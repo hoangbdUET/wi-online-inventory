@@ -1,0 +1,63 @@
+"use strict";
+let express = require('express');
+let router = express.Router();
+let bodyParser = require('body-parser');
+let models = require('../../models/index');
+let Well = models.Well;
+
+router.use(bodyParser.json());
+
+router.post('/well/new', function (req, res) {
+    Well.create(req.body).then(well => {
+        res.status(200).send(well);
+    }).catch(err => {
+        res.status(500).send(err);
+    });
+});
+
+router.post('/well/info', function (req, res) {
+    Well.findById(req.body.idWell).then(well => {
+        if (well) {
+            res.status(200).send(well);
+        } else {
+            res.status(200).send("NO well FOUND BI ID");
+        }
+    }).catch(err => {
+        res.status(500).send(err);
+    });
+});
+
+router.post('/well/edit', function (req, res) {
+    Well.findById(req.body.idWell).then(well => {
+        if (well) {
+            Object.assign(well, req.body);
+            well.save().then(c => {
+                res.status(200).send(c);
+            }).catch(e => {
+                res.status(500).send("ERR");
+            })
+        } else {
+            res.status(200).send("NO CURVE FOUND FOR EDIT");
+        }
+    }).catch(err => {
+        res.status(500).send(err);
+    });
+});
+
+router.post('/well/delete', function (req, res) {
+    Well.destroy({
+        where: {
+            idWell: req.body.idWell
+        }
+    }).then(well => {
+        if (well) {
+            res.status(200).send(well);
+        } else {
+            res.status(500).send("NO well FOUND FOR DELETE");
+        }
+    }).catch(err => {
+        res.status(500).send(err);
+    });
+});
+
+module.exports = router;
