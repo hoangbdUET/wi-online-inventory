@@ -10,5 +10,6 @@
   },
   "Application": {
     "port": 3000
-  }
+  },
+  "dataPath": "D:/tmp2"
 }

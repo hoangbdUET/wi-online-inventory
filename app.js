@@ -2,19 +2,22 @@
 main();
 
 function main() {
-    var express = require('express')
-    var app = express()
+    var express = require('express');
+    var config = require('config').Application;
+    var app = express();
     const cors = require('cors');
     var http = require('http').Server(app);
     app.use(cors());
-    var config = require('./config.json').Application;
+
+
     let testRouter = require('./router/index');
     let curveRouter = require('./router/curve/curveRouter');
     let wellRouter = require('./router/well/wellRouter');
-
+    let uploadRouter = require('./router/upload/las-file');
 
     app.use('/', testRouter);
     app.use('/', wellRouter);
+    app.use('/', uploadRouter);
     app.use('/well', curveRouter);
     app.get('/', function (req, res) {
         res.status(200).send('WI Online Inventory');

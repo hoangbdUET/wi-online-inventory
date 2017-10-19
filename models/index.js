@@ -1,6 +1,6 @@
 "use strict";
 let Sequelize = require('sequelize');
-var config = require('../config.json').Database;
+var config = require('config').Database;
 
 const sequelize = new Sequelize(config.dbName, config.user, config.password, {
     define: {
