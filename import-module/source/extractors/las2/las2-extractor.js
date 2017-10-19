@@ -68,14 +68,12 @@ function extractCurves(inputURL, callback) {
             sectionName = line;
         } else if (/^[A-z]/.test(line)) {
             if (/WELL/.test(sectionName)) {
-                //wellInfo.wellname = "";
                 let start = "";
                 let stop = "";
                 let step = "";
                 let NULL = "";
                 if ((/WELL/).test(line) && !/UWI/.test(line)) {
                     wellInfo.wellname = line.substring(line.indexOf('.') + 1, line.indexOf(':')).trim();
-                    tmpname = wellInfo.wellname;
                 } else if (/STRT/.test(line)) {
                     start = line.substring(line.indexOf('.') + 2, line.indexOf(':')).trim();
                     wellInfo.start = start;
@@ -163,12 +161,7 @@ function writeToCurveFile(buffer, curveFileName, index, value, defaultNull) {
     }
 }
 
-// function writeToCurveFile(curveFileName, data) {
-//     fs.appendFileSync(curveFileName, data);
-// }
-
 function extractWell(inputURL, callback) {
-    //console.log("extractWell");
     let rl = new readline(inputURL);
     let sectionName = "";
     let datasetsName = [];

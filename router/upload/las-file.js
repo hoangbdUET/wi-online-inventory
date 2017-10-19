@@ -19,14 +19,15 @@ var storage = multer.diskStorage({
 var upload = multer({storage: storage});
 
 router.post('/upload/las', upload.single('file'), function (req, res) {
-    console.log(req.file);
+    // console.log(req.file);
     wi_import.setBasePath(config.dataPath);
     wi_import.extractLAS2(req.file.path, function (err, result) {
         if (err) console.log(err);
         console.log(result);
+        res.status(200).send(result);
     });
-    console.log(wi_import.getBasePath());
-    res.status(200).send("DONE");
+    // console.log(wi_import.getBasePath());
+
 });
 
 module.exports = router;

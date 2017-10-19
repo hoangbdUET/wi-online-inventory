@@ -23,10 +23,8 @@ module.exports.extractWellLAS2 = function (inputURL, callback) {
 };
 
 module.exports.extractLAS2 = function (inputURL, callback) {
-    //console.log("Extract all call");
     extractLAS2.extractAll(inputURL, function (err, result) {
         if (err) return callback(err, null);
-        //console.log(result);
         callback(false, result);
     });
 };
