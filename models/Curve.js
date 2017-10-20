@@ -11,6 +11,10 @@ module.exports = function (sequelize, DataTypes) {
             defaultValue: "",
             unique: "name-idWell"
         },
+        alias: {
+            type: DataTypes.STRING,
+            allowNull: true
+        },
         path: {
             type: DataTypes.STRING,
             allowNull: false,

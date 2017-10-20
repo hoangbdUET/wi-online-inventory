@@ -14,11 +14,15 @@ function main() {
     let curveRouter = require('./router/curve/curveRouter');
     let wellRouter = require('./router/well/wellRouter');
     let uploadRouter = require('./router/upload/las-file');
+    let fileRouter = require('./router/file/fileRouter');
+    let userRouter = require('./router/user/userRouter');
 
     app.use('/', testRouter);
-    app.use('/', wellRouter);
+    app.use('/', userRouter);
+    app.use('/user', fileRouter);
+    app.use('/user/file', wellRouter);
+    app.use('/user/file/well', curveRouter);
     app.use('/', uploadRouter);
-    app.use('/well', curveRouter);
     app.get('/', function (req, res) {
         res.status(200).send('WI Online Inventory');
     });

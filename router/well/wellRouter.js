@@ -16,11 +16,11 @@ router.post('/well/new', function (req, res) {
 });
 
 router.post('/well/info', function (req, res) {
-    Well.findById(req.body.idWell).then(well => {
+    Well.findById(req.body.idWell, {include: {all: true}}).then(well => {
         if (well) {
             res.status(200).send(well);
         } else {
-            res.status(200).send("NO well FOUND BI ID");
+            res.status(200).send("NO well FOUND BY ID");
         }
     }).catch(err => {
         res.status(500).send(err);

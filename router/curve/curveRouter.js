@@ -20,7 +20,7 @@ router.post('/curve/info', function (req, res) {
         if (curve) {
             res.status(200).send(curve);
         } else {
-            res.status(200).send("NO CURVE FOUND BI ID");
+            res.status(200).send("NO CURVE FOUND BY ID");
         }
     }).catch(err => {
         res.status(500).send(err);

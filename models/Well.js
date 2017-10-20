@@ -8,8 +8,7 @@ module.exports = function (sequelize, DataTypes) {
         name: {
             type: DataTypes.STRING,
             allowNull: false,
-            defaultValue: "",
-            unique: true
+            defaultValue: ""
         },
         startDepth: {
             type: DataTypes.DOUBLE,

@@ -26,13 +26,23 @@ sequelize.sync()
     });
 var models = [
     'Curve',
-    'Well'
+    'Well',
+    'User',
+    'File'
 ];
 models.forEach(function (model) {
     module.exports[model] = sequelize.import(__dirname + '/' + model);
 });
 
 (function (m) {
+    m.User.hasMany(m.File, {
+        foreignKey: {name: "idUser", allowNull: false},
+        onDelete: 'CASCADE'
+    });
+    m.File.hasMany(m.Well, {
+        foreignKey: {name: "idFile", allowNull: false, unique: "name-idFile"},
+        onDelete: 'CASCADE'
+    });
     m.Well.hasMany(m.Curve, {
         foreignKey: {name: "idWell", allowNull: false, unique: "name-idWell"},
         onDelete: 'CASCADE'
