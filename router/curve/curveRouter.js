@@ -4,6 +4,7 @@ let router = express.Router();
 let bodyParser = require('body-parser');
 let models = require('../../models/index');
 let Curve = models.Curve;
+let curveExport = require('../../export/curveExport');
 
 router.use(bodyParser.json());
 
@@ -16,9 +17,14 @@ router.post('/curve/new', function (req, res) {
 });
 
 router.post('/curve/info', function (req, res) {
+    console.log(req.body.idCurve);
     Curve.findById(req.body.idCurve).then(curve => {
         if (curve) {
-            res.status(200).send(curve);
+            curveExport(curve, req.body.unit, (err, curve) => {
+                if(!err){
+                    res.status(200).send(curve);
+                }
+            });
         } else {
             res.status(200).send("NO CURVE FOUND BY ID");
         }

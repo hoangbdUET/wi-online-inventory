@@ -60,3 +60,6 @@ typings/
 # intellij
 .idea
 wi-online-inventory.iml
+
+#data directory
+tmp/

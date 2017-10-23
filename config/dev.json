@@ -1,0 +1,15 @@
+{
+  "Database": {
+    "dialect": "mysql",
+    "host": "localhost",
+    "port": 3306,
+    "user": "root",
+    "password": "qwertyui",
+    "logging": false,
+    "dbName": "wi_online_inventory"
+  },
+  "Application": {
+    "port": 3000
+  },
+  "dataPath": "/Users/dodang/uet_work/backend/wi-online-inventory/tmp"
+}
