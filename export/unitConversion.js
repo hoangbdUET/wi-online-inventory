@@ -12,10 +12,10 @@ const M_FT = 0.3048;
 
 function convert(value, from, to) {
     if(from == 'M') {
-        return value * eval(from + '_' + to);
+        return value / eval(from + '_' + to);
     }
     else if(to == 'M') {
-        return value / eval(from + '_' + to);
+        return value * eval(to + '_' + from);
     }
     else {
         return value * eval('M_' + from) / eval('M_' + to);

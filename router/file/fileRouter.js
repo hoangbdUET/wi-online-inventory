@@ -60,5 +60,19 @@ router.post('/file/delete', function (req, res) {
     });
 });
 
+router.post('/files', function (req, res) {
+    File.findAll({
+        where: {
+            idUser: req.body.idUser
+        }
+    })
+        .then((files) => {
+            res.status(200).send(files);
+        })
+        .catch((err) => {
+            res.status(500).send(err);
+        })
+})
+
 
 module.exports = router;

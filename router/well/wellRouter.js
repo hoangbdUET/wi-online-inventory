@@ -60,4 +60,18 @@ router.post('/well/delete', function (req, res) {
     });
 });
 
+router.post('/wells', function (req, res) {
+    Well.findAll({
+        where: {
+            idFile: req.body.idFile
+        }
+    })
+        .then((files) => {
+            res.status(200).send(files);
+        })
+        .catch((err) => {
+            res.status(500).send(err);
+        })
+})
+
 module.exports = router;

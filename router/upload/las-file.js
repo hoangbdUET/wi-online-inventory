@@ -9,8 +9,6 @@ var asyncLoop = require("node-async-loop");
 var Well = require("../../models").Well;
 var Curve = require("../../models").Curve;
 var File = require("../../models").File;
-const EventEmitter = require('events');
-let event = new EventEmitter.EventEmitter();
 
 var storage = multer.diskStorage({
     destination: function (req, file, cb) {
