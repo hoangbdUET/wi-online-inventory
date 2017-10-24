@@ -38,7 +38,7 @@ function LASDone(result, file, callback) {
             wellInfo.idFile = file.idFile;
             Well.create(wellInfo)
                 .then((well) => {
-                    result.datasetInfo.forEach((dataset) => {
+                    asyncLoop(result.datasetInfo, (dataset, nextDataset) => {
                         let curves = dataset.curves;
                         console.log('curves: ' + curves);
                         asyncLoop(curves, function (curve, next) {
@@ -60,11 +60,14 @@ function LASDone(result, file, callback) {
                             }
                             else next();
                         }, function (err) {
-                            console.log('loi roi: ' + err);
-                            if(err) callback(err, null);
-                            else callback(null, 'las file extracted');
+                            if(err) nextDataset(err);
+                            else nextDataset();
                         });
-                    })
+                    }, (err) => {
+                        console.log("import curve failed");
+                        callback(err);
+                    });
+
                 })
                 .catch((err) => {
                     console.log('Well creation failed: ' + err);
@@ -76,59 +79,68 @@ function LASDone(result, file, callback) {
         })
 }
 
-function processFileUpload(file, next) {
+function processFileUpload(file, callback) {
+    console.log("______processFileUpload________");
     let fileFormat = file.filename.substring(file.filename.lastIndexOf('.') + 1, file.filename.length);
 
     if (/LAS/.test(fileFormat.toUpperCase())) {
         wi_import.setBasePath(config.dataPath);
         wi_import.extractLAS2(file.path, function (err, result) {
             if (err) {
+                console.log("this is not a las 2 file");
                 if (/LAS_3_DETECTED/.test(err)) {
+                    console.log("this is las 3 file");
                     wi_import.extractLAS3(file.path, function (err, result) {
                         if (err) {
                             console.log('las 3 extract failed!');
-                            if(next) next(err);
+                            callback();
                         }
                         else {
+                            console.log("las 3 extracted");
                             LASDone(result, file, (err, result) => {
                                 if(err) {
-                                    if(next) next(err);
+                                    console.log("import to db failed");
+                                    callback(err);
                                 }
                                 else {
-                                    next(result);
+                                    console.log("import done");
+                                    callback();
                                 }
                             })
                         }
                     });
                 }
                 else {
-                    if(next) next(err);
+                    console.log("this is not las 3 too");
+                    callback(err);
                 }
             }
             else {
                 LASDone(result, file, function (err, result) {
                     if (err) {
-                        if(next) next(err);
+                        callback(err);
                     }
                     else {
-                        if(next) next();
+                        callback();
                     }
                 });
             }
-
-
         })
     }
     else {
-        if(next) next();
+        callback('this is not las file');
     }
 }
 
 router.post('/upload/lases', upload.array('file'), function (req, res)  {
     wi_import.setBasePath(config.dataPath);
-
+    console.log(req.files);
     asyncLoop(req.files, (file, next) => {
-        processFileUpload(file, next);
+        console.log("=====================");
+        processFileUpload(file, function (err) {
+            if(err) next(err);
+            else next();
+        });
     }, (err) => {
         if(err) res.status(500).send(err);
         else {
