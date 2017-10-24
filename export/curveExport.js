@@ -43,7 +43,7 @@ module.exports = function (curve, unit, callback) {
 
             lr.on('line', function (line) {
                 let value = parseFloat(line.trim().split(' ')[1]);
-                writeToCurveFile(buffer, filePath, index, unitConversion.convert(value, curve.unit, unit), 'NULL');
+                writeToCurveFile(buffer, filePath, index, unitConversion.convert(value, curve.unit, unit), -9999);
                 index++;
             });
 
