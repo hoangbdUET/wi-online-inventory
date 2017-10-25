@@ -64,3 +64,6 @@ wi-online-inventory.iml
 #data directory
 tmp/
 uploads/
+
+#configs
+/config/production.json

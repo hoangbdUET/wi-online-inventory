@@ -1,5 +1,20 @@
 "use strict";
-main();
+let models = require('./models/index');
+let User = models.User;
+
+addUser();
+
+function addUser() {
+    let Admin = {
+        username: "admin",
+        password: "c4ca4238a0b923820dcc509a6f75849b",
+        role: "1"
+    }
+    User.findOrCreate({where: {username: "admin"}, defaults: Admin}).then(() => {
+        main();
+    }).catch();
+}
+
 
 function main() {
     var express = require('express');
