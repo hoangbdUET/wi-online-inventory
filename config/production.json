@@ -9,7 +9,7 @@
     "dbName": "wi_online_inventory"
   },
   "Application": {
-    "port": 3000
+    "port": 9000
   },
   "dataPath": "D:/tmp2"
 }
