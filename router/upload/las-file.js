@@ -79,7 +79,7 @@ function LASDone(result, file, callback) {
         })
 }
 
-function processFileUpload(file, callback) {
+function processFileUpload(file, nextFile) {
     console.log("______processFileUpload________");
     let fileFormat = file.filename.substring(file.filename.lastIndexOf('.') + 1, file.filename.length);
 
@@ -93,18 +93,18 @@ function processFileUpload(file, callback) {
                     wi_import.extractLAS3(file.path, function (err, result) {
                         if (err) {
                             console.log('las 3 extract failed!');
-                            callback();
+                            nextFile();
                         }
                         else {
                             console.log("las 3 extracted");
                             LASDone(result, file, (err, result) => {
                                 if(err) {
                                     console.log("import to db failed");
-                                    callback(err);
+                                    nextFile(err);
                                 }
                                 else {
                                     console.log("import done");
-                                    callback();
+                                    nextFile();
                                 }
                             })
                         }
@@ -112,23 +112,23 @@ function processFileUpload(file, callback) {
                 }
                 else {
                     console.log("this is not las 3 too");
-                    callback(err);
+                    nextFile(err);
                 }
             }
             else {
                 LASDone(result, file, function (err, result) {
                     if (err) {
-                        callback(err);
+                        nextFile(err);
                     }
                     else {
-                        callback();
+                        nextFile();
                     }
                 });
             }
         })
     }
     else {
-        callback('this is not las file');
+        nextFile('this is not las file');
     }
 }
 
@@ -136,11 +136,7 @@ router.post('/upload/lases', upload.array('file'), function (req, res)  {
     wi_import.setBasePath(config.dataPath);
     console.log(req.files);
     asyncLoop(req.files, (file, next) => {
-        console.log("=====================");
-        processFileUpload(file, function (err) {
-            if(err) next(err);
-            else next();
-        });
+        processFileUpload(file, next);
     }, (err) => {
         if(err) res.status(500).send(err);
         else {
