@@ -6,9 +6,10 @@ var config = require("config");
 var multer = require('multer');
 var wi_import = require("../../import-module");
 var asyncLoop = require("node-async-loop");
-var Well = require("../../models").Well;
-var Curve = require("../../models").Curve;
-var File = require("../../models").File;
+let models = require('../../models');
+var Well = models.Well;
+var Curve = models.Curve;
+var File = models.File;
 
 var storage = multer.diskStorage({
     destination: function (req, file, cb) {
@@ -21,24 +22,25 @@ var storage = multer.diskStorage({
 
 var upload = multer({storage: storage});
 
-function LASDone(result, file, callback) {
+function LASDone(inputWell, file, callback) {
     let fileInfo = new Object();
     fileInfo.name = file.originalname;
     fileInfo.size = file.size;
     fileInfo.idUser = 1;
 
     let wellInfo = new Object();
-    wellInfo.name = result.wellname;
-    wellInfo.startDepth = result.start;
-    wellInfo.stopDepth = result.stop;
-    wellInfo.step = result.step;
+    wellInfo.name = inputWell.wellname;
+    wellInfo.startDepth = inputWell.start;
+    wellInfo.stopDepth = inputWell.stop;
+    wellInfo.step = inputWell.step;
 
     File.create(fileInfo)
         .then((file) => {
+
             wellInfo.idFile = file.idFile;
             Well.create(wellInfo)
                 .then((well) => {
-                    asyncLoop(result.datasetInfo, (dataset, nextDataset) => {
+                    asyncLoop(inputWell.datasetInfo, (dataset, nextDataset) => {
                         let curves = dataset.curves;
                         console.log('curves: ' + curves);
                         asyncLoop(curves, function (curve, next) {
@@ -64,8 +66,13 @@ function LASDone(result, file, callback) {
                             else nextDataset();
                         });
                     }, (err) => {
-                        console.log("import curve failed");
-                        callback(err);
+                        if(err) {
+                            console.log("import curve failed: ", err);
+                            callback(err, null);
+                        }
+                        else {
+                            callback(null, file);
+                        }
                     });
 
                 })
@@ -79,12 +86,12 @@ function LASDone(result, file, callback) {
         })
 }
 
-function processFileUpload(file, nextFile) {
+function processFileUpload(file, callback) {
     console.log("______processFileUpload________");
     let fileFormat = file.filename.substring(file.filename.lastIndexOf('.') + 1, file.filename.length);
 
     if (/LAS/.test(fileFormat.toUpperCase())) {
-        wi_import.setBasePath(config.dataPath);
+        // wi_import.setBasePath(config.dataPath);
         wi_import.extractLAS2(file.path, function (err, result) {
             if (err) {
                 console.log("this is not a las 2 file");
@@ -93,18 +100,18 @@ function processFileUpload(file, nextFile) {
                     wi_import.extractLAS3(file.path, function (err, result) {
                         if (err) {
                             console.log('las 3 extract failed!');
-                            nextFile();
+                            callback(err, null);
                         }
                         else {
                             console.log("las 3 extracted");
                             LASDone(result, file, (err, result) => {
                                 if(err) {
                                     console.log("import to db failed");
-                                    nextFile(err);
+                                    callback(err, null);
                                 }
                                 else {
                                     console.log("import done");
-                                    nextFile();
+                                    callback(null, result);
                                 }
                             })
                         }
@@ -112,36 +119,45 @@ function processFileUpload(file, nextFile) {
                 }
                 else {
                     console.log("this is not las 3 too");
-                    nextFile(err);
+                    callback(err, null);
                 }
             }
             else {
                 LASDone(result, file, function (err, result) {
                     if (err) {
-                        nextFile(err);
+                        callback(err, null);
                     }
                     else {
-                        nextFile();
+                        callback(null, result);
                     }
                 });
             }
         })
     }
     else {
-        nextFile('this is not las file');
+        callback('this is not las file', null);
     }
 }
 
 router.post('/upload/lases', upload.array('file'), function (req, res)  {
     wi_import.setBasePath(config.dataPath);
     console.log(req.files);
+    let output = new Array();
     asyncLoop(req.files, (file, next) => {
-        processFileUpload(file, next);
+        processFileUpload(file, (err, result) => {
+            if(err) next(err)
+            else {
+                File.findById(result.idFile, {include: {all: true, include: {all: true}}}).then(file => {
+                    if (file) output.push(file);
+                    next();
+                }).catch(err => {
+                    next(err);
+                });
+            }
+        });
     }, (err) => {
         if(err) res.status(500).send(err);
-        else {
-            res.sendStatus(200);
-        }
+        else res.status(200).send(output);
     })
 
 })
