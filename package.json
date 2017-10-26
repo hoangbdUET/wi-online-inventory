@@ -27,6 +27,7 @@
     "express": "^4.16.2",
     "fast-csv": "^2.4.0",
     "file-encryptor": "^0.1.1",
+    "firstline": "^1.2.1",
     "fs": "0.0.1-security",
     "line-by-line": "^0.1.5",
     "md5": "^2.2.1",
