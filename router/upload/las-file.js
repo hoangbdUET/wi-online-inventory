@@ -22,11 +22,12 @@ var storage = multer.diskStorage({
 
 var upload = multer({storage: storage});
 
-function LASDone(inputWell, file, callback) {
+function LASDone(inputWell, file, userInfor, callback) {
     let fileInfo = new Object();
     fileInfo.name = file.originalname;
     fileInfo.size = file.size;
-    fileInfo.idUser = 1;
+    // fileInfo.idUser = 1;
+    fileInfo.idUser = userInfor.idUser;
 
     let wellInfo = new Object();
     wellInfo.name = inputWell.wellname;
@@ -47,9 +48,9 @@ function LASDone(inputWell, file, callback) {
                             if(curve) {
 
                                 curve.idWell = well.idWell;
-                                curve.name = curve.datasetname + "_" + curve.name;
                                 Curve.create({
-                                    name: curve.name,
+                                    name: curve.datasetname + "_" + curve.name,
+                                    alias: curve.name,
                                     idWell: curve.idWell,
                                     unit: curve.unit,
                                     path: curve.path
@@ -86,12 +87,11 @@ function LASDone(inputWell, file, callback) {
         })
 }
 
-function processFileUpload(file, callback) {
+function processFileUpload(file, userInfor, callback) {
     console.log("______processFileUpload________");
     let fileFormat = file.filename.substring(file.filename.lastIndexOf('.') + 1, file.filename.length);
 
     if (/LAS/.test(fileFormat.toUpperCase())) {
-        // wi_import.setBasePath(config.dataPath);
         wi_import.extractLAS2(file.path, function (err, result) {
             if (err) {
                 console.log("this is not a las 2 file");
@@ -104,7 +104,7 @@ function processFileUpload(file, callback) {
                         }
                         else {
                             console.log("las 3 extracted");
-                            LASDone(result, file, (err, result) => {
+                            LASDone(result, file, userInfor, (err, result) => {
                                 if(err) {
                                     console.log("import to db failed");
                                     callback(err, null);
@@ -123,7 +123,7 @@ function processFileUpload(file, callback) {
                 }
             }
             else {
-                LASDone(result, file, function (err, result) {
+                LASDone(result, file, userInfor, function (err, result) {
                     if (err) {
                         callback(err, null);
                     }
@@ -144,11 +144,11 @@ router.post('/upload/lases', upload.array('file'), function (req, res)  {
     console.log(req.files);
     let output = new Array();
     asyncLoop(req.files, (file, next) => {
-        processFileUpload(file, (err, result) => {
+        processFileUpload(file, req.decoded, (err, result) => {
             if(err) next(err)
             else {
-                File.findById(result.idFile, {include: {all: true, include: {all: true}}}).then(file => {
-                    if (file) output.push(file);
+                File.findById(result.idFile, {include: {all: true, include: {all: true}}}).then(fileObj => {
+                    if (fileObj) output.push(fileObj);
                     next();
                 }).catch(err => {
                     next(err);

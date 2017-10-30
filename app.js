@@ -24,6 +24,12 @@ function main() {
     var http = require('http').Server(app);
     app.use(cors());
 
+    let bodyParser = require('body-parser');
+    app.use(bodyParser.json());
+
+    let authentication = require('./router/authenticate');
+    app.use('/', authentication.router);
+    app.use(authentication.authenticate());
 
     let testRouter = require('./router/index');
     let curveRouter = require('./router/curve/curveRouter');
@@ -31,6 +37,7 @@ function main() {
     let uploadRouter = require('./router/upload/las-file');
     let fileRouter = require('./router/file/fileRouter');
     let userRouter = require('./router/user/userRouter');
+
 
     app.use('/', testRouter);
     app.use('/', userRouter);

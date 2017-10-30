@@ -4,8 +4,11 @@ let router = express.Router();
 let bodyParser = require('body-parser');
 let models = require('../../models/index');
 let Well = models.Well;
+let File = models.File;
+let User = models.User;
 
 router.use(bodyParser.json());
+
 
 router.post('/well/new', function (req, res) {
     Well.create(req.body).then(well => {
@@ -16,7 +19,21 @@ router.post('/well/new', function (req, res) {
 });
 
 router.post('/well/info', function (req, res) {
-    Well.findById(req.body.idWell, {include: {all: true}}).then(well => {
+    Well.findOne({
+        where:{idWell : req.body.idWell},
+        include : {
+            model: File,
+            attributes: [],
+            include : [ {
+                model: User,
+                attributes: [],
+                where: { idUser : req.decoded.idUser},
+                required: true
+            }],
+            required : true
+        },
+        logging: console.log
+    }).then(well => {
         if (well) {
             res.status(200).send(well);
         } else {
@@ -28,7 +45,20 @@ router.post('/well/info', function (req, res) {
 });
 
 router.post('/well/edit', function (req, res) {
-    Well.findById(req.body.idWell).then(well => {
+    Well.findById(req.body.idWell, {
+        include : {
+            model: File,
+            attributes: [],
+            include : [ {
+                model: User,
+                attributes: [],
+                where: { idUser : req.decoded.idUser},
+                required: true
+            }],
+            required : true
+        },
+        logging: console.log
+    }).then(well => {
         if (well) {
             Object.assign(well, req.body);
             well.save().then(c => {
@@ -48,6 +78,17 @@ router.post('/well/delete', function (req, res) {
     Well.destroy({
         where: {
             idWell: req.body.idWell
+        },
+        include : {
+            model: File,
+            attributes: [],
+            include : [ {
+                model: User,
+                attributes: [],
+                where: { idUser : req.decoded.idUser},
+                required: true
+            }],
+            required : true
         }
     }).then(well => {
         if (well) {
@@ -63,8 +104,18 @@ router.post('/well/delete', function (req, res) {
 router.post('/wells', function (req, res) {
     Well.findAll({
         where: {
-            idFile: req.body.idFile
-        }
+            idFile: req.body.idFile,
+         },
+        include : [{
+            model: File,
+            attributes: [],
+            where : { idFile: req.body.idFile },
+            include : [ {
+                model: User,
+                attributes: [],
+                where: { idUser : req.decoded.idUser}
+            }]
+        }]
     })
         .then((files) => {
             res.status(200).send(files);

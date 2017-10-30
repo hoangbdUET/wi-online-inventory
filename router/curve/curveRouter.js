@@ -4,6 +4,9 @@ let router = express.Router();
 let bodyParser = require('body-parser');
 let models = require('../../models/index');
 let Curve = models.Curve;
+let Well = models.Well;
+let File = models.File;
+let User = models.User;
 let curveExport = require('../../export/curveExport');
 
 router.use(bodyParser.json());
@@ -18,7 +21,26 @@ router.post('/curve/new', function (req, res) {
 
 router.post('/curve/info', function (req, res) {
     console.log(req.body.idCurve);
-    Curve.findById(req.body.idCurve).then(curve => {
+    Curve.findById(req.body.idCurve, {
+        include : {
+        model: Well,
+            attributes : [],
+            required: true,
+            include: {
+            model: File,
+                attributes: [],
+                required: true,
+                include: {
+                model: User,
+                    attributes: [],
+                    required: true,
+                    where: {
+                    idUser: req.decoded.idUser
+                }
+            }
+        }
+    }
+    }).then(curve => {
         if (curve) {
             res.status(200).send(curve);
         } else {
@@ -30,7 +52,26 @@ router.post('/curve/info', function (req, res) {
 });
 
 router.post('/curve/data', function (req, res) {
-    Curve.findById(req.body.idCurve)
+    Curve.findById(req.body.idCurve, {
+        include : {
+        model: Well,
+            attributes : [],
+            required: true,
+            include: {
+            model: File,
+                attributes: [],
+                required: true,
+                include: {
+                model: User,
+                    attributes: [],
+                    required: true,
+                    where: {
+                    idUser: req.decoded.idUser
+                }
+            }
+        }
+    }
+    })
         .then((curve) => {
             if (curve) {
                 curveExport(curve, req.body.unit, (err, curve) => {
@@ -48,7 +89,26 @@ router.post('/curve/data', function (req, res) {
 })
 
 router.post('/curve/edit', function (req, res) {
-    Curve.findById(req.body.idCurve).then(curve => {
+    Curve.findById(req.body.idCurve, {
+        include : {
+        model: Well,
+            attributes : [],
+            required: true,
+            include: {
+            model: File,
+                attributes: [],
+                required: true,
+                include: {
+                model: User,
+                    attributes: [],
+                    required: true,
+                    where: {
+                    idUser: req.decoded.idUser
+                }
+            }
+        }
+    }
+    }).then(curve => {
         if (curve) {
             Object.assign(curve, req.body);
             curve.save().then(c => {
@@ -68,6 +128,24 @@ router.post('/curve/delete', function (req, res) {
     Curve.destroy({
         where: {
             idCurve: req.body.idCurve
+        },
+        include : {
+            model: Well,
+            attributes : [],
+            required: true,
+            include: {
+                model: File,
+                attributes: [],
+                required: true,
+                include: {
+                    model: User,
+                    attributes: [],
+                    required: true,
+                    where: {
+                        idUser: req.decoded.idUser
+                    }
+                }
+            }
         }
     }).then(curve => {
         if (curve) {
@@ -84,7 +162,26 @@ router.post('/curves', function (req, res) {
     Curve.findAll({
         where: {
             idWell: req.body.idWell
-        }
+        },
+        include : {
+            model: Well,
+            attributes : [],
+            required: true,
+            include: {
+                model: File,
+                attributes: [],
+                required: true,
+                include: {
+                    model: User,
+                    attributes: [],
+                    required: true,
+                    where: {
+                        idUser: req.decoded.idUser
+                    }
+                }
+            }
+        },
+        logging: console.log
     })
         .then((curves) => {
             res.status(200).send(curves);

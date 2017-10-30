@@ -39,13 +39,26 @@ models.forEach(function (model) {
         foreignKey: {name: "idUser", allowNull: false},
         onDelete: 'CASCADE'
     });
+    m.File.belongsTo(m.User, {
+        foreignKey: {name: "idUser", allowNull: false}
+    });
+
     m.File.hasMany(m.Well, {
         foreignKey: {name: "idFile", allowNull: false, unique: "name-idFile"},
         onDelete: 'CASCADE'
     });
+
+    m.Well.belongsTo(m.File, {
+        foreignKey: {name: "idFile", allowNull: false}
+    });
+
     m.Well.hasMany(m.Curve, {
         foreignKey: {name: "idWell", allowNull: false, unique: "name-idWell"},
         onDelete: 'CASCADE'
     });
+
+    m.Curve.belongsTo(m.Well, {
+        foreignKey: {name: "idWell", allowNull: false}
+    })
 })(module.exports);
 module.exports.sequelize = sequelize;
