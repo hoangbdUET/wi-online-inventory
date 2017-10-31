@@ -12,7 +12,7 @@ let curveExport = require('../../export/curveExport');
 router.use(bodyParser.json());
 
 router.post('/curve/new', function (req, res) {
-    Curve.create(req.body).then(curve => {
+        Curve.create(req.body).then(curve => {
         res.status(200).send(curve);
     }).catch(err => {
         res.status(500).send(err);
@@ -20,7 +20,6 @@ router.post('/curve/new', function (req, res) {
 });
 
 router.post('/curve/info', function (req, res) {
-    console.log(req.body.idCurve);
     Curve.findById(req.body.idCurve, {
         include : {
         model: Well,
@@ -35,11 +34,12 @@ router.post('/curve/info', function (req, res) {
                     attributes: [],
                     required: true,
                     where: {
-                    idUser: req.decoded.idUser
+                        idUser: req.decoded.idUser
                 }
             }
         }
-    }
+    },
+        logging: console.log
     }).then(curve => {
         if (curve) {
             res.status(200).send(curve);
@@ -54,24 +54,23 @@ router.post('/curve/info', function (req, res) {
 router.post('/curve/data', function (req, res) {
     Curve.findById(req.body.idCurve, {
         include : {
-        model: Well,
+            model: Well,
             attributes : [],
             required: true,
             include: {
-            model: File,
+                model: File,
                 attributes: [],
                 required: true,
                 include: {
-                model: User,
+                    model: User,
                     attributes: [],
                     required: true,
                     where: {
-                    idUser: req.decoded.idUser
+                        idUser: req.decoded.idUser
                 }
             }
         }
-    }
-    })
+    }})
         .then((curve) => {
             if (curve) {
                 curveExport(curve, req.body.unit, (err, curve) => {

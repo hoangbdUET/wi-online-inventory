@@ -16,7 +16,7 @@ router.post('/user/new', function (req, res) {
 });
 
 router.post('/user/info', function (req, res) {
-    User.findById(req.body.idUser, {include: {all: true, include: {all: true, include: {all: true}}}}).then(user => {
+    User.findById(req.decoded.idUser).then(user => {
         if (user) {
             res.status(200).send(user);
         } else {
@@ -28,7 +28,7 @@ router.post('/user/info', function (req, res) {
 });
 
 router.post('/user/edit', function (req, res) {
-    User.findById(req.body.idUser).then(user => {
+    User.findById(req.decoded.idUser).then(user => {
         if (user) {
             Object.assign(user, req.body);
             user.save().then(c => {
@@ -47,7 +47,7 @@ router.post('/user/edit', function (req, res) {
 router.post('/file/delete', function (req, res) {
     User.destroy({
         where: {
-            idUser: req.body.idUser
+            idUser: req.decoded.idUser
         }
     }).then(user => {
         if (user) {

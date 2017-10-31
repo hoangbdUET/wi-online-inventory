@@ -23,9 +23,7 @@ router.post('/file/info', function (req, res) {
         where: {
             idFile: req.body.idFile,
             idUser:req.decoded.idUser
-        },
-        // include: {Well, include: {all: true}}
-        include: [{model: Well, include: {all : true}}  ]
+        }
     }).then(file => {
         if (file) {
             res.status(200).send(file);
@@ -79,7 +77,6 @@ router.post('/files', function (req, res) {
     File.findAll({
         where: {
             idUser: req.decoded.idUser
-            // idUser: req.idUser
         }
     })
         .then((files) => {

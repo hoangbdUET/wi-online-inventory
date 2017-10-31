@@ -22,11 +22,10 @@ var storage = multer.diskStorage({
 
 var upload = multer({storage: storage});
 
-function LASDone(inputWell, file, userInfor, callback) {
+function importToDB(inputWell, file, userInfor, callback) {
     let fileInfo = new Object();
     fileInfo.name = file.originalname;
     fileInfo.size = file.size;
-    // fileInfo.idUser = 1;
     fileInfo.idUser = userInfor.idUser;
 
     let wellInfo = new Object();
@@ -37,7 +36,6 @@ function LASDone(inputWell, file, userInfor, callback) {
 
     File.create(fileInfo)
         .then((file) => {
-
             wellInfo.idFile = file.idFile;
             Well.create(wellInfo)
                 .then((well) => {
@@ -46,7 +44,6 @@ function LASDone(inputWell, file, userInfor, callback) {
                         console.log('curves: ' + curves);
                         asyncLoop(curves, function (curve, next) {
                             if(curve) {
-
                                 curve.idWell = well.idWell;
                                 Curve.create({
                                     name: curve.datasetname + "_" + curve.name,
@@ -104,7 +101,7 @@ function processFileUpload(file, userInfor, callback) {
                         }
                         else {
                             console.log("las 3 extracted");
-                            LASDone(result, file, userInfor, (err, result) => {
+                            importToDB(result, file, userInfor, (err, result) => {
                                 if(err) {
                                     console.log("import to db failed");
                                     callback(err, null);
@@ -123,7 +120,7 @@ function processFileUpload(file, userInfor, callback) {
                 }
             }
             else {
-                LASDone(result, file, userInfor, function (err, result) {
+                importToDB(result, file, userInfor, function (err, result) {
                     if (err) {
                         callback(err, null);
                     }
