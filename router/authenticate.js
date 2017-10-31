@@ -3,6 +3,7 @@ const router = express.Router();
 var bodyParser = require('body-parser');
 var User = require('../models').User;
 var jwt = require('jsonwebtoken');
+var md5 = require('md5');
 
 router.use(bodyParser.json());
 router.post('/login', function (req, res) {
@@ -11,7 +12,7 @@ router.post('/login', function (req, res) {
             if (!user) {
                 res.status(401).send("User not exist");
             } else {
-                if (user.password != req.body.password) {
+                if (user.password != md5(req.body.password)) {
                     res.status(401).send("Wrong password. Authenticate fail");
                 } else {
                     var token = jwt.sign(req.body, 'secretKey', {expiresIn: '12h'});
