@@ -10,6 +10,7 @@ let models = require('../../models');
 var Well = models.Well;
 var Curve = models.Curve;
 var File = models.File;
+let response = require('../response');
 
 var storage = multer.diskStorage({
     destination: function (req, file, cb) {
@@ -21,6 +22,7 @@ var storage = multer.diskStorage({
 });
 
 var upload = multer({storage: storage});
+
 
 function importToDB(inputWell, file, userInfor, callback) {
     let fileInfo = new Object();
@@ -153,8 +155,8 @@ router.post('/upload/lases', upload.array('file'), function (req, res)  {
             }
         });
     }, (err) => {
-        if(err) res.status(500).send(err);
-        else res.status(200).send(output);
+        if(err) res.send(response(500, 'UPLOAD FILES FAILED'));
+        else res.send(response(200, 'UPLOAD FILES SUCCESS'));
     })
 
 })

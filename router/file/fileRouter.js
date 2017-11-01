@@ -4,16 +4,15 @@ let router = express.Router();
 let bodyParser = require('body-parser');
 let models = require('../../models/index');
 let File = models.File;
-let User = models.User;
-let Well = models.Well;
+let response = require('../response');
 
 router.use(bodyParser.json());
 
 router.post('/file/new', function (req, res) {
     File.create(req.body).then(file => {
-        res.status(200).send(file);
+        res.send(response(200, 'SUCCESSFULLY CREATE NEW FILE', file));
     }).catch(err => {
-        res.status(500).send(err);
+        res.send(response(500, 'FAILED TO CREATE NEW FILE', err));
     });
 });
 
@@ -26,12 +25,12 @@ router.post('/file/info', function (req, res) {
         }
     }).then(file => {
         if (file) {
-            res.status(200).send(file);
+            res.send(response(200, 'SUCCESSFULLY GET FILE INFOR', file));
         } else {
-            res.status(200).send("NO FILE FOUND BY ID");
+            res.send(response(200, "NO FILE FOUND BY ID"));
         }
     }).catch(err => {
-        res.status(500).send(err);
+        res.send(response(500, 'FAILED TO FIND FILE', err));
     });
 });
 
@@ -44,15 +43,15 @@ router.post('/file/edit', function (req, res) {
         if (file) {
             Object.assign(file, req.body);
             file.save().then(c => {
-                res.status(200).send(c);
+                res.send(response(200, 'SUCCESSFULLY EDIT FILE', c));
             }).catch(err => {
-                res.status(500).send(err);
+                res.send(response(500, 'FAILED TO EDIT FILE', err));
             })
         } else {
-            res.status(200).send("NO FILE FOUND FOR EDIT");
+            res.send(response(500, "NO FILE FOUND FOR EDIT"));
         }
     }).catch(err => {
-        res.status(500).send(err);
+        res.send(response(500, 'FAILED TO FIND FILE', err));
     });
 });
 
@@ -64,12 +63,12 @@ router.post('/file/delete', function (req, res) {
         }
     }).then(file => {
         if (file) {
-            res.status(200).send(file);
+            res.send(response(200, 'SUCCESSFULLY DELETE FILE', file));
         } else {
-            res.status(500).send("NO FILE FOUND FOR DELETE");
+            res.send(response(500, "NO FILE FOUND FOR DELETE"));
         }
     }).catch(err => {
-        res.status(500).send(err);
+        res.send(response(500, 'FAILED TO FIND FILE', err));
     });
 });
 
@@ -80,10 +79,10 @@ router.post('/files', function (req, res) {
         }
     })
         .then((files) => {
-            res.status(200).send(files);
+            res.send(response(200, 'SUCCESSFULLY GET FILES', files));
         })
         .catch((err) => {
-            res.status(500).send(err);
+            res.send(response(500, 'FAILED TO GET FILES', err));
         })
 })
 

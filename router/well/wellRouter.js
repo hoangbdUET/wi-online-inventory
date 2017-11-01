@@ -6,15 +6,16 @@ let models = require('../../models/index');
 let Well = models.Well;
 let File = models.File;
 let User = models.User;
+let response = require('../response');
 
 router.use(bodyParser.json());
 
 
 router.post('/well/new', function (req, res) {
     Well.create(req.body).then(well => {
-        res.status(200).send(well);
+        res.send(response(200, 'SUCCESSFULLY CREATE NEW WELL', well));
     }).catch(err => {
-        res.status(500).send(err);
+        res.send(response(500, 'FAILED TO CREATE NEW WELL', err));
     });
 });
 
@@ -35,12 +36,12 @@ router.post('/well/info', function (req, res) {
         logging: console.log
     }).then(well => {
         if (well) {
-            res.status(200).send(well);
+            res.send(response(200, 'SUCCESSFULLY GET WELL INFOR', well));
         } else {
-            res.status(200).send("NO well FOUND BY ID");
+            res.send(response(200, 'NO WELL FOUND BY ID'));
         }
     }).catch(err => {
-        res.status(500).send(err);
+        res.send(response(500, 'FAILED TO FIND WELL', err));
     });
 });
 
@@ -62,15 +63,15 @@ router.post('/well/edit', function (req, res) {
         if (well) {
             Object.assign(well, req.body);
             well.save().then(c => {
-                res.status(200).send(c);
+                res.send(response(200, 'SUCCESSFULLY EDIT WELL', c));
             }).catch(e => {
-                res.status(500).send("ERR");
+                res.send(response(500, 'FAILED TO EDIT WELL', e));
             })
         } else {
-            res.status(200).send("NO CURVE FOUND FOR EDIT");
+            res.send(response(200, 'NO WELL FOUND TO EDIT'));
         }
     }).catch(err => {
-        res.status(500).send(err);
+        res.send(response(500, 'FAILED TO FIND WELL', err));
     });
 });
 
@@ -92,12 +93,12 @@ router.post('/well/delete', function (req, res) {
         }
     }).then(well => {
         if (well) {
-            res.status(200).send(well);
+            res.send(response(200, 'SUCCESSFULLY DELETE WELL', well));
         } else {
-            res.status(500).send("NO well FOUND FOR DELETE");
+            res.send(response(500, 'NO WELL FOUND TO DELETE'));
         }
     }).catch(err => {
-        res.status(500).send(err);
+        res.send(response(500, 'FAILED TO FIND WELL', err));
     });
 });
 
@@ -117,11 +118,11 @@ router.post('/wells', function (req, res) {
             }]
         }]
     })
-        .then((files) => {
-            res.status(200).send(files);
+        .then((wells) => {
+            res.send(response(200, 'SUCCESSFULLY GET WELLS', wells));
         })
         .catch((err) => {
-            res.status(500).send(err);
+            res.send(response(500, 'FAILED TO GET WELLS', err));
         })
 })
 

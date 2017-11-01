@@ -8,14 +8,15 @@ let Well = models.Well;
 let File = models.File;
 let User = models.User;
 let curveExport = require('../../export/curveExport');
+let response = require('../response');
 
 router.use(bodyParser.json());
 
 router.post('/curve/new', function (req, res) {
-        Curve.create(req.body).then(curve => {
-        res.status(200).send(curve);
+    Curve.create(req.body).then(curve => {
+        res.send(response(200, 'SUCCESSFULLY CREATE NEW CURVE', curve));
     }).catch(err => {
-        res.status(500).send(err);
+        res.send(response(500, 'FAILED TO CREATE NEW CURVE', err));
     });
 });
 
@@ -42,12 +43,12 @@ router.post('/curve/info', function (req, res) {
         logging: console.log
     }).then(curve => {
         if (curve) {
-            res.status(200).send(curve);
+            res.send(response(200, 'SUCCESSFULLY GET CURVE INFOR', curve));
         } else {
-            res.status(200).send("NO CURVE FOUND BY ID");
+            res.send(response(200, 'NO CURVE FOUND BY ID'));
         }
     }).catch(err => {
-        res.status(500).send(err);
+        res.send(response(500, 'FAILED TO FIND CURVE', err));
     });
 });
 
@@ -79,11 +80,11 @@ router.post('/curve/data', function (req, res) {
                     }
                 });
             } else {
-                res.status(200).send("NO CURVE FOUND BY ID");
+                res.send(response(200, 'NO CURVE FOUND BY ID'));
             }
         })
         .catch((err) => {
-            res.status(500).send(err);
+            res.send(response(500, 'FAILED TO FIND CURVE', err));
         })
 })
 
@@ -111,15 +112,15 @@ router.post('/curve/edit', function (req, res) {
         if (curve) {
             Object.assign(curve, req.body);
             curve.save().then(c => {
-                res.status(200).send(c);
+                res.send(response(200, 'SUCCESSFULLY EDIT CURVE', c));
             }).catch(e => {
-                res.status(500).send("ERR");
+                res.send(response(500, 'FAILED TO EDIT CURVE', e));
             })
         } else {
-            res.status(200).send("NO CURVE FOUND FOR EDIT");
+            res.send(response(200, 'NO CURVE FOUND FOR EDIT'));
         }
     }).catch(err => {
-        res.status(500).send(err);
+        res.send(response(500, 'FAILED TO FIND CURVE', err));
     });
 });
 
@@ -148,12 +149,12 @@ router.post('/curve/delete', function (req, res) {
         }
     }).then(curve => {
         if (curve) {
-            res.status(200).send(curve);
+            res.send(response(200, 'SUCCESSFULLY DELETE CURVE', curve));
         } else {
-            res.status(500).send("NO CURVE FOUND FOR DELETE");
+            res.send(response(500, 'NO CURVE FOUND FOR DELETE'));
         }
     }).catch(err => {
-        res.status(500).send(err);
+        res.send(response(500, 'FAILED TO FIND CURVE', err));
     });
 });
 
@@ -183,10 +184,10 @@ router.post('/curves', function (req, res) {
         logging: console.log
     })
         .then((curves) => {
-            res.status(200).send(curves);
+            res.send(response(200, 'SUCCESSFULLY GET CURVES', curves));
         })
         .catch((err) => {
-            res.status(500).send(err);
+            res.send(response(500, 'FAILED TO FIND CURVES', err));
         })
 })
 
