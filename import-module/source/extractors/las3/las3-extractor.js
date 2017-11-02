@@ -6,6 +6,8 @@ let CONFIG = require('../crypto-file/crypto.config').CONFIG;
 let fs = require('fs');
 let __config = require('../common-config');
 const cryptorFile = require('file-encryptor');
+const uploadCurveToS3 = require('../uploadToS3');
+let config = require('config');
 
 function writeToCurveFile(buffer, curveFileName, index, value, defaultNull) {
     buffer.count += 1;
@@ -20,6 +22,10 @@ function writeToCurveFile(buffer, curveFileName, index, value, defaultNull) {
         buffer.count = 0;
         buffer.data = "";
     }
+}
+
+function findDataset(dataset){
+    return dataset.name == this.datasetname;
 }
 
 function extractCurves(inputURL, callback) {
@@ -157,14 +163,15 @@ function extractCurves(inputURL, callback) {
         deleteFile(inputURL);
 
         if (datasets.length > 0) {
-            datasets.forEach(function (dataset) {
-                for (let i = 0; i < curves.length; i++) {
-                    fs.appendFileSync(curves[i].path, BUFFERS[curves[i].name].data);
-                    if (curves[i].datasetname == dataset.name) {
-                        dataset.curves.push(curves[i]);
-                    }
+            curves.forEach((curve)=>{
+                fs.appendFileSync(curve.path, BUFFERS[curve.name].data);
+                if(config.s3Path) {
+                    curve.path = curve.path.replace(config.dataPath + '/', '');
+                    uploadCurveToS3(curve);
                 }
-            });
+                let curveDataset = datasets.find(findDataset, curve);
+                curveDataset.curves.push(curve);
+            })
         } else {
             let dataset = {
                 name: wellInfo.wellname,
@@ -186,7 +193,7 @@ function extractCurves(inputURL, callback) {
     rl.on('err', function (err) {
         console.log(err);
         deleteFile(inputURL);
-        callbac(err, null);
+        callback(err, null);
     });
 }
 
