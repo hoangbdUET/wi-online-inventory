@@ -74,9 +74,9 @@ router.post('/curve/data', function (req, res) {
     }})
         .then((curve) => {
             if (curve) {
-                curveExport(curve, req.body.unit, (err, curve) => {
+                curveExport(curve, req.body.unit, (err, readStream) => {
                     if(!err){
-                        res.status(200).sendFile(curve.path);
+                        readStream.pipe(res);
                     }
                 });
             } else {
@@ -150,6 +150,7 @@ router.post('/curve/delete', function (req, res) {
     }).then(curve => {
         if (curve) {
             res.send(response(200, 'SUCCESSFULLY DELETE CURVE', curve));
+            //be sure to delete curve file on disk
         } else {
             res.send(response(500, 'NO CURVE FOUND FOR DELETE'));
         }

@@ -94,6 +94,7 @@ router.post('/well/delete', function (req, res) {
     }).then(well => {
         if (well) {
             res.send(response(200, 'SUCCESSFULLY DELETE WELL', well));
+            //be sure to delete all curves of well on disk
         } else {
             res.send(response(500, 'NO WELL FOUND TO DELETE'));
         }

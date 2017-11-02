@@ -64,6 +64,7 @@ router.post('/file/delete', function (req, res) {
     }).then(file => {
         if (file) {
             res.send(response(200, 'SUCCESSFULLY DELETE FILE', file));
+            //be sure to detele all curves of file on disk
         } else {
             res.send(response(500, "NO FILE FOUND FOR DELETE"));
         }

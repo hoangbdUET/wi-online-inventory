@@ -4,19 +4,20 @@ var bodyParser = require('body-parser');
 var User = require('../models').User;
 var jwt = require('jsonwebtoken');
 var md5 = require('md5');
+let response = require('./response');
 
 router.use(bodyParser.json());
 router.post('/login', function (req, res) {
     User.findOne({where: {idUser: req.body.idUser}})
         .then(function (user) {
             if (!user) {
-                res.status(401).send("User not exist");
+                res.send(response(401, 'USER DOES NOT EXISTS'));
             } else {
-                if (user.password != md5(req.body.password)) {
-                    res.status(401).send("Wrong password. Authenticate fail");
+                if (user.password != req.body.password) {
+                    res.send(response(401, 'Wrong password. Authenticate fail'));
                 } else {
                     var token = jwt.sign(req.body, 'secretKey');
-                    res.status(200).send({status:"Success", token: token});
+                    res.send(response(200, 'SUCCEEDED', {token: token}))
                 }
             }
         });
@@ -25,12 +26,11 @@ router.post('/login', function (req, res) {
 
 function authenticate() {
     return function (req, res, next) {
-        console.log(req.headers);
         var token = req.body.token || req.query.token || req.headers['x-access-token'] || req.get('Authorization');
         if (token) {
             jwt.verify(token, 'secretKey', function (err, decoded) {
                 if (err) {
-                    return res.status(401).json({code: 401, success: false, message: 'Failed to authenticate'});
+                    return res.send(response(401, 'Failed to authenticate'));
                 } else {
                     req.decoded = decoded;
                     next();
@@ -38,11 +38,11 @@ function authenticate() {
             });
 
         } else {
-            return res.status(401).send({
+            return res.status(401).send(response(401, 'No token provided' ,{
                 code: 401,
                 success: false,
                 message: 'No token provided.'
-            })
+            }))
         }
     }
 }

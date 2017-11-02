@@ -146,7 +146,7 @@ router.post('/upload/lases', upload.array('file'), function (req, res)  {
         processFileUpload(file, req.decoded, (err, result) => {
             if(err) next(err)
             else {
-                File.findById(result.idFile, {include: {all: true, include: {all: true}}}).then(fileObj => {
+                File.findById(result.idFile, {include: {model: Well, include: {all: true}}}).then(fileObj => {
                     if (fileObj) output.push(fileObj);
                     next();
                 }).catch(err => {
@@ -155,8 +155,8 @@ router.post('/upload/lases', upload.array('file'), function (req, res)  {
             }
         });
     }, (err) => {
-        if(err) res.send(response(500, 'UPLOAD FILES FAILED'));
-        else res.send(response(200, 'UPLOAD FILES SUCCESS'));
+        if(err) res.send(response(500, 'UPLOAD FILES FAILED', err));
+        else res.send(response(200, 'UPLOAD FILES SUCCESS', output));
     })
 
 })

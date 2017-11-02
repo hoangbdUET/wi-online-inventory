@@ -9,6 +9,8 @@ const cryptorFile = require('file-encryptor');
 let cypher = CONFIG.cypher;
 let secret = CONFIG.secret;
 const optionsEncode = {algorithm: cypher};
+const uploadCurveToS3 = require('../uploadToS3');
+const config = require('config');
 
 
 function getLASVersion(inputURL, callback) {
@@ -127,16 +129,21 @@ function extractCurves(inputURL, callback) {
     rl.on('end', function () {
         deleteFile(inputURL);
         wellInfo.datasetInfo = [];
-        curves.forEach(function (curve, i) {
-            fs.appendFileSync(curve.path, BUFFERS[curve.name].data);
-        });
         let dataset = {
             name: wellInfo.wellname,
             datasetKey: wellInfo.wellname,
             datasetLabel: wellInfo.wellname,
             curves: null
         }
-        dataset.curves = curves;
+        dataset.curves = curves.map(function (curve) {
+            fs.appendFileSync(curve.path, BUFFERS[curve.name].data);
+            if(config.s3Path) {
+                curve.path = curve.path.replace(config.dataPath + '/', '');
+                uploadCurveToS3(curve);
+            }
+            return curve;
+        });
+
         wellInfo.datasetInfo.push(dataset);
         callback(false, wellInfo);
     });

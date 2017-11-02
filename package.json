@@ -18,6 +18,7 @@
   "homepage": "https://github.com/hoangbdUET/wi-online-inventory#readme",
   "dependencies": {
     "async": "^2.5.0",
+    "aws-sdk": "^2.141.0",
     "body-parser": "^1.17.2",
     "byline": "^5.0.0",
     "config": "^1.26.1",
