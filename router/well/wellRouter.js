@@ -7,34 +7,9 @@ let Well = models.Well;
 let File = models.File;
 let User = models.User;
 let response = require('../response');
-let asyncLoop = require('node-async-loop');
+let wellModel = require('./well.model');
 
 router.use(bodyParser.json());
-
-function deleteCurves(curves) {
-    console.log('~~~deleteCurves~~~');
-    let fs = require('fs');
-    let deleteEmpty = require('delete-empty');
-    let config = require('config');
-    asyncLoop(curves, (curve, next)=> {
-        if(!config.s3Path) {
-            fs.unlink(curve.path, (err, rs)=>{
-                if(err) console.log(err);
-                next();
-            });
-        }
-        else {
-            next();
-        }
-
-    }, (err) => {
-        deleteEmpty(config.dataPath, (err) => {
-            if (err) console.log(err);
-        })
-        if(err) console.log('end asyncloop:' + err);
-    })
-}
-
 
 router.post('/well/new', function (req, res) {
     Well.create(req.body).then(well => {
@@ -45,91 +20,51 @@ router.post('/well/new', function (req, res) {
 });
 
 router.post('/well/info', function (req, res) {
-    Well.findOne({
-        where:{idWell : req.body.idWell},
-        include : [{
-            model: File,
-            attributes: [],
-            include : [ {
-                model: User,
-                attributes: [],
-                where: { idUser : req.decoded.idUser},
-                required: true
-            }],
-            required : true
-        }, {
-            model: models.Curve
-        }],
-        logging: console.log
-    }).then(well => {
-        if (well) {
-            res.send(response(200, 'SUCCESSFULLY GET WELL INFOR', well));
-        } else {
-            res.send(response(200, 'NO WELL FOUND BY ID'));
-        }
-    }).catch(err => {
+    wellModel.findWellById(req.body.idWell, req.decoded.idUser)
+        .then(well => {
+            if (well) {
+                res.send(response(200, 'SUCCESSFULLY GET WELL INFOR', well));
+            } else {
+                res.send(response(200, 'NO WELL FOUND BY ID'));
+            }
+        }).catch(err => {
         res.send(response(500, 'FAILED TO FIND WELL', err));
     });
 });
 
 router.post('/well/edit', function (req, res) {
-    Well.findById(req.body.idWell, {
-        include : {
-            model: File,
-            attributes: [],
-            include : [ {
-                model: User,
-                attributes: [],
-                where: { idUser : req.decoded.idUser},
-                required: true
-            }],
-            required : true
-        },
-        logging: console.log
-    }).then(well => {
-        if (well) {
-            Object.assign(well, req.body);
-            well.save().then(c => {
-                res.send(response(200, 'SUCCESSFULLY EDIT WELL', c));
-            }).catch(e => {
-                res.send(response(500, 'FAILED TO EDIT WELL', e));
-            })
-        } else {
-            res.send(response(200, 'NO WELL FOUND TO EDIT'));
-        }
-    }).catch(err => {
+    wellModel.findWellById(req.body.idWell, req.decoded.idUser)
+        .then(well => {
+            if (well) {
+                Object.assign(well, req.body);
+                well.save().then(c => {
+                    res.send(response(200, 'SUCCESSFULLY EDIT WELL', c));
+                }).catch(e => {
+                    res.send(response(500, 'FAILED TO EDIT WELL', e));
+                })
+            } else {
+                res.send(response(200, 'NO WELL FOUND TO EDIT'));
+            }
+        }).catch(err => {
         res.send(response(500, 'FAILED TO FIND WELL', err));
     });
 });
 
 router.post('/well/delete', function (req, res) {
-    Well.findById(req.body.idWell, {
-        include : [{
-            model: File,
-            attributes: [],
-            include : [ {
-                model: User,
-                attributes: [],
-                where: { idUser : req.decoded.idUser},
-                required: true
-            }],
-            required : true
-        }, {
-            model: models.Curve
-        }]
-    }).then(well => {
-        if (well) {
-            let curves = well.curves;
-            well.destroy({paranoid: true})
-                .then((rs)=>{
-                    deleteCurves(curves);
-                    res.send(response(200, 'SUCCESSFULLY DELETE WELL', rs));
+    wellModel.findWellById(req.body.idWell, req.decoded.idUser)
+        .then(well => {
+            if (well) {
+                wellModel.deleteWell(well, (err, rs)=>{
+                    if(!err) res.send(response(200, 'SUCCESSFULLY DELETE WELL', rs));
+                    else {
+                        console.log(err);
+                        res.send(response(200, 'FAILED TO DELETE WELL: ', err));
+                    }
                 })
-            //be sure to delete all curves of well on disk
-        } else {
-            res.send(response(500, 'NO WELL FOUND TO DELETE'));
-        }
-    }).catch(err => {
+            } else {
+                res.send(response(500, 'NO WELL FOUND TO DELETE'));
+            }
+        }).catch(err => {
         res.send(response(500, 'FAILED TO FIND WELL', err));
     });
 });
