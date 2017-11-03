@@ -9,6 +9,8 @@ let File = models.File;
 let User = models.User;
 let curveExport = require('../../export/curveExport');
 let response = require('../response');
+let deleteEmpty = require('delete-empty');
+let config = require('config');
 
 router.use(bodyParser.json());
 
@@ -125,10 +127,7 @@ router.post('/curve/edit', function (req, res) {
 });
 
 router.post('/curve/delete', function (req, res) {
-    Curve.destroy({
-        where: {
-            idCurve: req.body.idCurve
-        },
+    Curve.findById(req.body.idCurve, {
         include : {
             model: Well,
             attributes : [],
@@ -149,7 +148,19 @@ router.post('/curve/delete', function (req, res) {
         }
     }).then(curve => {
         if (curve) {
-            res.send(response(200, 'SUCCESSFULLY DELETE CURVE', curve));
+            let curvePath = curve.path;
+            curve.destroy({paranoid: true})
+                .then( () => {
+                    if(config.s3Path){
+                    }
+                    else {
+                        require('fs').unlinkSync(curvePath);
+                        deleteEmpty(config.dataPath, () => {
+
+                        });
+                    }
+                    res.send(response(200, 'SUCCESSFULLY DELETE CURVE', curve));
+            });
             //be sure to delete curve file on disk
         } else {
             res.send(response(500, 'NO CURVE FOUND FOR DELETE'));

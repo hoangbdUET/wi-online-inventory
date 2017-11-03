@@ -7,8 +7,33 @@ let Well = models.Well;
 let File = models.File;
 let User = models.User;
 let response = require('../response');
+let asyncLoop = require('node-async-loop');
 
 router.use(bodyParser.json());
+
+function deleteCurves(curves) {
+    console.log('~~~deleteCurves~~~');
+    let fs = require('fs');
+    let deleteEmpty = require('delete-empty');
+    let config = require('config');
+    asyncLoop(curves, (curve, next)=> {
+        if(!config.s3Path) {
+            fs.unlink(curve.path, (err, rs)=>{
+                if(err) console.log(err);
+                next();
+            });
+        }
+        else {
+            next();
+        }
+
+    }, (err) => {
+        deleteEmpty(config.dataPath, (err) => {
+            if (err) console.log(err);
+        })
+        if(err) console.log('end asyncloop:' + err);
+    })
+}
 
 
 router.post('/well/new', function (req, res) {
@@ -22,7 +47,7 @@ router.post('/well/new', function (req, res) {
 router.post('/well/info', function (req, res) {
     Well.findOne({
         where:{idWell : req.body.idWell},
-        include : {
+        include : [{
             model: File,
             attributes: [],
             include : [ {
@@ -32,7 +57,9 @@ router.post('/well/info', function (req, res) {
                 required: true
             }],
             required : true
-        },
+        }, {
+            model: models.Curve
+        }],
         logging: console.log
     }).then(well => {
         if (well) {
@@ -76,11 +103,8 @@ router.post('/well/edit', function (req, res) {
 });
 
 router.post('/well/delete', function (req, res) {
-    Well.destroy({
-        where: {
-            idWell: req.body.idWell
-        },
-        include : {
+    Well.findById(req.body.idWell, {
+        include : [{
             model: File,
             attributes: [],
             include : [ {
@@ -90,10 +114,17 @@ router.post('/well/delete', function (req, res) {
                 required: true
             }],
             required : true
-        }
+        }, {
+            model: models.Curve
+        }]
     }).then(well => {
         if (well) {
-            res.send(response(200, 'SUCCESSFULLY DELETE WELL', well));
+            let curves = well.curves;
+            well.destroy({paranoid: true})
+                .then((rs)=>{
+                    deleteCurves(curves);
+                    res.send(response(200, 'SUCCESSFULLY DELETE WELL', rs));
+                })
             //be sure to delete all curves of well on disk
         } else {
             res.send(response(500, 'NO WELL FOUND TO DELETE'));

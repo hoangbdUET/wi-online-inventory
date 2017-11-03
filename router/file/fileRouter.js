@@ -4,9 +4,37 @@ let router = express.Router();
 let bodyParser = require('body-parser');
 let models = require('../../models/index');
 let File = models.File;
+let Well = models.Well;
+let Curve = models.Curve;
 let response = require('../response');
 
 router.use(bodyParser.json());
+
+function deleteCurves(curves) {
+    console.log('~~~deleteCurves~~~');
+    let fs = require('fs');
+    let deleteEmpty = require('delete-empty');
+    let config = require('config');
+    let asyncLoop = require('node-async-loop');
+    asyncLoop(curves, (curve, next)=> {
+        console.log(curve);
+        if(!config.s3Path) {
+            fs.unlink(curve.path, (err, rs)=>{
+                if(err) console.log(err);
+                next();
+            });
+        }
+        else {
+            next();
+        }
+
+    }, (err) => {
+        deleteEmpty(config.dataPath, (err) => {
+            if (err) console.log(err);
+        })
+        if(err) console.log('end asyncloop:' + err);
+    })
+}
 
 router.post('/file/new', function (req, res) {
     File.create(req.body).then(file => {
@@ -56,14 +84,29 @@ router.post('/file/edit', function (req, res) {
 });
 
 router.post('/file/delete', function (req, res) {
-    File.destroy({
+    File.findOne({
         where: {
             idUser: req.decoded.idUser,
             idFile: req.body.idFile
+        },
+        include: {
+            model: Well,
+            include: {
+                model: Curve
+            }
         }
     }).then(file => {
         if (file) {
-            res.send(response(200, 'SUCCESSFULLY DELETE FILE', file));
+            let curves;
+            file.wells.forEach((well)=> {
+                if(!curves) curves = well.curves;
+                else curves.push.apply(curves, well.curves);
+            });
+            file.destroy()
+                .then(() => {
+                    deleteCurves(curves);
+                    res.send(response(200, 'SUCCESSFULLY DELETE FILE', file));
+                })
             //be sure to detele all curves of file on disk
         } else {
             res.send(response(500, "NO FILE FOUND FOR DELETE"));
