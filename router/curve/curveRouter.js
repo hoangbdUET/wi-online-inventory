@@ -4,7 +4,7 @@ let router = express.Router();
 let bodyParser = require('body-parser');
 let models = require('../../models/index');
 let Curve = models.Curve;
-let curveExport = require('../../export/curveExport');
+let curveExport = require('./curveExport');
 let response = require('../response');
 let curveModel= require('./curve.model');
 

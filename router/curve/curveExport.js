@@ -59,6 +59,7 @@ function convertCurve(path, originUnit, newUnit, callback) {
     });
 
     lr.on('end', function () {
+        fs.unlink(path, ()=>{});
         fs.appendFileSync(newPath, buffer.data);
         callback(null, newPath);
     });
@@ -87,14 +88,14 @@ module.exports = function (curve, unit, callback) {
                 if(err && err.code == 'NotFound'){
                     console.log('file with ' + unit + ' does not exists');
                     console.log('curvePath: ' + curve.path);
-                    let originUnitFileOnDisk = config.dataPath + '/' + curve.path;
-                    let newUnitFileOnDisk = config.dataPath + '/' + filePath;
-                    console.log('originUnitFileOnDisk: ' + originUnitFileOnDisk);
-                    console.log('newUnitFileOnDisk: ' + newUnitFileOnDisk);
+                    let tempPath =  fs.mkdtempSync(require('os').tmpdir());
+                    console.log('tempPath: ' + tempPath);
+                    let originUnitFileOnDisk = tempPath + '/' + curve.alias + '.txt';
 
                     let wstream = fs.createWriteStream(originUnitFileOnDisk);
                     getCurveDataFromS3(curve.path).pipe(wstream);
                     wstream.on('finish', () => {
+                        console.log('----------');
                         convertCurve(originUnitFileOnDisk, curve.unit, unit, (err, path)=> {
                             if(!err){
                                 console.log('convert done!!!');
@@ -107,7 +108,9 @@ module.exports = function (curve, unit, callback) {
                                     console.log('upload done!!!');
                                     if(!err) {
                                         callback(null, getCurveDataFromS3(filePath));
-                                        fs.unlink(newUnitFileOnDisk, ()=>{});
+                                        fs.unlink(path, ()=>{
+                                            fs.rmdir(tempPath, ()=>{});
+                                        });
                                     }
                                 })
                             }
@@ -115,7 +118,7 @@ module.exports = function (curve, unit, callback) {
                     })
                 } else {
                     console.log('file with ' + unit + ' exists');
-                    return callback(null, getCurveDataFromS3(curve.path));
+                    return callback(null, getCurveDataFromS3(filePath));
                 }
             })
         }
