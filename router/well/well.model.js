@@ -4,6 +4,7 @@ let Well = models.Well;
 let File = models.File;
 let User = models.User;
 let Curve = models.Curve;
+let curveModel = require('../curve/curve.model');
 
 function findWellById(idWell, idUser) {
     return Well.findById(
@@ -28,36 +29,29 @@ function findWellById(idWell, idUser) {
 
 function deleteCurves(curves) {
     console.log('~~~deleteCurves~~~');
-    let fs = require('fs');
-    let deleteEmpty = require('delete-empty');
-    let config = require('config');
     let asyncLoop = require('node-async-loop');
     asyncLoop(curves, (curve, next)=> {
-        if(!config.s3Path) {
-            fs.unlink(curve.path, (err, rs)=>{
-                if(err) console.log(err);
-                next();
-            });
-        }
-        else {
-            next();
-        }
+        curveModel.deleteCurveFile(curve.path);
+        next();
     }, (err) => {
-        deleteEmpty(config.dataPath, (err) => {
-            if (err) console.log(err);
-        })
         if(err) console.log('end asyncloop:' + err);
     })
 }
 
-function deleteWell(well, callback) {
-    let curves = well.curves;
-    well.destroy({paranoid: true})
-        .then((rs)=>{
-            deleteCurves(curves);
-            callback(null, rs);
+function deleteWell(idWell, idUser, callback) {
+    findWellById(idWell, idUser)
+        .then((well) => {
+            let curves = well.curves;
+            well.destroy({paranoid: true})
+                .then((rs)=>{
+                    deleteCurves(curves);
+                    callback(null, rs);
+                })
+                .catch((err)=>{
+                    callback(err, null);
+                })
         })
-        .catch((err)=>{
+        .catch((err) => {
             callback(err, null);
         })
 }

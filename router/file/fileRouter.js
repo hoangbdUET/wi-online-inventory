@@ -7,31 +7,17 @@ let File = models.File;
 let Well = models.Well;
 let Curve = models.Curve;
 let response = require('../response');
+let curveModel = require('../curve/curve.model');
 
 router.use(bodyParser.json());
 
 function deleteCurves(curves) {
     console.log('~~~deleteCurves~~~');
-    let fs = require('fs');
-    let deleteEmpty = require('delete-empty');
-    let config = require('config');
     let asyncLoop = require('node-async-loop');
     asyncLoop(curves, (curve, next)=> {
-        console.log(curve);
-        if(!config.s3Path) {
-            fs.unlink(curve.path, (err, rs)=>{
-                if(err) console.log(err);
-                next();
-            });
-        }
-        else {
-            next();
-        }
-
+        curveModel.deleteCurveFile(curve.path);
+        next();
     }, (err) => {
-        deleteEmpty(config.dataPath, (err) => {
-            if (err) console.log(err);
-        })
         if(err) console.log('end asyncloop:' + err);
     })
 }

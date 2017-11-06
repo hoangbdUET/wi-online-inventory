@@ -51,21 +51,12 @@ router.post('/well/edit', function (req, res) {
 });
 
 router.post('/well/delete', function (req, res) {
-    wellModel.findWellById(req.body.idWell, req.decoded.idUser)
-        .then(well => {
-            if (well) {
-                wellModel.deleteWell(well, (err, rs)=>{
-                    if(!err) res.send(response(200, 'SUCCESSFULLY DELETE WELL', rs));
-                    else {
-                        console.log(err);
-                        res.send(response(200, 'FAILED TO DELETE WELL: ', err));
-                    }
-                })
-            } else {
-                res.send(response(500, 'NO WELL FOUND TO DELETE'));
-            }
-        }).catch(err => {
-        res.send(response(500, 'FAILED TO FIND WELL', err));
+    wellModel.deleteWell(req.body.idWell, req.decoded.idUser, (err, rs) => {
+        if(!err) res.send(response(200, 'SUCCESSFULLY DELETE WELL', rs));
+        else {
+            console.log(err);
+            res.send(response(200, 'FAILED TO DELETE WELL: ', err));
+        }
     });
 });
 
