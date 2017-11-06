@@ -13,6 +13,7 @@ router.use(bodyParser.json());
 
 function deleteCurves(curves) {
     console.log('~~~deleteCurves~~~');
+    if(!curves) return;
     let asyncLoop = require('node-async-loop');
     asyncLoop(curves, (curve, next)=> {
         curveModel.deleteCurveFile(curve.path);
