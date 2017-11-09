@@ -143,6 +143,7 @@ router.post('/upload/lases', upload.array('file'), function (req, res)  {
     console.log(req.files);
     let output = new Array();
     asyncLoop(req.files, (file, next) => {
+        if(!file) return next('NO FILE CHOSEN!!!');
         processFileUpload(file, req.decoded, (err, result) => {
             if(err) next(err)
             else {

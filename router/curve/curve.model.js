@@ -39,25 +39,50 @@ function findCurveById(idCurve, idUser) {
 
 function deleteCurveFile(path) {
     console.log('~~~deleteCurveFile~~~');
+    let curveName = path.slice(path.lastIndexOf('/') + 1, path.length);
+    let dir = path.slice(0, path.lastIndexOf('/') + 1);
     if(config.s3Path){
+        //be sure to delete all unit exported curve files
         let params = {
             Bucket: "wi-inventory",
-            Key: path
+            // Key: path
+            Delimiter: '/',
+            Prefix: dir
         }
-        s3.deleteObject(params, (err) => {
-            if(err) console.log("s3 delete object failed " + err);
-        });
+        s3.listObjects(params, (err, data) => {
+            let deleteParams = {
+                Bucket: "wi-inventory",
+                Delete: {Objects:[]}
+            }
+            data.Contents.forEach((content) => {
+                if(content.Key.indexOf(curveName) != -1) {
+                    console.log(content.Key + ' will be deleted.');
+                    deleteParams.Delete.Objects.push({Key: content.Key});
+                }
+            })
 
+            s3.deleteObjects(deleteParams, (err)=>{
+                if(err) console.log("s3 delete object failed " + err);
+                else console.log("s3 delete object done");
+            })
+        })
     }
     else {
-        require('fs').unlink(path, (err, rs) => {
-            if(!err) {
-                let deleteEmpty = require('delete-empty');
-                deleteEmpty(config.dataPath, () => {
-                });
-            }
-            else console.log(err);
-        });
+        //be sure to delete all unit exported curve files
+        let fs = require('fs');
+        fs.readdir(dir, (err, files) => {
+            files.forEach((file)=> {
+                if(file.indexOf(curveName) != -1) fs.unlink(dir + file, (err)=> {
+                    if(!err) {
+                        let deleteEmpty = require('delete-empty');
+                        deleteEmpty(config.dataPath, () => {
+                        });
+                    }
+                    else console.log(err);
+                })
+            })
+
+        })
     }
 }
 

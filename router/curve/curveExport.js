@@ -41,6 +41,8 @@ function convertCurve(path, originUnit, newUnit, callback) {
     console.log('~~~convertCurve~~~');
     let fileName = path.substring(path.lastIndexOf('/') + 1, path.length);
     let newPath = path.substring(0, path.lastIndexOf('/') + 1) + newUnit + '_' + fileName;
+    console.log("path: " + path);
+    console.log("newPath: " + newPath);
     let lr = new lineReader(path);
     let buffer = new Object();
     buffer.count = 0;
@@ -59,7 +61,6 @@ function convertCurve(path, originUnit, newUnit, callback) {
     });
 
     lr.on('end', function () {
-        fs.unlink(path, ()=>{});
         fs.appendFileSync(newPath, buffer.data);
         callback(null, newPath);
     });
@@ -99,6 +100,7 @@ module.exports = function (curve, unit, callback) {
                         convertCurve(originUnitFileOnDisk, curve.unit, unit, (err, path)=> {
                             if(!err){
                                 console.log('convert done!!!');
+                                fs.unlink(originUnitFileOnDisk);
                                 let uploadParams = {
                                     Bucket: 'wi-inventory',
                                     Key: filePath,
@@ -128,7 +130,7 @@ module.exports = function (curve, unit, callback) {
             }
             else {
                 convertCurve(curve.path, curve.unit, unit, (err, path)=> {
-                    if(!err) fs.createReadStream(path);
+                    if(!err) callback(null, fs.createReadStream(path));
                 })
             }
         }
