@@ -1,30 +1,15 @@
 'use strict'
 
-const lineReader = require('line-by-line');
 const unitConversion = require('./unitConversion');
 const fs = require('fs');
 const AWS = require('aws-sdk');
 const config = require('config');
+const readline = require('readline');
 
 let credentials = new AWS.SharedIniFileCredentials({profile: 'wi_inventory'});
 AWS.config.credentials = credentials;
 let s3 = new AWS.S3({apiVersion: '2006-03-01'});
 
-
-function writeToCurveFile(buffer, curveFileName, index, value, defaultNull) {
-    buffer.count += 1;
-    if (value == defaultNull) {
-        buffer.data += index + " null" + "\n";
-    }
-    else {
-        buffer.data += index + " " + value + "\n";
-    }
-    if (buffer.count >= 1000 || buffer.end == true) {
-        fs.appendFileSync(curveFileName, buffer.data);
-        buffer.count = 0;
-        buffer.data = "";
-    }
-}
 
 function getCurveDataFromS3(path) {
     console.log('~~~getCurveDataFromS3~~~');
@@ -37,33 +22,53 @@ function getCurveDataFromS3(path) {
     return readStream;
 }
 
-function convertCurve(path, originUnit, newUnit, callback) {
+function convertCurve(curve, newUnit, callback) {
     console.log('~~~convertCurve~~~');
-    let fileName = path.substring(path.lastIndexOf('/') + 1, path.length);
-    let newPath = path.substring(0, path.lastIndexOf('/') + 1) + newUnit + '_' + fileName;
-    console.log("path: " + path);
-    console.log("newPath: " + newPath);
-    let lr = new lineReader(path);
-    let buffer = new Object();
-    buffer.count = 0;
-    buffer.data = '';
-    buffer.end = false;
     let index = 0;
+    let tempPath =  fs.mkdtempSync(require('os').tmpdir());
 
-    lr.on('error', function (err) {
-        console.log('loi roi: ' + err);
-    });
-
-    lr.on('line', function (line) {
-        let value = parseFloat(line.trim().split(' ')[1]);
-        writeToCurveFile(buffer, newPath, index, unitConversion.convert(value, originUnit, newUnit), -9999);
-        index++;
-    });
-
-    lr.on('end', function () {
-        fs.appendFileSync(newPath, buffer.data);
-        callback(null, newPath);
-    });
+    if(config.s3Path){
+        let newKey = curve.path.substring(0, curve.path.lastIndexOf('/') + 1) + newUnit + '_' + curve.alias + '.txt';
+        let pathOnDisk = tempPath + '/' + newUnit + '_' + curve.alias + '.txt';
+        const writeStream = fs.createWriteStream(pathOnDisk);
+        const rl = readline.createInterface({
+            input: getCurveDataFromS3(curve.path)
+        })
+        rl.on('line', (line) => {
+            writeStream.write(index + ' ' + unitConversion.convert(parseFloat(line.trim().split(' ')[1]), curve.unit, newUnit) + '\n');
+            index++;
+        })
+        rl.on('close', ()=> {
+            let uploadParams = {
+                Bucket: 'wi-inventory',
+                Key: newKey,
+                Body: fs.createReadStream(pathOnDisk)
+            };
+            s3.upload(uploadParams, (err, data)=> {
+                console.log('upload done!!!');
+                if(!err) {
+                    callback(null, newKey);
+                    fs.unlink(pathOnDisk, ()=>{
+                        fs.rmdir(tempPath, ()=>{});
+                    });
+                }
+            })
+        })
+    }
+    else {
+        let newPath = curve.path.substring(0, curve.path.lastIndexOf('/') + 1) + newUnit + '_' + curve.alias + '.txt';
+        const writeStream = fs.createWriteStream(newPath);
+        const rl = readline.createInterface({
+            input: fs.createReadStream(curve.path)
+        })
+        rl.on('line', (line) => {
+            writeStream.write(index + ' ' + unitConversion.convert(parseFloat(line.trim().split(' ')[1]), curve.unit, newUnit) + '\n');
+            index++;
+        })
+        rl.on('close', ()=> {
+            callback(null, newPath);
+        })
+    }
 }
 
 module.exports = function (curve, unit, callback) {
@@ -89,34 +94,12 @@ module.exports = function (curve, unit, callback) {
                 if(err && err.code == 'NotFound'){
                     console.log('file with ' + unit + ' does not exists');
                     console.log('curvePath: ' + curve.path);
-                    let tempPath =  fs.mkdtempSync(require('os').tmpdir());
-                    console.log('tempPath: ' + tempPath);
-                    let originUnitFileOnDisk = tempPath + '/' + curve.alias + '.txt';
 
-                    let wstream = fs.createWriteStream(originUnitFileOnDisk);
-                    getCurveDataFromS3(curve.path).pipe(wstream);
-                    wstream.on('finish', () => {
-                        console.log('----------');
-                        convertCurve(originUnitFileOnDisk, curve.unit, unit, (err, path)=> {
-                            if(!err){
-                                console.log('convert done!!!');
-                                fs.unlink(originUnitFileOnDisk);
-                                let uploadParams = {
-                                    Bucket: 'wi-inventory',
-                                    Key: filePath,
-                                    Body: fs.createReadStream(path)
-                                };
-                                s3.upload(uploadParams, (err, data)=> {
-                                    console.log('upload done!!!');
-                                    if(!err) {
-                                        callback(null, getCurveDataFromS3(filePath));
-                                        fs.unlink(path, ()=>{
-                                            fs.rmdir(tempPath, ()=>{});
-                                        });
-                                    }
-                                })
-                            }
-                        })
+                    convertCurve(curve, unit, (err, path)=> {
+                        if(!err){
+                            console.log('convert done!!!');
+                            callback(null, getCurveDataFromS3(path));
+                        }
                     })
                 } else {
                     console.log('file with ' + unit + ' exists');
@@ -129,8 +112,9 @@ module.exports = function (curve, unit, callback) {
                 callback(null, fs.createReadStream(filePath));
             }
             else {
-                convertCurve(curve.path, curve.unit, unit, (err, path)=> {
+                convertCurve(curve, unit, (err, path)=> {
                     if(!err) callback(null, fs.createReadStream(path));
+                    else console.log(err);
                 })
             }
         }
