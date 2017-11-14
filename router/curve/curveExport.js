@@ -25,9 +25,9 @@ function getCurveDataFromS3(path) {
 function convertCurve(curve, newUnit, callback) {
     console.log('~~~convertCurve~~~');
     let index = 0;
-    let tempPath =  fs.mkdtempSync(require('os').tmpdir());
 
     if(config.s3Path){
+        let tempPath =  fs.mkdtempSync(require('os').tmpdir());
         let newKey = curve.path.substring(0, curve.path.lastIndexOf('/') + 1) + newUnit + '_' + curve.alias + '.txt';
         let pathOnDisk = tempPath + '/' + newUnit + '_' + curve.alias + '.txt';
         const writeStream = fs.createWriteStream(pathOnDisk);

@@ -1,13 +1,13 @@
 "use strict";
 let models = require('./models/index');
 let User = models.User;
-
+let md5 = require('md5');
 addUser();
 
 function addUser() {
     let Admin = {
         username: "admin",
-        password: "c4ca4238a0b923820dcc509a6f75849b",
+        password: md5('1'),
         role: "1"
     }
     User.findOrCreate({where: {username: "admin"}, defaults: Admin}).then(() => {

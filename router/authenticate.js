@@ -7,13 +7,15 @@ var md5 = require('md5');
 let response = require('./response');
 
 router.use(bodyParser.json());
+
 router.post('/login', function (req, res) {
-    User.findOne({where: {idUser: req.body.idUser}})
+    User.findOne({where: {username: req.body.username}})
         .then(function (user) {
             if (!user) {
                 res.send(response(401, 'USER DOES NOT EXISTS'));
             } else {
-                if (user.password != req.body.password) {
+                console.log(user.password + '       ' + md5(req.body.password));
+                if (user.password != md5(req.body.password)) {
                     res.send(response(401, 'Wrong password. Authenticate fail'));
                 } else {
                     var token = jwt.sign(req.body, 'secretKey');
@@ -23,7 +25,6 @@ router.post('/login', function (req, res) {
         });
 });
 
-
 function authenticate() {
     return function (req, res, next) {
         var token = req.body.token || req.query.token || req.headers['x-access-token'] || req.get('Authorization');
@@ -32,8 +33,16 @@ function authenticate() {
                 if (err) {
                     return res.send(response(401, 'Failed to authenticate'));
                 } else {
-                    req.decoded = decoded;
-                    next();
+                    User.findOne({
+                        where: {
+                            username: decoded.username
+                        }
+                    }).then((user) => {
+                        req.decoded = {};
+                        req.decoded.idUser = user.idUser;
+                        next();
+                    })
+
                 }
             });
 

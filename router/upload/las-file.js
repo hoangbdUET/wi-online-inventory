@@ -21,7 +21,7 @@ var storage = multer.diskStorage({
     }
 });
 
-var upload = multer({storage: storage});
+let upload = multer({storage: storage});
 
 
 function importToDB(inputWell, file, userInfor, callback) {
