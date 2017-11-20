@@ -1,3 +1,5 @@
+"use strict";
+
 const express = require('express');
 const router = express.Router();
 var bodyParser = require('body-parser');
@@ -38,25 +40,36 @@ function authenticate() {
                             username: decoded.username
                         }
                     }).then((user) => {
-                        req.decoded = {};
-                        req.decoded.idUser = user.idUser;
-                        next();
+                        if (user) {
+                            req.decoded = user.toJSON();
+                            next();
+                        } else {
+                            User.create({
+                                username: decoded.username,
+                                password: '========================================'
+                            }).then(user => {
+                                req.decoded = user.toJSON();
+                                next();
+                            }).catch(err => {
+                                return res.send(response(401, 'Failed to authenticate'));
+                            })
+                        }
                     })
 
                 }
             });
 
         } else {
-            return res.status(401).send(response(401, 'No token provided' ,{
+            return res.status(401).send(response(401, 'No token provided', {
                 code: 401,
                 success: false,
                 message: 'No token provided.'
-            }))
+            }));
         }
     }
 }
 
 module.exports = {
-    router : router,
-    authenticate : authenticate
+    router: router,
+    authenticate: authenticate
 }
