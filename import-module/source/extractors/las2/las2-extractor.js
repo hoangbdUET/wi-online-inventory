@@ -54,11 +54,9 @@ function getLASVersion(inputURL, callback) {
 function extractCurves(inputURL, callback) {
     let rl = new readline(inputURL);
     let sectionName = "";
-    let datasetsName = [];
     let curves = [];
     let count = 0;
     let wellInfo = new Object();
-    let tmpname = "Data";
     let filePaths = new Object();
     let BUFFERS = new Object();
     let fields = [];
@@ -72,31 +70,22 @@ function extractCurves(inputURL, callback) {
         } else if(/^#/.test(line)){
             return;
         } else if (sectionName == '~W') {
-            let start = "";
-            let stop = "";
-            let step = "";
-            let NULL = "";
             if ((/WELL/).test(line) && !/UWI/.test(line)) {
                 wellInfo.wellname = line.substring(line.indexOf('.') + 1, line.indexOf(':')).trim();
             } else if (/STRT/.test(line)) {
-                start = line.substring(line.indexOf('.') + 2, line.indexOf(':')).trim();
-                wellInfo.start = start;
+                wellInfo.start = line.substring(line.indexOf('.') + 2, line.indexOf(':')).trim();
             } else if (/STOP/.test(line)) {
-                stop = line.substring(line.indexOf('.') + 2, line.indexOf(':')).trim();
-                wellInfo.stop = stop;
+                wellInfo.stop = line.substring(line.indexOf('.') + 2, line.indexOf(':')).trim();
             } else if (/STEP/.test(line)) {
-                step = line.substring(line.indexOf('.') + 2, line.indexOf(':')).trim();
-                wellInfo.step = step;
+                wellInfo.step = line.substring(line.indexOf('.') + 2, line.indexOf(':')).trim();
             } else if (/NULL/.test(line)) {
-                NULL = line.substring(line.indexOf('.') + 1, line.indexOf(':')).trim();
-                wellInfo.null = NULL;
+                wellInfo.null = line.substring(line.indexOf('.') + 1, line.indexOf(':')).trim();
             }
         } else if (sectionName == '~C') {
             let curve = new Object();
-            let curveName = "";
-            let unit = "";
-            curveName = line.substring(0, line.indexOf('.')).trim();
-            unit = line.substring(line.indexOf('.') + 1, line.indexOf(':')).trim();
+
+            let curveName = line.substring(0, line.indexOf('.')).trim();
+            let unit = line.substring(line.indexOf('.') + 1, line.indexOf(':')).trim();
             if (unit.indexOf("00") != -1) unit = unit.substring(0, unit.indexOf("00"));
             curve.name = curveName;
             curve.unit = unit;
