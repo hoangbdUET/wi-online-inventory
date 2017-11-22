@@ -8,7 +8,8 @@ module.exports = function (sequelize, DataTypes) {
         name: {
             type: DataTypes.STRING,
             allowNull: false,
-            defaultValue: ""
+            defaultValue: "",
+            unique: 'name-idFile'
         },
         startDepth: {
             type: DataTypes.DOUBLE,
