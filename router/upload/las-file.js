@@ -45,7 +45,7 @@ function importToDB(inputWell, file, userInfor, callback) {
                         let curves = dataset.curves;
                         console.log('curves: ' + curves);
                         asyncLoop(curves, function (curve, next) {
-                            if(curve) {
+                            if (curve) {
                                 curve.idWell = well.idWell;
                                 Curve.create({
                                     name: curve.datasetname + "_" + curve.name,
@@ -62,11 +62,11 @@ function importToDB(inputWell, file, userInfor, callback) {
                             }
                             else next();
                         }, function (err) {
-                            if(err) nextDataset(err);
+                            if (err) nextDataset(err);
                             else nextDataset();
                         });
                     }, (err) => {
-                        if(err) {
+                        if (err) {
                             console.log("import curve failed: ", err);
                             callback(err, null);
                         }
@@ -82,7 +82,8 @@ function importToDB(inputWell, file, userInfor, callback) {
                 })
         })
         .catch((err) => {
-        console.log('file creation failed: ' + err);
+            callback(err, null);
+            console.log('file creation failed: ' + err);
         })
 }
 
@@ -104,7 +105,7 @@ function processFileUpload(file, userInfor, callback) {
                         else {
                             console.log("las 3 extracted");
                             importToDB(result, file, userInfor, (err, result) => {
-                                if(err) {
+                                if (err) {
                                     console.log("import to db failed");
                                     callback(err, null);
                                 }
@@ -138,14 +139,14 @@ function processFileUpload(file, userInfor, callback) {
     }
 }
 
-router.post('/upload/lases', upload.array('file'), function (req, res)  {
+router.post('/upload/lases', upload.array('file'), function (req, res) {
     wi_import.setBasePath(config.dataPath);
     console.log(req.files);
     let output = new Array();
     asyncLoop(req.files, (file, next) => {
-        if(!file) return next('NO FILE CHOSEN!!!');
+        if (!file) return next('NO FILE CHOSEN!!!');
         processFileUpload(file, req.decoded, (err, result) => {
-            if(err) next(err)
+            if (err) next(err)
             else {
                 File.findById(result.idFile, {include: {model: Well, include: {all: true}}}).then(fileObj => {
                     if (fileObj) output.push(fileObj);
@@ -156,7 +157,7 @@ router.post('/upload/lases', upload.array('file'), function (req, res)  {
             }
         });
     }, (err) => {
-        if(err) res.send(response(500, 'UPLOAD FILES FAILED', err));
+        if (err) res.send(response(500, 'UPLOAD FILES FAILED', err));
         else res.send(response(200, 'UPLOAD FILES SUCCESS', output));
     })
 
