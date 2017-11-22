@@ -52,12 +52,12 @@ models.forEach(function (model) {
     });
 
     m.Dataset.hasMany(m.Curve, {
-        foreignKey: {name: "idWell", allowNull: false, unique: "name-idWell"},
+        foreignKey: {name: "idDataset", allowNull: false},
         onDelete: 'CASCADE'
     });
 
     m.Curve.belongsTo(m.Dataset, {
-        foreignKey: {name: "idWell", allowNull: false}
+        foreignKey: {name: "idDataset", allowNull: false}
     })
 })(module.exports);
 module.exports.sequelize = sequelize;

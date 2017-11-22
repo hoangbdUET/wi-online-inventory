@@ -4,8 +4,6 @@ let router = express.Router();
 let bodyParser = require('body-parser');
 let models = require('../../models/index');
 let Well = models.Well;
-let File = models.File;
-let User = models.User;
 let response = require('../response');
 let wellModel = require('./well.model');
 
@@ -63,18 +61,8 @@ router.post('/well/delete', function (req, res) {
 router.post('/wells', function (req, res) {
     Well.findAll({
         where: {
-            idFile: req.body.idFile,
-         },
-        include : [{
-            model: File,
-            attributes: [],
-            where : { idFile: req.body.idFile },
-            include : [ {
-                model: User,
-                attributes: [],
-                where: { idUser : req.decoded.idUser}
-            }]
-        }]
+            idUser: req.decoded.idUser,
+         }
     })
         .then((wells) => {
             res.send(response(200, 'SUCCESSFULLY GET WELLS', wells));

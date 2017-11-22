@@ -1,7 +1,7 @@
 'use strict'
 let models = require('../../models');
 let Well = models.Well;
-let File = models.File;
+let Dataset = models.Dataset;
 let User = models.User;
 let Curve = models.Curve;
 let config = require('config');
@@ -16,11 +16,11 @@ let s3 = new AWS.S3({apiVersion: '2006-03-01'});
 function findCurveById(idCurve, idUser) {
     return Curve.findById(idCurve, {
         include : {
-            model: Well,
+            model: Dataset,
             attributes : [],
             required: true,
             include: {
-                model: File,
+                model: Well,
                 attributes: [],
                 required: true,
                 include: {
@@ -74,9 +74,9 @@ function deleteCurveFile(path) {
             files.forEach((file)=> {
                 if(file.indexOf(curveName) != -1) fs.unlink(dir + file, (err)=> {
                     if(!err) {
-                        let deleteEmpty = require('delete-empty');
-                        deleteEmpty(config.dataPath, () => {
-                        });
+                        // let deleteEmpty = require('delete-empty');
+                        // deleteEmpty(config.dataPath, () => {
+                        // });
                     }
                     else console.log(err);
                 })
@@ -98,17 +98,17 @@ function deleteCurve(curve, callback) {
         })
 }
 
-function getCurves(idWell, idUser) {
+function getCurves(idDataset, idUser) {
     return Curve.findAll({
         where: {
-            idWell: idWell
+            idDataset: idDataset
         },
         include : {
-            model: Well,
+            model: Dataset,
             attributes : [],
             required: true,
             include: {
-                model: File,
+                model: Well,
                 attributes: [],
                 required: true,
                 include: {

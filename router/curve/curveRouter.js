@@ -84,7 +84,7 @@ router.post('/curve/delete', function (req, res) {
 });
 
 router.post('/curves', function (req, res) {
-    curveModel.getCurves(req.body.idWell, req.decoded.idUser)
+    curveModel.getCurves(req.body.idDataset, req.decoded.idUser)
         .then((curves) => {
             res.send(response(200, 'SUCCESSFULLY GET CURVES', curves));
         })

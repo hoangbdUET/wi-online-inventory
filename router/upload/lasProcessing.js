@@ -1,58 +1,45 @@
-"use strict";
+'use strict'
 
-var express = require("express");
-var router = express.Router();
-var config = require("config");
-var multer = require('multer');
-var wi_import = require("../../import-module");
-var asyncLoop = require("node-async-loop");
-let models = require('../../models');
-var Well = models.Well;
-var Curve = models.Curve;
-var File = models.File;
-let response = require('../response');
-
-var storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, 'uploads/');
-    },
-    filename: function (req, file, cb) {
-        cb(null, Date.now() + '-' + file.originalname);
-    }
-});
-
-let upload = multer({storage: storage});
+const models = require('../../models');
+const Well = models.Well;
+const Curve = models.Curve;
+const Dataset = models.Dataset;
+const asyncLoop = require('node-async-loop');
+const config = require("config");
+const wi_import = require("../../import-module");
 
 
-function importToDB(inputWell, file, userInfor, callback) {
-    let fileInfo = new Object();
-    fileInfo.name = file.originalname;
-    fileInfo.size = file.size;
-    fileInfo.idUser = userInfor.idUser;
+wi_import.setBasePath(config.dataPath);
 
+
+
+function importToDB(inputWell, userInfor, callback) {
+    console.log(userInfor);
     let wellInfo = new Object();
     wellInfo.name = inputWell.wellname;
     wellInfo.startDepth = inputWell.start;
     wellInfo.stopDepth = inputWell.stop;
     wellInfo.step = inputWell.step;
+    wellInfo.idUser = userInfor.idUser;
 
-    File.create(fileInfo)
-        .then((file) => {
-            wellInfo.idFile = file.idFile;
-            Well.create(wellInfo)
-                .then((well) => {
-                    asyncLoop(inputWell.datasetInfo, (dataset, nextDataset) => {
-                        let curves = dataset.curves;
+    Well.create(wellInfo)
+        .then(well => {
+            asyncLoop(inputWell.datasetInfo, (datasetInfo, nextDataset) => {
+                datasetInfo.idWell = well.idWell;
+                Dataset.create(datasetInfo)
+                    .then(dataset => {
+                        let curves = datasetInfo.curves;
                         console.log('curves: ' + curves);
                         asyncLoop(curves, function (curve, next) {
                             if(curve) {
-                                curve.idWell = well.idWell;
+                                // curve.idWell = well.idWell;
                                 Curve.create({
                                     name: curve.datasetname + "_" + curve.name,
                                     alias: curve.name,
                                     idWell: curve.idWell,
                                     unit: curve.unit,
-                                    path: curve.path
+                                    path: curve.path,
+                                    idDataset: dataset.idDataset
                                 }).then(() => {
                                     next();
                                 }).catch(err => {
@@ -65,24 +52,24 @@ function importToDB(inputWell, file, userInfor, callback) {
                             if(err) nextDataset(err);
                             else nextDataset();
                         });
-                    }, (err) => {
-                        if(err) {
-                            console.log("import curve failed: ", err);
-                            callback(err, null);
-                        }
-                        else {
-                            callback(null, file);
-                        }
+                    })
+                    .catch(err => {
+                        console.log('create datatset failed');
+                        callback(err, null);
                     });
-
-                })
-                .catch((err) => {
-                    console.log('Well creation failed: ' + err);
-
-                })
+            }, (err) => {
+                if(err) {
+                    console.log("import curve failed: ", err);
+                    callback(err, null);
+                }
+                else {
+                    callback(null, well);
+                }
+            });
         })
         .catch((err) => {
-        console.log('file creation failed: ' + err);
+            console.log('Well creation failed: ' + err);
+            callback(err, null);
         })
 }
 
@@ -103,7 +90,7 @@ function processFileUpload(file, userInfor, callback) {
                         }
                         else {
                             console.log("las 3 extracted");
-                            importToDB(result, file, userInfor, (err, result) => {
+                            importToDB(result, userInfor, (err, result) => {
                                 if(err) {
                                     console.log("import to db failed");
                                     callback(err, null);
@@ -122,7 +109,7 @@ function processFileUpload(file, userInfor, callback) {
                 }
             }
             else {
-                importToDB(result, file, userInfor, function (err, result) {
+                importToDB(result, userInfor, function (err, result) {
                     if (err) {
                         callback(err, null);
                     }
@@ -138,28 +125,6 @@ function processFileUpload(file, userInfor, callback) {
     }
 }
 
-router.post('/upload/lases', upload.array('file'), function (req, res)  {
-    wi_import.setBasePath(config.dataPath);
-    console.log(req.files);
-    let output = new Array();
-    asyncLoop(req.files, (file, next) => {
-        if(!file) return next('NO FILE CHOSEN!!!');
-        processFileUpload(file, req.decoded, (err, result) => {
-            if(err) next(err)
-            else {
-                File.findById(result.idFile, {include: {model: Well, include: {all: true}}}).then(fileObj => {
-                    if (fileObj) output.push(fileObj);
-                    next();
-                }).catch(err => {
-                    next(err);
-                });
-            }
-        });
-    }, (err) => {
-        if(err) res.send(response(500, 'UPLOAD FILES FAILED', err));
-        else res.send(response(200, 'UPLOAD FILES SUCCESS', output));
-    })
-
-})
-
-module.exports = router;
+module.exports = {
+    processFileUpload: processFileUpload
+}

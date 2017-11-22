@@ -45,7 +45,7 @@ router.post('/user/edit', function (req, res) {
     });
 });
 
-router.post('/file/delete', function (req, res) {
+router.post('/user/delete', function (req, res) {
     User.destroy({
         where: {
             idUser: req.decoded.idUser
