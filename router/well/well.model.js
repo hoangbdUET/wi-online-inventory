@@ -120,6 +120,10 @@ function copyDatasets(req, cb) {
                 })
             }, (err) => {
                 if(!err) {
+<<<<<<< HEAD
+=======
+                    console.log("there is some errs" + err);
+>>>>>>> 56cc44503f6881469198423b3599d5be773d3284
                     cb(null, newDatasets);
                 }
                 else {
