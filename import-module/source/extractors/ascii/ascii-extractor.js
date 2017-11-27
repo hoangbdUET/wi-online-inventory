@@ -147,7 +147,7 @@ function extractFromASC(inputURL, resultCallBack) {
                             }
                         });
                         curvesName.forEach(function (curveName) {
-                            filePath[curveName] = hashDir.getHashPath(__config.basePath, datasetName + curveName, curveName + '.txt');
+                            filePath[curveName] = hashDir.createPath(__config.basePath, datasetName + curveName, curveName + '.txt');
                             fs.appendFileSync(filePath[curveName], BUFFERS[curveName].data);
                             BUFFERS[curveName] = {
                                 count: 0,
@@ -169,7 +169,7 @@ function extractFromASC(inputURL, resultCallBack) {
                 bottomDepth = dataCurves[0].toString();
                 dataCurves.shift();
                 curvesName.forEach(function (curveName, i) {
-                    filePath[curveName] = hashDir.getHashPath(__config.basePath, datasetName + curveName, curveName + '.txt');
+                    filePath[curveName] = hashDir.createPath(__config.basePath, datasetName + curveName, curveName + '.txt');
                     writeToFile(BUFFERS[curveName], filePath[curveName], count, dataCurves[i], function (err) {
                         if (err) console.log("File format is not true", err);
                     });
@@ -216,7 +216,7 @@ function extractFromASC(inputURL, resultCallBack) {
                             }
                         });
                         curvesName.forEach(function (curveName) {
-                            filePath[curveName] = hashDir.getHashPath(__config.basePath, datasetName + curveName, curveName + '.txt');
+                            filePath[curveName] = hashDir.createPath(__config.basePath, datasetName + curveName, curveName + '.txt');
                             fs.appendFileSync(filePath[curveName], BUFFERS[curveName].data);
                             BUFFERS[curveName] = {
                                 count: 0,
@@ -238,7 +238,7 @@ function extractFromASC(inputURL, resultCallBack) {
                 bottomDepth = dataCurves[0].toString();
                 dataCurves.shift();
                 curvesName.forEach(function (curveName, i) {
-                    filePath[curveName] = hashDir.getHashPath(__config.basePath, datasetName + curveName, curveName + '.txt');
+                    filePath[curveName] = hashDir.createPath(__config.basePath, datasetName + curveName, curveName + '.txt');
                     writeToFile(BUFFERS[curveName], filePath[curveName], count, dataCurves[i], function (err) {
                         if (err) console.log("File format is not true", err);
                     });
@@ -273,7 +273,7 @@ function extractFromASC(inputURL, resultCallBack) {
                 bottomDepth = dataCurves[0].toString();
                 dataCurves.shift();
                 curvesName.forEach(function (curveName, i) {
-                    filePath[curveName] = hashDir.getHashPath(__config.basePath, datasetName + curveName, curveName + '.txt');
+                    filePath[curveName] = hashDir.createPath(__config.basePath, datasetName + curveName, curveName + '.txt');
                     writeToFile(BUFFERS[curveName], filePath[curveName], count, dataCurves[i], function (err) {
                         if (err) console.log("File format is not true", err);
                     });
@@ -298,7 +298,7 @@ function extractFromASC(inputURL, resultCallBack) {
 
         if (curvesName) {
             curvesName.forEach(function (curveName) {
-                filePath[curveName] = hashDir.getHashPath(__config.basePath, datasetName + curveName, curveName + '.txt');
+                filePath[curveName] = hashDir.createPath(__config.basePath, datasetName + curveName, curveName + '.txt');
                 fs.appendFileSync(filePath[curveName], BUFFERS[curveName].data);
             });
         }

@@ -11,7 +11,13 @@ const credentials = new AWS.SharedIniFileCredentials({profile: 'wi_inventory'});
 AWS.config.credentials = credentials;
 let s3 = new AWS.S3({apiVersion: '2006-03-01'});
 
-
+function createCurve(body, cb) {
+    Curve.create(body).then(curve => {
+        cb(null, curve);
+    }).catch(err => {
+        cb(err, null);
+    });
+}
 
 function findCurveById(idCurve, idUser) {
     return Curve.findById(idCurve, {
@@ -69,7 +75,8 @@ function deleteCurveFile(path) {
     }
     else {
         //be sure to delete all unit exported curve files
-        let fs = require('fs');
+        dir = config.dataPath + '/' + dir;
+        const fs = require('fs');
         fs.readdir(dir, (err, files) => {
             files.forEach((file)=> {
                 if(file.indexOf(curveName) != -1) fs.unlink(dir + file, (err)=> {
@@ -131,5 +138,6 @@ module.exports = {
     findCurveById: findCurveById,
     deleteCurve : deleteCurve,
     getCurves: getCurves,
-    deleteCurveFile: deleteCurveFile
+    deleteCurveFile: deleteCurveFile,
+    createCurve: createCurve
 }

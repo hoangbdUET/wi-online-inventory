@@ -1,14 +1,14 @@
 'use strict';
 let readline = require('line-by-line');
-let async = require('async');
+// let async = require('async');
 let hashDir = require('../../hash-dir');
-let CONFIG = require('../crypto-file/crypto.config').CONFIG;
+// let CONFIG = require('../crypto-file/crypto.config').CONFIG;
 let fs = require('fs');
 let __config = require('../common-config');
-const cryptorFile = require('file-encryptor');
-let cypher = CONFIG.cypher;
-let secret = CONFIG.secret;
-const optionsEncode = {algorithm: cypher};
+// const cryptorFile = require('file-encryptor');
+// let cypher = CONFIG.cypher;
+// let secret = CONFIG.secret;
+// const optionsEncode = {algorithm: cypher};
 const uploadCurveToS3 = require('../uploadToS3');
 const config = require('config');
 
@@ -49,7 +49,6 @@ function getLASVersion(inputURL, callback) {
         callback(err, null);
     });
 }
-
 
 function extractCurves(inputURL, callback) {
     let rl = new readline(inputURL);
@@ -100,6 +99,7 @@ function extractCurves(inputURL, callback) {
                     data: ""
                 };
                 filePaths[curveName] = hashDir.createPath(__config.basePath, wellInfo.wellname + curve.datasetname + curveName, curveName + '.txt');
+                // filePaths[curveName] = hashDir.createPath(__config.basePath, new Date().getTime().toString() + curveName , curveName + '.txt');
                 fs.writeFileSync(filePaths[curveName], "");
                 curve.path = filePaths[curveName];
                 curves.push(curve);
@@ -128,8 +128,8 @@ function extractCurves(inputURL, callback) {
         }
         dataset.curves = curves.map(function (curve) {
             fs.appendFileSync(curve.path, BUFFERS[curve.name].data);
+            curve.path = curve.path.replace(config.dataPath + '/', '');
             if(config.s3Path) {
-                curve.path = curve.path.replace(config.dataPath + '/', '');
                 uploadCurveToS3(curve);
             }
             return curve;

@@ -18,10 +18,9 @@ var storage = multer.diskStorage({
 
 let upload = multer({storage: storage});
 
-
-
 router.post('/upload/lases', upload.array('file'), function (req, res)  {
     console.log(req.files);
+    //req.body.importInfo = { well, dataset } => if exists, create well and dataset
     let output = new Array();
     asyncLoop(req.files, (file, next) => {
         if(!file) return next('NO FILE CHOSEN!!!');
@@ -30,12 +29,6 @@ router.post('/upload/lases', upload.array('file'), function (req, res)  {
             else {
                 output.push(result);
                 next();
-                // File.findById(result.idFile, {include: {model: Well, include: {all: true}}}).then(fileObj => {
-                //     if (fileObj) output.push(fileObj);
-                //     next();
-                // }).catch(err => {
-                //     next(err);
-                // });
             }
         });
     }, (err) => {

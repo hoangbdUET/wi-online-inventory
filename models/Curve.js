@@ -9,11 +9,7 @@ module.exports = function (sequelize, DataTypes) {
             type: DataTypes.STRING,
             allowNull: false,
             defaultValue: "",
-            unique: "name-idWell"
-        },
-        alias: {
-            type: DataTypes.STRING,
-            allowNull: true
+            // unique: "name-idWell"
         },
         path: {
             type: DataTypes.STRING,
