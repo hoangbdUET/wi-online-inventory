@@ -59,6 +59,19 @@ function createPath(basePath, hashString, fileName) {
     return basePath + '/' + dirs.join('/') + '/' + fileName;
 }
 
+function getHashPath(hashString) {
+    var md5sum = crypto.createHash('md5');
+    md5sum.update(hashString);
+    var hash = md5sum.digest('hex');
+    var dirs = [];
+
+    while (hash.length > 0) {
+        dirs.push(hash.substr(0, LEN));
+        hash = hash.substr(LEN);
+    }
+    return dirs.join('/') + '/';
+}
+
 function createReadStream(basePath, hashString, fileName) {
     var md5sum = crypto.createHash('md5');
     md5sum.update(hashString);
@@ -81,17 +94,7 @@ function createReadStream(basePath, hashString, fileName) {
     return stream;
 }
 
-function getHashPath(basePath, hashString, fileName) {
-    var md5sum = crypto.createHash('md5');
-    md5sum.update(hashString);
-    var hash = md5sum.digest('hex');
-    var dirs = [];
 
-    while (hash.length > 0) {
-        hash = createDirSync(basePath, hash, dirs);
-    }
-    return basePath + '/' + dirs.join('/') + '/' + fileName;
-}
 
 module.exports.getHashPath = getHashPath;
 module.exports.createPath = createPath;
@@ -175,7 +178,7 @@ module.exports.createJSONReadStream = function (basePath, hashString, fileName, 
 }
 
 function DeCodeData(basePath, hashString, fileName, callback) {
-    let url = getHashPath(basePath, hashString, fileName);
+    let url = createPath(basePath, hashString, fileName);
     let arr = [];
     decrypto.decoding(url, function (err, data) {
         if (err) return callback(err, null);

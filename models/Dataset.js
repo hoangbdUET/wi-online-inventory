@@ -1,31 +1,30 @@
 module.exports = function (sequelize, DataTypes) {
-    return sequelize.define('curve', {
-        idCurve: {
+    return sequelize.define('dataset', {
+        idDataset: {
             type: DataTypes.INTEGER,
             autoIncrement: true,
             primaryKey: true
         },
         name: {
             type: DataTypes.STRING,
-            allowNull: false,
-            defaultValue: "",
-            // unique: "name-idWell"
-        },
-        path: {
-            type: DataTypes.STRING,
-            allowNull: false,
-            defaultValue: ""
-        },
-        unit: {
-            type: DataTypes.STRING,
             allowNull: false
         },
-        startDepth: {
+        numberOfSample: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            defaultValue: 0
+        },
+        unit: {
+            type: DataTypes.STRING(5),
+            allowNull: false,
+            defaultValue: 'M'
+        },
+        top: {
             type: DataTypes.DOUBLE,
             allowNull: false,
             defaultValue: 0
         },
-        stopDepth: {
+        bottom: {
             type: DataTypes.DOUBLE,
             allowNull: false,
             defaultValue: 0

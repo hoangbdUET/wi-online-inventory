@@ -28,37 +28,36 @@ var models = [
     'Curve',
     'Well',
     'User',
-    'File'
+    'Dataset'
 ];
 models.forEach(function (model) {
     module.exports[model] = sequelize.import(__dirname + '/' + model);
 });
 
 (function (m) {
-    m.User.hasMany(m.File, {
-        foreignKey: {name: "idUser", allowNull: false, unique: "name-idUser"},
+    m.User.hasMany(m.Well, {
+        foreignKey: {name: "idUser", allowNull: false},
         onDelete: 'CASCADE'
     });
-    m.File.belongsTo(m.User, {
+    m.Well.belongsTo(m.User, {
         foreignKey: {name: "idUser", allowNull: false}
     });
 
-    m.File.hasMany(m.Well, {
-        foreignKey: {name: "idFile", allowNull: false, unique: "name-idFile"},
-        onDelete: 'CASCADE'
-    });
-
-    m.Well.belongsTo(m.File, {
-        foreignKey: {name: "idFile", allowNull: false}
-    });
-
-    m.Well.hasMany(m.Curve, {
-        foreignKey: {name: "idWell", allowNull: false, unique: "name-idWell"},
-        onDelete: 'CASCADE'
-    });
-
-    m.Curve.belongsTo(m.Well, {
+    m.Well.hasMany(m.Dataset, {
         foreignKey: {name: "idWell", allowNull: false}
+    });
+
+    m.Dataset.belongsTo(m.Well, {
+        foreignKey: {name: "idWell", allowNull: false}
+    });
+
+    m.Dataset.hasMany(m.Curve, {
+        foreignKey: {name: "idDataset", allowNull: false},
+        onDelete: 'CASCADE'
+    });
+
+    m.Curve.belongsTo(m.Dataset, {
+        foreignKey: {name: "idDataset", allowNull: false}
     })
 })(module.exports);
 module.exports.sequelize = sequelize;

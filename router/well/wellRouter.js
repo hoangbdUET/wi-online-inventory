@@ -4,8 +4,6 @@ let router = express.Router();
 let bodyParser = require('body-parser');
 let models = require('../../models/index');
 let Well = models.Well;
-let File = models.File;
-let User = models.User;
 let response = require('../response');
 let wellModel = require('./well.model');
 
@@ -60,21 +58,27 @@ router.post('/well/delete', function (req, res) {
     });
 });
 
+router.post('/well/addDatasets', function (req, res) {
+    //this route is for upload and import datasets to an existing well
+    //add datasets to existing well
+    //req.body.idWell + datasets
+
+})
+
+router.post('/well/copyDatasets', function (req, res) {
+    //copy datasets from another well
+    //req.body.datasets = [], req.body.idWell
+    wellModel.copyDatasets(req, (err, rs)=> {
+        if(err) res.send(response(500, 'COPY DATASETS FAILED'));
+        else res.send(response(200, 'SUCCESSFULLY COPY DATASETS', rs));
+    })
+})
+
 router.post('/wells', function (req, res) {
     Well.findAll({
         where: {
-            idFile: req.body.idFile,
-         },
-        include : [{
-            model: File,
-            attributes: [],
-            where : { idFile: req.body.idFile },
-            include : [ {
-                model: User,
-                attributes: [],
-                where: { idUser : req.decoded.idUser}
-            }]
-        }]
+            idUser: req.decoded.idUser,
+         }
     })
         .then((wells) => {
             res.send(response(200, 'SUCCESSFULLY GET WELLS', wells));

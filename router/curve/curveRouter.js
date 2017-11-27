@@ -11,11 +11,10 @@ let curveModel= require('./curve.model');
 router.use(bodyParser.json());
 
 router.post('/curve/new', function (req, res) {
-    Curve.create(req.body).then(curve => {
-        res.send(response(200, 'SUCCESSFULLY CREATE NEW CURVE', curve));
-    }).catch(err => {
-        res.send(response(500, 'FAILED TO CREATE NEW CURVE', err));
-    });
+    curveModel.createCurve(req.body, (err, curve) => {
+        if(err) res.send(response(500, 'FAILED TO CREATE NEW CURVE', err));
+        else res.send(response(200, 'SUCCESSFULLY CREATE NEW CURVE', curve));
+    })
 });
 
 router.post('/curve/info', function (req, res) {
@@ -84,7 +83,7 @@ router.post('/curve/delete', function (req, res) {
 });
 
 router.post('/curves', function (req, res) {
-    curveModel.getCurves(req.body.idWell, req.decoded.idUser)
+    curveModel.getCurves(req.body.idDataset, req.decoded.idUser)
         .then((curves) => {
             res.send(response(200, 'SUCCESSFULLY GET CURVES', curves));
         })
