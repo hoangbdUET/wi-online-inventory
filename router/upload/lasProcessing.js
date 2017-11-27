@@ -34,8 +34,7 @@ function importToDB(inputWell, userInfor, callback) {
                             if(curve) {
                                 // curve.idWell = well.idWell;
                                 Curve.create({
-                                    name: curve.datasetname + "_" + curve.name,
-                                    alias: curve.name,
+                                    name: curve.name,
                                     idWell: curve.idWell,
                                     unit: curve.unit,
                                     path: curve.path,

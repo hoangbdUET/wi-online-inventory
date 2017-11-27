@@ -9,12 +9,15 @@ const response = require('../response');
 
 
 router.post('/dataset/new', function (req, res) {
-    Dataset.create(req.body).then(dataset => {
-        res.send(response(200, 'SUCCESSFULLY CREATE NEW DATASET', dataset));
+    datasetModel.createDataset(req.body, (err, dataset)=> {
+        if(err) {
+            res.send(response(500, 'FAILED TO CREATE NEW DATASET', err));
+        }
+        else {
+            res.send(response(200, 'SUCCESSFULLY CREATE NEW DATASET', dataset));
+        }
+    })
 
-    }).catch(err => {
-        res.send(response(500, 'FAILED TO CREATE NEW DATASET', err));
-    });
 });
 
 router.post('/dataset/info', function (req, res) {
@@ -45,6 +48,10 @@ router.post('/dataset/delete', function (req, res) {
 
 router.post('/dataset/edit', function (req, res) {
     res.send(response(200, "chua lam cai nay nhe"));
+})
+
+router.post('dataset/addCurves', function (req, res) {
+    //add curves to existing dataset
 })
 
 router.post('/datasets', function (req, res) {

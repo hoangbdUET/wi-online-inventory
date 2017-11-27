@@ -28,8 +28,8 @@ function convertCurve(curve, newUnit, callback) {
 
     if(config.s3Path){
         let tempPath =  fs.mkdtempSync(require('os').tmpdir());
-        let newKey = curve.path.substring(0, curve.path.lastIndexOf('/') + 1) + newUnit + '_' + curve.alias + '.txt';
-        let pathOnDisk = tempPath + '/' + newUnit + '_' + curve.alias + '.txt';
+        let newKey = curve.path.substring(0, curve.path.lastIndexOf('/') + 1) + newUnit + '_' + curve.name + '.txt';
+        let pathOnDisk = tempPath + '/' + newUnit + '_' + curve.name + '.txt';
         const writeStream = fs.createWriteStream(pathOnDisk);
         const rl = readline.createInterface({
             input: getCurveDataFromS3(curve.path)
@@ -56,10 +56,10 @@ function convertCurve(curve, newUnit, callback) {
         })
     }
     else {
-        let newPath = curve.path.substring(0, curve.path.lastIndexOf('/') + 1) + newUnit + '_' + curve.alias + '.txt';
+        let newPath = config.dataPath + '/' + curve.path.substring(0, curve.path.lastIndexOf('/') + 1) + newUnit + '_' + curve.name + '.txt';
         const writeStream = fs.createWriteStream(newPath);
         const rl = readline.createInterface({
-            input: fs.createReadStream(curve.path)
+            input: fs.createReadStream(config.dataPath + '/' + curve.path)
         })
         rl.on('line', (line) => {
             writeStream.write(index + ' ' + unitConversion.convert(parseFloat(line.trim().split(' ')[1]), curve.unit, newUnit) + '\n');
@@ -80,10 +80,10 @@ module.exports = function (curve, unit, callback) {
             callback(null, getCurveDataFromS3(curve.path));
         }
         else {
-            callback(null, fs.createReadStream(curve.path));
+            callback(null, fs.createReadStream(config.dataPath + '/' + curve.path));
         }
     } else {
-        let filePath = curve.path.substring(0, curve.path.lastIndexOf('/') + 1) + unit + '_' + curve.alias + '.txt';
+        let filePath = curve.path.substring(0, curve.path.lastIndexOf('/') + 1) + unit + '_' + curve.name + '.txt';
         console.log('filePath: ' + filePath);
         if(config.s3Path){
             let params = {
