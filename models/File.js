@@ -7,7 +7,8 @@ module.exports = function (sequelize, DataTypes) {
         },
         name: {
             type: DataTypes.STRING,
-            allowNull: false
+            allowNull: false,
+            unique: 'name-idUser'
         },
         size: {
             type: DataTypes.DOUBLE,

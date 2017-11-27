@@ -33,7 +33,7 @@ function authenticate() {
         if (token) {
             jwt.verify(token, 'secretKey', function (err, decoded) {
                 if (err) {
-                    return res.send(response(401, 'Failed to authenticate'));
+                    return res.status(401).send(response(401, 'Failed to authenticate'));
                 } else {
                     User.findOne({
                         where: {
@@ -51,7 +51,7 @@ function authenticate() {
                                 req.decoded = user.toJSON();
                                 next();
                             }).catch(err => {
-                                return res.send(response(401, 'Failed to authenticate'));
+                                return res.status(401).send(response(401, 'Failed to authenticate'));
                             })
                         }
                     })

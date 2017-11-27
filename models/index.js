@@ -36,7 +36,7 @@ models.forEach(function (model) {
 
 (function (m) {
     m.User.hasMany(m.File, {
-        foreignKey: {name: "idUser", allowNull: false},
+        foreignKey: {name: "idUser", allowNull: false, unique: "name-idUser"},
         onDelete: 'CASCADE'
     });
     m.File.belongsTo(m.User, {
