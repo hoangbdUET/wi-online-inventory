@@ -22,8 +22,8 @@ module.exports.extractWellLAS2 = function (inputURL, callback) {
     });
 };
 
-module.exports.extractLAS2 = function (inputURL, callback) {
-    extractLAS2.extractAll(inputURL, function (err, result) {
+module.exports.extractLAS2 = function (inputURL, importData, callback) {
+    extractLAS2.extractAll(inputURL, importData, function (err, result) {
         if (err) return callback(err, null);
         callback(false, result);
     });
@@ -33,9 +33,9 @@ module.exports.extractCurveLAS2 = function (inputURL) {
     extractLAS2.extractCurves(inputURL);
 };
 
-module.exports.extractLAS3 = function (inputURL, callback) {
+module.exports.extractLAS3 = function (inputURL, importData, callback) {
     console.log("Extract all 3.0 ");
-    extractLAS3.extractCurves(inputURL, function (err, result) {
+    extractLAS3.extractCurves(inputURL, importData, function (err, result) {
         //console.log(result);
         if (err) {
             callback(err, null);

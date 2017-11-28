@@ -11,12 +11,12 @@ module.exports = function (sequelize, DataTypes) {
             defaultValue: "",
             unique: 'name-idFile'
         },
-        startDepth: {
+        start: {
             type: DataTypes.DOUBLE,
             allowNull: false,
             defaultValue: 0
         },
-        stopDepth: {
+        stop: {
             type: DataTypes.DOUBLE,
             allowNull: false,
             defaultValue: 0

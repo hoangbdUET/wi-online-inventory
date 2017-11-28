@@ -1,11 +1,11 @@
 'use strict';
 let readline = require('line-by-line');
-let async = require('async');
+// let async = require('async');
 let hashDir = require('../../hash-dir');
-let CONFIG = require('../crypto-file/crypto.config').CONFIG;
+// let CONFIG = require('../crypto-file/crypto.config').CONFIG;
 let fs = require('fs');
 let __config = require('../common-config');
-const cryptorFile = require('file-encryptor');
+// const cryptorFile = require('file-encryptor');
 const uploadCurveToS3 = require('../uploadToS3');
 let config = require('config');
 
@@ -28,13 +28,13 @@ function findDataset(dataset){
     return dataset.name == this.datasetname;
 }
 
-function extractCurves(inputURL, callback) {
+function extractCurves(inputURL, importData, callback) {
     let rl = new readline(inputURL);
     let sectionName = "";
     let datasets = [];
     let curves = [];
     let count = 0;
-    let wellInfo = new Object();
+    let wellInfo = importData.well ? importData.well : new Object();
     let filePaths = new Object();
     let BUFFERS = new Object();
     rl.on('line', function (line) {
@@ -57,38 +57,26 @@ function extractCurves(inputURL, callback) {
             }
         } else if (/^[A-z]/.test(line)) {
             if (/WELL/.test(sectionName)) {
-                let wellName = "";
-                let start = "";
-                let stop = "";
-                let step = "";
-                let NULL = "";
+                if(importData.well) return;
                 if (/WELL/.test(line) && !/UWI/.test(line)) {
-                    wellName = line.substring(line.indexOf('.') + 1, line.indexOf(':')).trim();
-                    wellInfo.wellname = wellName;
+                    wellInfo.name = line.substring(line.indexOf('.') + 1, line.indexOf(':')).trim();
                 } else if (/STRT/.test(line)) {
-                    start = line.substring(line.indexOf('.') + 2, line.indexOf(':')).trim();
-                    wellInfo.start = start;
+                    wellInfo.start = line.substring(line.indexOf('.') + 2, line.indexOf(':')).trim();
                 } else if (/STOP/.test(line)) {
-                    stop = line.substring(line.indexOf('.') + 2, line.indexOf(':')).trim();
-                    wellInfo.stop = stop;
+                    wellInfo.stop = line.substring(line.indexOf('.') + 2, line.indexOf(':')).trim();
                 } else if (/STEP/.test(line)) {
-                    step = line.substring(line.indexOf('.') + 2, line.indexOf(':')).trim();
-                    wellInfo.step = step;
+                    wellInfo.step = line.substring(line.indexOf('.') + 2, line.indexOf(':')).trim();
                 } else if (/NULL/.test(line)) {
-                    NULL = line.substring(line.indexOf('.') + 1, line.indexOf(':')).trim();
-                    wellInfo.null = NULL;
+                    wellInfo.null = line.substring(line.indexOf('.') + 1, line.indexOf(':')).trim();
                 }
             } else if (/~CURVE/.test(sectionName)) {
                 let curve = new Object();
-                let curveName = "";
-                let unit = "";
-                let wellName = wellInfo.wellname;
-                curveName = line.substring(0, line.indexOf('.')).trim();
-                unit = line.substring(line.indexOf('.') + 1, line.indexOf(':')).trim();
+                let curveName = line.substring(0, line.indexOf('.')).trim();
+                let unit = line.substring(line.indexOf('.') + 1, line.indexOf(':')).trim();
                 curve.name = curveName;
                 curve.unit = unit;
-                curve.datasetname = wellInfo.wellname;
-                curve.wellname = wellInfo.wellname;
+                curve.datasetname = wellInfo.name;
+                curve.wellname = wellInfo.name;
                 curve.initValue = "abc";
                 curve.family = "VNU";
                 curve.idDataset = null;
@@ -98,7 +86,7 @@ function extractCurves(inputURL, callback) {
                         count: 0,
                         data: ""
                     };
-                    filePaths[curveName] = hashDir.createPath(__config.basePath, wellName + curve.datasetname + curveName, curveName + '.txt');
+                    filePaths[curveName] = hashDir.createPath(__config.basePath, importData.userInfo.username + wellInfo.name + curve.datasetname + curveName, curveName + '.txt');
                     fs.writeFileSync(filePaths[curveName], "");
                     curve.path = filePaths[curveName];
                     curves.push(curve);
@@ -108,15 +96,12 @@ function extractCurves(inputURL, callback) {
                 count = 0;
                 let datasetName = sectionName.substring(1, sectionName.indexOf("_DEFINITION"));
                 let curve = new Object();
-                let unit = "";
-                let curveName = "";
-                let wellName = wellInfo.wellname;
-                curveName = line.substring(0, line.indexOf('.')).trim();
-                unit = line.substring(line.indexOf('.') + 1, line.indexOf(':')).trim();
+                let curveName = line.substring(0, line.indexOf('.')).trim();
+                let unit = line.substring(line.indexOf('.') + 1, line.indexOf(':')).trim();
                 curve.name = curveName;
                 curve.unit = unit;
                 curve.datasetname = datasetName;
-                curve.wellname = wellInfo.wellname;
+                curve.wellname = wellInfo.name;
                 curve.initValue = "abc";
                 curve.family = "VNU";
                 curve.idDataset = null;
@@ -126,7 +111,7 @@ function extractCurves(inputURL, callback) {
                         data: ""
                     };
                     curve.datasetname = datasetName;
-                    filePaths[curveName] = hashDir.createPath(__config.basePath, wellName + curve.datasetname + curveName, curveName + '.txt');
+                    filePaths[curveName] = hashDir.createPath(__config.basePath,importData.userInfo.username + wellInfo.name + curve.datasetname + curveName, curveName + '.txt');
                     fs.writeFileSync(filePaths[curveName], "");
                     curve.path = filePaths[curveName];
                     curves.push(curve);
@@ -165,8 +150,8 @@ function extractCurves(inputURL, callback) {
         if (datasets.length > 0) {
             curves.forEach((curve)=>{
                 fs.appendFileSync(curve.path, BUFFERS[curve.name].data);
+                curve.path = curve.path.replace(config.dataPath + '/', '');
                 if(config.s3Path) {
-                    curve.path = curve.path.replace(config.dataPath + '/', '');
                     uploadCurveToS3(curve);
                 }
                 let curveDataset = datasets.find(findDataset, curve);
@@ -174,9 +159,9 @@ function extractCurves(inputURL, callback) {
             })
         } else {
             let dataset = {
-                name: wellInfo.wellname,
-                datasetKey: wellInfo.wellname,
-                datasetLabel: wellInfo.wellname,
+                name: wellInfo.name,
+                datasetKey: wellInfo.name,
+                datasetLabel: wellInfo.name,
                 curves: []
             }
             for (let i = 0; i < curves.length; i++) {
@@ -186,7 +171,6 @@ function extractCurves(inputURL, callback) {
         }
 
         wellInfo.datasetInfo = datasets;
-        wellInfo.wellname = wellInfo.wellname;
         callback(false, wellInfo);
         //console.log("ExtractLAS3 Done");
     });
@@ -236,7 +220,7 @@ function extractInfoOnly(inputURL, callback) {
                 if (/WELL/.test(line) && !/UWI/.test(line)) {
                     wellName = line.substring(line.indexOf('.') + 1, line.indexOf(':')).trim();
                     //console.log("WELL NAME : " + wellName);
-                    wellInfo.wellname = wellName;
+                    wellInfo.name = wellName;
                 } else if (/STRT/.test(line)) {
                     start = line.substring(line.indexOf('.') + 2, line.indexOf(':')).trim();
                     wellInfo.start = start;
@@ -260,8 +244,8 @@ function extractInfoOnly(inputURL, callback) {
                 unit = line.substring(line.indexOf('.') + 1, line.indexOf(':')).trim();
                 curve.name = curveName;
                 curve.unit = unit;
-                curve.datasetname = wellInfo.wellname;
-                curve.wellname = wellInfo.wellname;
+                curve.datasetname = wellInfo.name;
+                curve.wellname = wellInfo.name;
                 if (!/DEPTH/.test(curve.name)) {
                     curves.push(curve);
                 }
@@ -277,7 +261,7 @@ function extractInfoOnly(inputURL, callback) {
                 curve.name = curveName;
                 curve.unit = unit;
                 curve.datasetname = datasetName;
-                curve.wellname = wellInfo.wellname;
+                curve.wellname = wellInfo.name;
                 if (!/DEPTH/.test(curve.name)) {
                     curves.push(curve);
                 }
@@ -300,9 +284,9 @@ function extractInfoOnly(inputURL, callback) {
             });
         } else {
             let dataset = {
-                name: wellInfo.wellname,
-                datasetKey: wellInfo.wellname,
-                datasetLabel: wellInfo.wellname,
+                name: wellInfo.name,
+                datasetKey: wellInfo.name,
+                datasetLabel: wellInfo.name,
                 curves: []
             }
             for (let i = 0; i < curves.length; i++) {

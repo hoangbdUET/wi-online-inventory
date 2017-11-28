@@ -9,6 +9,7 @@ const importModule = require('../../import-module');
 const hashDir = importModule.hashDir;
 const config = require('config');
 
+
 function findWellById(idWell, idUser) {
     return Well.findById(
         idWell,

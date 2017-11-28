@@ -50,12 +50,12 @@ function getLASVersion(inputURL, callback) {
     });
 }
 
-function extractCurves(inputURL, callback) {
+function extractCurves(inputURL, importData, callback) {
     let rl = new readline(inputURL);
     let sectionName = "";
     let curves = [];
     let count = 0;
-    let wellInfo = new Object();
+    let wellInfo = importData.well ? importData.well :  new Object();
     let filePaths = new Object();
     let BUFFERS = new Object();
     let fields = [];
@@ -69,8 +69,9 @@ function extractCurves(inputURL, callback) {
         } else if(/^#/.test(line)){
             return;
         } else if (sectionName == '~W') {
+            if(importData.well) return;
             if ((/WELL/).test(line) && !/UWI/.test(line)) {
-                wellInfo.wellname = line.substring(line.indexOf('.') + 1, line.indexOf(':')).trim();
+                wellInfo.name = line.substring(line.indexOf('.') + 1, line.indexOf(':')).trim();
             } else if (/STRT/.test(line)) {
                 wellInfo.start = line.substring(line.indexOf('.') + 2, line.indexOf(':')).trim();
             } else if (/STOP/.test(line)) {
@@ -88,8 +89,8 @@ function extractCurves(inputURL, callback) {
             if (unit.indexOf("00") != -1) unit = unit.substring(0, unit.indexOf("00"));
             curve.name = curveName;
             curve.unit = unit;
-            curve.datasetname = wellInfo.wellname;
-            curve.wellname = wellInfo.wellname;
+            curve.datasetname = wellInfo.name;
+            curve.wellname = wellInfo.name;
             curve.initValue = "abc";
             curve.family = "VNU";
             curve.idDataset = null;
@@ -98,7 +99,7 @@ function extractCurves(inputURL, callback) {
                     count: 0,
                     data: ""
                 };
-                filePaths[curveName] = hashDir.createPath(__config.basePath, wellInfo.wellname + curve.datasetname + curveName, curveName + '.txt');
+                filePaths[curveName] = hashDir.createPath(__config.basePath,importData.userInfo.username + wellInfo.name + curve.datasetname + curveName, curveName + '.txt');
                 // filePaths[curveName] = hashDir.createPath(__config.basePath, new Date().getTime().toString() + curveName , curveName + '.txt');
                 fs.writeFileSync(filePaths[curveName], "");
                 curve.path = filePaths[curveName];
@@ -121,9 +122,9 @@ function extractCurves(inputURL, callback) {
         deleteFile(inputURL);
         wellInfo.datasetInfo = [];
         let dataset = {
-            name: wellInfo.wellname,
-            datasetKey: wellInfo.wellname,
-            datasetLabel: wellInfo.wellname,
+            name: wellInfo.name,
+            datasetKey: wellInfo.name,
+            datasetLabel: wellInfo.name,
             curves: null
         }
         dataset.curves = curves.map(function (curve) {
@@ -182,7 +183,7 @@ function extractWell(inputURL, callback) {
                 let NULL = "";
                 if ((/WELL/).test(line) && !/UWI/.test(line)) {
                     wellname = line.substring(line.indexOf('.') + 1, line.indexOf(':')).trim();
-                    wellInfo.wellname = wellname;
+                    wellInfo.name = wellname;
                 } else if (/STRT/.test(line)) {
                     start = line.substring(line.indexOf('.') + 2, line.indexOf(':')).trim();
                     wellInfo.start = start;
@@ -204,8 +205,8 @@ function extractWell(inputURL, callback) {
                 unit = line.substring(line.indexOf('.') + 1, line.indexOf(':')).trim();
                 curve.name = curveName;
                 curve.unit = unit;
-                curve.datasetname = wellInfo.wellname;
-                curve.wellname = wellInfo.wellname;
+                curve.datasetname = wellInfo.name;
+                curve.wellname = wellInfo.name;
                 curve.initValue = "abc";
                 curve.family = "VNU";
                 curve.idDataset = null;
@@ -220,9 +221,9 @@ function extractWell(inputURL, callback) {
         deleteFile(inputURL);
         wellInfo.datasetInfo = [];
         let dataset = {
-            name: wellInfo.wellname,
-            datasetKey: wellInfo.wellname,
-            datasetLabel: wellInfo.wellname,
+            name: wellInfo.name,
+            datasetKey: wellInfo.name,
+            datasetLabel: wellInfo.name,
             curves: null
         }
         dataset.curves = curves;
@@ -236,13 +237,13 @@ function extractWell(inputURL, callback) {
 
 }
 
-function extractAll(inputURL, callbackGetSections) {
+function extractAll(inputURL, importData, callbackGetSections) {
     getLASVersion(inputURL, function (err, result) {
         if (err) {
             callbackGetSections(err, result);
         } else {
             if (result.lasVersion == 2) {
-                extractCurves(inputURL, function (err, info) {
+                extractCurves(inputURL, importData, function (err, info) {
                     if (err) callbackGetSections(err, null);
                     callbackGetSections(false, info);
                 });

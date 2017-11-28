@@ -14,82 +14,75 @@ wi_import.setBasePath(config.dataPath);
 
 
 function importToDB(inputWell, userInfor, callback) {
-    console.log(userInfor);
-    let wellInfo = new Object();
-    wellInfo.name = inputWell.wellname;
-    wellInfo.startDepth = inputWell.start;
-    wellInfo.stopDepth = inputWell.stop;
-    wellInfo.step = inputWell.step;
-    wellInfo.idUser = userInfor.idUser;
+    console.log('importToDB');
+    inputWell.idUser = userInfor.idUser;
 
-    Well.create(wellInfo)
-        .then(well => {
-            asyncLoop(inputWell.datasetInfo, (datasetInfo, nextDataset) => {
-                datasetInfo.idWell = well.idWell;
-                Dataset.create(datasetInfo)
-                    .then(dataset => {
-                        let curves = datasetInfo.curves;
-                        console.log('curves: ' + curves);
-                        asyncLoop(curves, function (curve, next) {
-                            if(curve) {
-                                // curve.idWell = well.idWell;
-                                Curve.create({
-                                    name: curve.name,
-                                    idWell: curve.idWell,
-                                    unit: curve.unit,
-                                    path: curve.path,
-                                    idDataset: dataset.idDataset
-                                }).then(() => {
-                                    next();
-                                }).catch(err => {
-                                    console.log(err);
-                                    next(err);
-                                });
-                            }
-                            else next();
-                        }, function (err) {
-                            if (err) nextDataset(err);
-                            else nextDataset();
-                        });
-                    })
-                    .catch(err => {
-                        console.log('create datatset failed');
-                        callback(err, null);
+    Well.findOrCreate({
+        where : { idWell : inputWell.idWell },
+        defaults: inputWell
+    }).spread((well, created) => {
+        console.log('create new well? ' + created);
+        asyncLoop(inputWell.datasetInfo, (datasetInfo, nextDataset) => {
+            datasetInfo.idWell = well.idWell;
+            Dataset.create(datasetInfo)
+                .then(dataset => {
+                    let curves = datasetInfo.curves;
+                    asyncLoop(curves, function (curve, next) {
+                        if(curve) {
+                            // curve.idWell = well.idWell;
+                            Curve.create({
+                                name: curve.name,
+                                idWell: curve.idWell,
+                                unit: curve.unit,
+                                path: curve.path,
+                                idDataset: dataset.idDataset
+                            }).then(() => {
+                                next();
+                            }).catch(err => {
+                                console.log(err);
+                                next(err);
+                            });
+                        }
+                        else next();
+                    }, function (err) {
+                        if (err) nextDataset(err);
+                        else nextDataset();
                     });
-            }, (err) => {
-                if(err) {
-                    console.log("import curve failed: ", err);
+                })
+                .catch(err => {
+                    console.log('create datatset failed');
                     callback(err, null);
-                }
-                else {
-                    callback(null, well);
-                }
-            });
-        })
-        .catch((err) => {
-            console.log('Well creation failed: ' + err);
-            callback(err, null);
-        })
+                });
+        }, (err) => {
+            if(err) {
+                console.log("import curve failed: ", err);
+                callback(err, null);
+            }
+            else {
+                callback(null, well);
+            }
+        });
+    })
 }
 
-function processFileUpload(file, userInfor, callback) {
+function processFileUpload(file, importData, callback) {
     console.log("______processFileUpload________");
+    console.log(importData.well);
     let fileFormat = file.filename.substring(file.filename.lastIndexOf('.') + 1, file.filename.length);
-
     if (/LAS/.test(fileFormat.toUpperCase())) {
-        wi_import.extractLAS2(file.path, function (err, result) {
+        wi_import.extractLAS2(file.path, importData, function (err, result) {
             if (err) {
                 console.log("this is not a las 2 file");
                 if (/LAS_3_DETECTED/.test(err)) {
                     console.log("this is las 3 file");
-                    wi_import.extractLAS3(file.path, function (err, result) {
+                    wi_import.extractLAS3(file.path, importData, function (err, result) {
                         if (err) {
                             console.log('las 3 extract failed!');
                             callback(err, null);
                         }
                         else {
                             console.log("las 3 extracted");
-                            importToDB(result, userInfor, (err, result) => {
+                            importToDB(result, importData.userInfo, (err, result) => {
                                 if(err) {
                                     console.log("import to db failed");
                                     callback(err, null);
@@ -108,7 +101,7 @@ function processFileUpload(file, userInfor, callback) {
                 }
             }
             else {
-                importToDB(result, userInfor, function (err, result) {
+                importToDB(result, importData.userInfo, function (err, result) {
                     if (err) {
                         callback(err, null);
                     }
@@ -124,6 +117,31 @@ function processFileUpload(file, userInfor, callback) {
     }
 }
 
+function uploadLasFiles(req, cb) {
+    if(!req.files) return cb('NO FILE CHOSEN!!!');
+    let output = new Array();
+    let importData = {};
+    importData.userInfo = req.decoded;
+    Well.findById(req.body.idWell)
+        .then(well => {
+            importData.well = well;
+            asyncLoop(req.files, (file, next) => {
+                if (!file) return next('NO FILE CHOSEN!!!');
+                processFileUpload(file, importData, (err, result) => {
+                    if (err) next(err)
+                    else {
+                        output.push(result);
+                        next();
+                    }
+                });
+            }, (err) => {
+                if (err) cb(err, null);
+                else cb(null, output);
+            })
+        })
+
+}
+
 module.exports = {
-    processFileUpload: processFileUpload
+    uploadLasFiles: uploadLasFiles
 }

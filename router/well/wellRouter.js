@@ -6,6 +6,19 @@ let models = require('../../models/index');
 let Well = models.Well;
 let response = require('../response');
 let wellModel = require('./well.model');
+const lasProcessing = require('../upload/lasProcessing');
+
+const multer = require('multer');
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'uploads/');
+    },
+    filename: function (req, file, cb) {
+        cb(null, Date.now() + '-' + file.originalname);
+    }
+});
+
+const upload = multer({storage: storage});
 
 router.use(bodyParser.json());
 
@@ -58,10 +71,14 @@ router.post('/well/delete', function (req, res) {
     });
 });
 
-router.post('/well/addDatasets', function (req, res) {
+router.post('/well/addDatasets', upload.array('file'), function (req, res) {
     //this route is for upload and import datasets to an existing well
     //add datasets to existing well
     //req.body.idWell + datasets
+    lasProcessing.uploadLasFiles(req, (err, result)=> {
+        if(err) res.send(response(500, 'COPY DATASETS FAILED'));
+        else res.send(response(200, 'SUCCESSFULLY COPY DATASETS', result));
+    })
 
 })
 
