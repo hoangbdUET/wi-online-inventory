@@ -71,14 +71,18 @@ router.post('/curve/delete', function (req, res) {
         .then(curve => {
             if (curve) {
                 curveModel.deleteCurve(curve, (err, rs)=>{
-                    if(err) res.send(response(500, 'FAILED TO DELETE CURVE', err));
+                    if(err) {
+                        console.log(err);
+                        res.send(response(500, 'FAILED TO DELETE CURVE', err));
+                    }
                     else res.send(response(200, 'SUCCESSFULLY DELETE CURVE', rs));
                 })
             } else {
                 res.send(response(500, 'NO CURVE FOUND FOR DELETE'));
             }
         }).catch(err => {
-        res.send(response(500, 'FAILED TO FIND CURVE', err));
+            console.log(err);
+            res.send(response(500, 'FAILED TO FIND CURVE', err));
     });
 });
 

@@ -43,62 +43,62 @@ function findCurveById(idCurve, username) {
     });
 }
 
-function deleteCurveFile(path) {
-    console.log('~~~deleteCurveFile~~~');
-    let curveName = path.slice(path.lastIndexOf('/') + 1, path.length);
-    let dir = path.slice(0, path.lastIndexOf('/') + 1);
-    if(config.s3Path){
-        //be sure to delete all unit exported curve files
-        let params = {
-            Bucket: "wi-inventory",
-            // Key: path
-            Delimiter: '/',
-            Prefix: dir
-        }
-        s3.listObjects(params, (err, data) => {
-            let deleteParams = {
+function deleteCurveFiles(curves) {
+    //curves must be array
+    console.log('~~~deleteCurveFiles~~~');
+    require('node-async-loop')(curves, (curve, nextCurve)=> {
+        let curveName = curve.path.slice(curve.path.lastIndexOf('/') + 1, curve.path.length);
+        let dir = curve.path.slice(0, curve.path.lastIndexOf('/') + 1);
+        if(config.s3Path){
+            //be sure to delete all unit exported curve files
+            let params = {
                 Bucket: "wi-inventory",
-                Delete: {Objects:[]}
+                // Key: path
+                Delimiter: '/',
+                Prefix: dir
             }
-            data.Contents.forEach((content) => {
-                if(content.Key.indexOf(curveName) != -1) {
-                    console.log(content.Key + ' will be deleted.');
-                    deleteParams.Delete.Objects.push({Key: content.Key});
+            s3.listObjects(params, (err, data) => {
+                let deleteParams = {
+                    Bucket: "wi-inventory",
+                    Delete: {Objects:[]}
                 }
-            })
-
-            s3.deleteObjects(deleteParams, (err)=>{
-                if(err) console.log("s3 delete object failed " + err);
-                else console.log("s3 delete object done");
-            })
-        })
-    }
-    else {
-        //be sure to delete all unit exported curve files
-        dir = config.dataPath + '/' + dir;
-        const fs = require('fs');
-        fs.readdir(dir, (err, files) => {
-            files.forEach((file)=> {
-                if(file.indexOf(curveName) != -1) fs.unlink(dir + file, (err)=> {
-                    if(!err) {
-                        // let deleteEmpty = require('delete-empty');
-                        // deleteEmpty(config.dataPath, () => {
-                        // });
+                data.Contents.forEach((content) => {
+                    if(content.Key.indexOf(curveName) != -1) {
+                        console.log(content.Key + ' will be deleted.');
+                        deleteParams.Delete.Objects.push({Key: content.Key});
                     }
-                    else console.log(err);
+                })
+
+                s3.deleteObjects(deleteParams, (err)=>{
+                    if(err) console.log("s3 delete object failed " + err);
+                    else console.log("s3 delete object done");
                 })
             })
+        }
+        else {
+            //be sure to delete all unit exported curve files
+            dir = config.dataPath + '/' + dir;
+            const fs = require('fs');
+            fs.readdir(dir, (err, files) => {
+                files.forEach((file)=> {
+                    if(file.indexOf(curveName) != -1) fs.unlink(dir + file, (err)=> {
+                        if(err) console.log(err);
+                    })
+                })
 
-        })
-    }
+            })
+        }
+        nextCurve();
+    }, (err)=> {
+        console.log('curve files deleted');
+    })
 }
 
 function deleteCurve(curve, callback) {
-    let curvePath = curve.path;
     curve.destroy({paranoid: true})
-        .then((curve)=>{
-            deleteCurveFile(curvePath);
-            callback(null, curve);
+        .then((rs)=>{
+            deleteCurveFiles([curve]);
+            callback(null, rs);
         })
         .catch((err) => {
             callback(err, null);
@@ -138,6 +138,6 @@ module.exports = {
     findCurveById: findCurveById,
     deleteCurve : deleteCurve,
     getCurves: getCurves,
-    deleteCurveFile: deleteCurveFile,
+    deleteCurveFiles: deleteCurveFiles,
     createCurve: createCurve
 }

@@ -24,17 +24,6 @@ function findWellById(idWell, username) {
         })
 }
 
-function deleteCurves(curves) {
-    console.log('~~~deleteCurves~~~');
-    if(!curves) return;
-    let asyncLoop = require('node-async-loop');
-    asyncLoop(curves, (curve, next)=> {
-        curveModel.deleteCurveFile(curve.path);
-        next();
-    }, (err) => {
-        if(err) console.log('end asyncloop:' + err);
-    })
-}
 
 function getCurves(idWell, cb) {
     let curves = [];
@@ -62,7 +51,7 @@ function deleteWell(idWell, username, callback) {
             getCurves(well.idWell, (curves) => {
                 well.destroy()
                     .then((rs)=>{
-                        deleteCurves(curves);
+                        curveModel.deleteCurveFiles(curves);
                         callback(null, rs);
                     })
                     .catch(err => {

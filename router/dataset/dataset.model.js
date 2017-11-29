@@ -49,18 +49,6 @@ function getDatasets(idWell, username) {
     })
 }
 
-function deleteCurves(curves) {
-    console.log('~~~deleteCurves~~~');
-    if(!curves) return;
-    let asyncLoop = require('node-async-loop');
-    asyncLoop(curves, (curve, next)=> {
-        curveModel.deleteCurveFile(curve.path);
-        next();
-    }, (err) => {
-        if(err) console.log('end asyncloop:' + err);
-    })
-}
-
 function deleteDataset(idDataset, username, callback) {
     findDatasetById(idDataset, username)
         .then(dataset => {
@@ -68,7 +56,7 @@ function deleteDataset(idDataset, username, callback) {
                 .then(curves => {
                     dataset.destroy()
                         .then((rs) => {
-                            deleteCurves(curves);
+                            curveModel.deleteCurveFiles(curves);
                             callback(null, rs);
                         })
                         .catch(err => {
