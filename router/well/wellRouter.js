@@ -31,7 +31,7 @@ router.post('/well/new', function (req, res) {
 });
 
 router.post('/well/info', function (req, res) {
-    wellModel.findWellById(req.body.idWell, req.decoded.idUser)
+    wellModel.findWellById(req.body.idWell, req.decoded.username)
         .then(well => {
             if (well) {
                 res.send(response(200, 'SUCCESSFULLY GET WELL INFOR', well));
@@ -44,7 +44,7 @@ router.post('/well/info', function (req, res) {
 });
 
 router.post('/well/edit', function (req, res) {
-    wellModel.findWellById(req.body.idWell, req.decoded.idUser)
+    wellModel.findWellById(req.body.idWell, req.decoded.username)
         .then(well => {
             if (well) {
                 Object.assign(well, req.body);
@@ -62,7 +62,7 @@ router.post('/well/edit', function (req, res) {
 });
 
 router.post('/well/delete', function (req, res) {
-    wellModel.deleteWell(req.body.idWell, req.decoded.idUser, (err, rs) => {
+    wellModel.deleteWell(req.body.idWell, req.decoded.username, (err, rs) => {
         if(!err) res.send(response(200, 'SUCCESSFULLY DELETE WELL', rs));
         else {
             console.log(err);
@@ -94,7 +94,7 @@ router.post('/well/copyDatasets', function (req, res) {
 router.post('/wells', function (req, res) {
     Well.findAll({
         where: {
-            idUser: req.decoded.idUser,
+            username: req.decoded.username,
          }
     })
         .then((wells) => {

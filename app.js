@@ -10,6 +10,7 @@ function addUser() {
         password: md5('1'),
         role: "1"
     }
+
     User.findOrCreate({where: {username: "admin"}, defaults: Admin}).then(() => {
         main();
     }).catch();
@@ -21,7 +22,7 @@ function main() {
     var config = require('config').Application;
     var app = express();
     const cors = require('cors');
-    var http = require('http').Server(app);
+    require('http').Server(app);
     app.use(cors());
 
     let bodyParser = require('body-parser');

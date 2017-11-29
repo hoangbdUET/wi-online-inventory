@@ -14,7 +14,7 @@ function createDataset(body, cb) {
     });
 }
 
-function findDatasetById(idDataset, idUser) {
+function findDatasetById(idDataset, username) {
     return Dataset.findById(idDataset, {
         include : [{
             model: models.Well,
@@ -22,7 +22,7 @@ function findDatasetById(idDataset, idUser) {
             include : {
                 model: models.User,
                 attributes: [],
-                where: {idUser: idUser},
+                where: {username: username},
                 required: true
             },
             required: true
@@ -30,7 +30,7 @@ function findDatasetById(idDataset, idUser) {
     })
 }
 
-function getDatasets(idWell, idUser) {
+function getDatasets(idWell, username) {
     return Dataset.findAll({
         where: {
             idWell: idWell
@@ -41,7 +41,7 @@ function getDatasets(idWell, idUser) {
             include: [{
                 model: models.User,
                 attributes: [],
-                where: {idUser: idUser},
+                where: {username: username},
                 required: true
             }],
             required: true
@@ -61,10 +61,10 @@ function deleteCurves(curves) {
     })
 }
 
-function deleteDataset(idDataset, idUser, callback) {
-    findDatasetById(idDataset, idUser)
+function deleteDataset(idDataset, username, callback) {
+    findDatasetById(idDataset, username)
         .then(dataset => {
-            curveModel.getCurves(dataset.idDataset, idUser)
+            curveModel.getCurves(dataset.idDataset, username)
                 .then(curves => {
                     dataset.destroy()
                         .then((rs) => {

@@ -36,11 +36,11 @@ models.forEach(function (model) {
 
 (function (m) {
     m.User.hasMany(m.Well, {
-        foreignKey: {name: "idUser", allowNull: false},
+        foreignKey: {name: "username", allowNull: false},
         onDelete: 'CASCADE'
     });
     m.Well.belongsTo(m.User, {
-        foreignKey: {name: "idUser", allowNull: false}
+        foreignKey: {name: "username", allowNull: false, unique: "wellname-username"}
     });
 
     m.Well.hasMany(m.Dataset, {

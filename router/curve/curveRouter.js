@@ -18,7 +18,7 @@ router.post('/curve/new', function (req, res) {
 });
 
 router.post('/curve/info', function (req, res) {
-    curveModel.findCurveById(req.body.idCurve, req.decoded.idUser)
+    curveModel.findCurveById(req.body.idCurve, req.decoded.username)
         .then(curve => {
             if (curve) {
                 res.send(response(200, 'SUCCESSFULLY GET CURVE INFOR', curve));
@@ -31,7 +31,7 @@ router.post('/curve/info', function (req, res) {
 });
 
 router.post('/curve/data', function (req, res) {
-    curveModel.findCurveById(req.body.idCurve, req.decoded.idUser)
+    curveModel.findCurveById(req.body.idCurve, req.decoded.username)
         .then((curve) => {
             if (curve) {
                 curveExport(curve, req.body.unit, (err, readStream) => {
@@ -49,7 +49,7 @@ router.post('/curve/data', function (req, res) {
 })
 
 router.post('/curve/edit', function (req, res) {
-    curveModel.findCurveById(req.body.idCurve, req.decoded.idUser)
+    curveModel.findCurveById(req.body.idCurve, req.decoded.username)
         .then(curve => {
             if (curve) {
                 Object.assign(curve, req.body);
@@ -67,7 +67,7 @@ router.post('/curve/edit', function (req, res) {
 });
 
 router.post('/curve/delete', function (req, res) {
-    curveModel.findCurveById(req.body.idCurve, req.decoded.idUser)
+    curveModel.findCurveById(req.body.idCurve, req.decoded.username)
         .then(curve => {
             if (curve) {
                 curveModel.deleteCurve(curve, (err, rs)=>{
@@ -83,7 +83,7 @@ router.post('/curve/delete', function (req, res) {
 });
 
 router.post('/curves', function (req, res) {
-    curveModel.getCurves(req.body.idDataset, req.decoded.idUser)
+    curveModel.getCurves(req.body.idDataset, req.decoded.username)
         .then((curves) => {
             res.send(response(200, 'SUCCESSFULLY GET CURVES', curves));
         })

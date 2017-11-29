@@ -19,7 +19,7 @@ function createCurve(body, cb) {
     });
 }
 
-function findCurveById(idCurve, idUser) {
+function findCurveById(idCurve, username) {
     return Curve.findById(idCurve, {
         include : {
             model: Dataset,
@@ -34,7 +34,7 @@ function findCurveById(idCurve, idUser) {
                     attributes: [],
                     required: true,
                     where: {
-                        idUser: idUser
+                        username: username
                     }
                 }
             }
@@ -105,7 +105,7 @@ function deleteCurve(curve, callback) {
         })
 }
 
-function getCurves(idDataset, idUser) {
+function getCurves(idDataset, username) {
     return Curve.findAll({
         where: {
             idDataset: idDataset
@@ -123,7 +123,7 @@ function getCurves(idDataset, idUser) {
                     attributes: [],
                     required: true,
                     where: {
-                        idUser: idUser
+                        username: username
                     }
                 }
             }

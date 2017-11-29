@@ -17,7 +17,7 @@ router.post('/user/new', function (req, res) {
 });
 
 router.post('/user/info', function (req, res) {
-    User.findById(req.decoded.idUser).then(user => {
+    User.findById(req.decoded.username).then(user => {
         if (user) {
             res.send(response(200, 'GET USER INFOR SUCCESS', user));
         } else {
@@ -29,7 +29,7 @@ router.post('/user/info', function (req, res) {
 });
 
 router.post('/user/edit', function (req, res) {
-    User.findById(req.decoded.idUser).then(user => {
+    User.findById(req.decoded.username).then(user => {
         if (user) {
             Object.assign(user, req.body);
             user.save().then(c => {
@@ -48,7 +48,7 @@ router.post('/user/edit', function (req, res) {
 router.post('/user/delete', function (req, res) {
     User.destroy({
         where: {
-            idUser: req.decoded.idUser
+            username: req.decoded.username
         }
     }).then(user => {
         if (user) {

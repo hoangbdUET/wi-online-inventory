@@ -10,14 +10,14 @@ const hashDir = importModule.hashDir;
 const config = require('config');
 
 
-function findWellById(idWell, idUser) {
+function findWellById(idWell, username) {
     return Well.findById(
         idWell,
         {
             include : [ {
                 model: User,
                 attributes: [],
-                where: { idUser : idUser},
+                where: { username : username},
                 required: true
             }],
             logging: console.log
@@ -56,8 +56,8 @@ function getCurves(idWell, cb) {
     })
 }
 
-function deleteWell(idWell, idUser, callback) {
-    findWellById(idWell, idUser)
+function deleteWell(idWell, username, callback) {
+    findWellById(idWell, username)
         .then((well) => {
             getCurves(well.idWell, (curves) => {
                 well.destroy()

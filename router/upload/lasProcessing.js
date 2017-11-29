@@ -14,12 +14,13 @@ wi_import.setBasePath(config.dataPath);
 
 
 function importToDB(inputWell, userInfor, callback) {
-    console.log('importToDB');
-    inputWell.idUser = userInfor.idUser;
+    console.log('importToDB inputWell.idWell: ' + inputWell.idWell);
+    inputWell.username = userInfor.username;
 
     Well.findOrCreate({
         where : { idWell : inputWell.idWell },
-        defaults: inputWell
+        defaults: inputWell,
+        logging: console.log
     }).spread((well, created) => {
         console.log('create new well? ' + created);
         asyncLoop(inputWell.datasetInfo, (datasetInfo, nextDataset) => {
