@@ -73,8 +73,7 @@ router.post('/well/delete', function (req, res) {
 
 router.post('/well/addDatasets', upload.array('file'), function (req, res) {
     //this route is for upload and import datasets to an existing well
-    //add datasets to existing well
-    //req.body.idWell + datasets
+    //req.body.idWell
     lasProcessing.uploadLasFiles(req, (err, result)=> {
         if(err) res.send(response(500, 'COPY DATASETS FAILED'));
         else res.send(response(200, 'SUCCESSFULLY COPY DATASETS', result));
@@ -86,7 +85,7 @@ router.post('/well/copyDatasets', function (req, res) {
     //copy datasets from another well
     //req.body.datasets = [], req.body.idWell
     wellModel.copyDatasets(req, (err, rs)=> {
-        if(err) res.send(response(500, 'COPY DATASETS FAILED'));
+        if(err) res.send(response(500, 'COPY DATASETS FAILED', err));
         else res.send(response(200, 'SUCCESSFULLY COPY DATASETS', rs));
     })
 })

@@ -116,25 +116,31 @@ function deleteFolderRecursive(path) {
     }
 };
 
-module.exports.copyFile = function (basePath, srcHashPath, desPath, fileName) {
-    var result = true;
-    var md5sum = crypto.createHash('md5');
-    md5sum.update(desPath);
-    var desHash = md5sum.digest('hex');
-    var dir = [];
-    while (desHash.length > 0) {
-        desHash = createDirSync(basePath, desHash, dir);
+module.exports.copyFile = function (basePath, srcHashedPath, desHashedDir, fileName) {
+    let result = true;
+    let desPath = basePath + '/';
+    while (desHashedDir.length > 0){
+        desPath += desHashedDir.substr(0, desHashedDir.indexOf('/') + 1);
+        desHashedDir = desHashedDir.substr(desHashedDir.indexOf('/') + 1);
+        try {
+            fs.mkdirSync(desPath);
+        }
+        catch (err) {
+            if (err.errno !== -17) {
+                //console.log(err.message);
+            }
+        }
     }
-    var newFile = basePath + '/' + dir.join('/') + '/' + fileName;
+
     //change this if error
-    var cp = fs.createReadStream(srcHashPath);
+    var cp = fs.createReadStream(basePath + '/' + srcHashedPath);
     cp.on('error', function (err) {
         //handler create stream error
         result = false;
         console.log("Copy File err : " + err);
 
     });
-    cp.pipe(fs.createWriteStream(newFile));
+    cp.pipe(fs.createWriteStream(desPath + fileName));
     return result;
 
 }

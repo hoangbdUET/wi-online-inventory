@@ -64,6 +64,9 @@ function importToDB(inputWell, userInfor, callback) {
             }
         });
     })
+        .catch(err => {
+            callback(err, null);
+        })
 }
 
 function processFileUpload(file, importData, callback) {

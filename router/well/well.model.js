@@ -97,8 +97,9 @@ function copyDatasets(req, cb) {
                                 delete curve.createdAt;
                                 delete curve.updatedAt;
                                 curve.idDataset = newDataset.idDataset;
-                                curve.path = hashDir.getHashPath(well.name + dataset.name + curve.name) + curve.name + '.txt';
-                                hashDir.copyFile(config.dataPath, config.dataPath + '/' + curve.path, well.name + dataset.name + curve.name, curve.name + '.txt');
+                                const hashedNewCurveDir = hashDir.getHashPath(req.decoded.username + well.name + dataset.name + curve.name);
+                                hashDir.copyFile(config.dataPath, curve.path, hashedNewCurveDir, curve.name + '.txt');
+                                curve.path = hashedNewCurveDir + curve.name + '.txt';
                                 curveModel.createCurve(curve, (err, newCurve)=> {
                                     if(err) {
                                         console.log('curve ' + err);
@@ -107,7 +108,10 @@ function copyDatasets(req, cb) {
                                     else nextCurve();
                                 })
                             }, (err)=> {
-                                if(err) nextDataset(err);
+                                if(err) {
+                                    console.log(err);
+                                    nextDataset(err);
+                                }
                                 else {
                                     newDatasets.push(newDataset);
                                     nextDataset();
@@ -121,15 +125,16 @@ function copyDatasets(req, cb) {
                 })
             }, (err) => {
                 if(!err) {
-                    console.log("there is some errs" + err);
                     cb(null, newDatasets);
                 }
                 else {
+                    console.log(err);
                     cb(err, null);
                 }
             })
         })
         .catch(err => {
+            console.log(err);
             cb(err, null);
         })
 
