@@ -28,16 +28,16 @@ function main() {
     let bodyParser = require('body-parser');
     app.use(bodyParser.json());
 
-    let authentication = require('./router/authenticate');
+    let authentication = require('./controllers/authenticate');
     app.use('/', authentication.router);
     app.use(authentication.authenticate());
 
-    let testRouter = require('./router/index');
-    let curveRouter = require('./router/curve/curveRouter');
-    let wellRouter = require('./router/well/wellRouter');
-    let uploadRouter = require('./router/upload/uploadRouter');
-    let userRouter = require('./router/user/userRouter');
-    let datasetRouter = require('./router/dataset/datasetRouter');
+    let testRouter = require('./controllers/index');
+    let curveRouter = require('./controllers/curve/curveRouter');
+    let wellRouter = require('./controllers/well/wellRouter');
+    let uploadRouter = require('./controllers/upload/uploadRouter');
+    let userRouter = require('./controllers/user/userRouter');
+    let datasetRouter = require('./controllers/dataset/datasetRouter');
 
 
     app.use('/', testRouter);

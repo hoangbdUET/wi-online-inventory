@@ -75,8 +75,8 @@ router.post('/well/addDatasets', upload.array('file'), function (req, res) {
     //this route is for upload and import datasets to an existing well
     //req.body.idWell
     lasProcessing.uploadLasFiles(req, (err, result)=> {
-        if(err) res.send(response(500, 'COPY DATASETS FAILED'));
-        else res.send(response(200, 'SUCCESSFULLY COPY DATASETS', result));
+        if(err) res.send(response(500, 'ADD DATASETS FAILED'));
+        else res.send(response(200, 'SUCCESSFULLY ADD DATASETS', result));
     })
 
 })

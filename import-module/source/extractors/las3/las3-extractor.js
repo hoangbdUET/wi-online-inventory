@@ -6,7 +6,7 @@ let hashDir = require('../../hash-dir');
 let fs = require('fs');
 let __config = require('../common-config');
 // const cryptorFile = require('file-encryptor');
-const uploadCurveToS3 = require('../uploadToS3');
+const s3 = require('../../../../controllers/s3');
 let config = require('config');
 
 function writeToCurveFile(buffer, curveFileName, index, value, defaultNull) {
@@ -152,7 +152,7 @@ function extractCurves(inputURL, importData, callback) {
                 fs.appendFileSync(curve.path, BUFFERS[curve.name].data);
                 curve.path = curve.path.replace(config.dataPath + '/', '');
                 if(config.s3Path) {
-                    uploadCurveToS3(curve);
+                    s3.upload(curve);
                 }
                 let curveDataset = datasets.find(findDataset, curve);
                 curveDataset.curves.push(curve);

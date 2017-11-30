@@ -9,7 +9,7 @@ let __config = require('../common-config');
 // let cypher = CONFIG.cypher;
 // let secret = CONFIG.secret;
 // const optionsEncode = {algorithm: cypher};
-const uploadCurveToS3 = require('../uploadToS3');
+const s3 = require('../../../../controllers/s3');
 const config = require('config');
 
 
@@ -131,7 +131,7 @@ function extractCurves(inputURL, importData, callback) {
             fs.appendFileSync(curve.path, BUFFERS[curve.name].data);
             curve.path = curve.path.replace(config.dataPath + '/', '');
             if(config.s3Path) {
-                uploadCurveToS3(curve);
+                s3.upload(curve);
             }
             return curve;
         });

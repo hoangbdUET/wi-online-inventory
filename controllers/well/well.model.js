@@ -35,6 +35,7 @@ function getCurves(idWell, cb) {
             model: models.Curve
         }]
     }).then(datasets => {
+        if(!datasets || datasets.length <= 0) return cb(curves);
         asyncLoop(datasets, (dataset, nextDataset) => {
             curves = curves.concat(dataset.curves);
             nextDataset();
@@ -87,7 +88,12 @@ function copyDatasets(req, cb) {
                                 delete curve.updatedAt;
                                 curve.idDataset = newDataset.idDataset;
                                 const hashedNewCurveDir = hashDir.getHashPath(req.decoded.username + well.name + dataset.name + curve.name);
-                                hashDir.copyFile(config.dataPath, curve.path, hashedNewCurveDir, curve.name + '.txt');
+                                if(!config.s3Path) {
+                                    hashDir.copyFile(config.dataPath, curve.path, hashedNewCurveDir, curve.name + '.txt');
+                                }
+                                else {
+                                    require('../s3').copyCurve(curve.path, hashedNewCurveDir + curve.name + '.txt');
+                                }
                                 curve.path = hashedNewCurveDir + curve.name + '.txt';
                                 curveModel.createCurve(curve, (err, newCurve)=> {
                                     if(err) {
