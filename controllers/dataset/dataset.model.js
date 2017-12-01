@@ -60,11 +60,13 @@ function deleteDataset(idDataset, username, callback) {
                             callback(null, rs);
                         })
                         .catch(err => {
-                            callback(err, null);
+                            throw new Error('dataset destroy failed: ' + err.message);
+                            // callback(err, null);
                         })
                 })
                 .catch(err => {
-                    callback(err, null);
+                    throw new Error('failed to get curve: ' + err.message);
+                    // callback(err, null);
                 })
         })
         .catch(err => {

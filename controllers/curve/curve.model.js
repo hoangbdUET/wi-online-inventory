@@ -63,7 +63,7 @@ function deleteCurveFiles(curves) {
         }
         nextCurve();
     }, (err)=> {
-        console.log('curve files deleted');
+        console.log('curve files deleted' + err);
     })
 }
 
