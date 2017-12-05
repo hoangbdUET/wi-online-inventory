@@ -38,6 +38,9 @@ router.post('/curve/data', function (req, res) {
                     if(!err){
                         readStream.pipe(res);
                     }
+                    else {
+                        res.send(response(500, 'CURVE CONVERSION FAILED', err));
+                    }
                 });
             } else {
                 res.send(response(200, 'NO CURVE FOUND BY ID'));

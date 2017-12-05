@@ -83,6 +83,10 @@ module.exports = function (curve, unit, callback) {
             callback(null, fs.createReadStream(config.dataPath + '/' + curve.path));
         }
     } else {
+        if(!unitConversion.unitCheck(curve.unit)) {
+            return callback('Can not convert ' + curve.unit + ' to ' + unit);
+        }
+
         let filePath = curve.path.substring(0, curve.path.lastIndexOf('/') + 1) + unit + '_' + curve.name + '.txt';
         console.log('filePath: ' + filePath);
         if(config.s3Path){

@@ -70,9 +70,9 @@ function importToDB(inputWell, userInfor, callback) {
         if(inputWell.datasetInfo && inputWell.datasetInfo.length > 0) {
             asyncLoop(inputWell.datasetInfo, (dataset, nextDataset) => {
                 curveModel.deleteCurveFiles(dataset.curves);
-                nextDataset(); 
+                nextDataset();
             }, (err) => {
-                console('done deleting: ' + err);
+                console.log('done deleting: ' + err);
             })
         }
         callback(err, null);

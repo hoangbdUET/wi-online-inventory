@@ -22,6 +22,16 @@ function convert(value, from, to) {
     }
 }
 
+function unitCheck(unit){
+    try{
+        return eval('M_' + unit);
+    }
+    catch (e) {
+        return false;
+    }
+}
+
 module.exports = {
-    convert : convert
+    convert : convert,
+    unitCheck: unitCheck
 }
