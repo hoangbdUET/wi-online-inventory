@@ -32,7 +32,7 @@ function importToDB(inputWell, userInfor, callback) {
                             // curve.idWell = well.idWell;
                             Curve.create({
                                 name: curve.name,
-                                idWell: curve.idWell,
+                                // idWell: curve.idWell,
                                 unit: curve.unit,
                                 path: curve.path,
                                 idDataset: dataset.idDataset
