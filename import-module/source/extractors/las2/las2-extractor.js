@@ -70,22 +70,29 @@ function extractCurves(inputURL, importData, callback) {
             return;
         } else if (sectionName == '~W') {
             if(importData.well) return;
-            if ((/WELL/).test(line) && !/UWI/.test(line)) {
-                wellInfo.name = line.substring(line.indexOf('.') + 1, line.indexOf(':')).trim();
-            } else if (/STRT/.test(line)) {
-                wellInfo.start = line.substring(line.indexOf('.') + 2, line.indexOf(':')).trim();
-            } else if (/STOP/.test(line)) {
-                wellInfo.stop = line.substring(line.indexOf('.') + 2, line.indexOf(':')).trim();
-            } else if (/STEP/.test(line)) {
-                wellInfo.step = line.substring(line.indexOf('.') + 2, line.indexOf(':')).trim();
-            } else if (/NULL/.test(line)) {
-                wellInfo.null = line.substring(line.indexOf('.') + 1, line.indexOf(':')).trim();
+            const mnem = line.substring(0, line.indexOf('.'));
+            line = line.substring(line.indexOf('.'));
+            const data = line.substring(line.indexOf(' '), line.indexOf(':')).trim();
+
+            if ((/WELL/).test(mnem) && !/UWI/.test(mnem)) {
+                wellInfo.name = data;
+            } else if (/STRT/.test(mnem)) {
+                wellInfo.start = data;
+            } else if (/STOP/.test(mnem)) {
+                wellInfo.stop = data;
+            } else if (/STEP/.test(mnem)) {
+                wellInfo.step = data;
+            } else if (/NULL/.test(mnem)) {
+                wellInfo.null = data;
             }
         } else if (sectionName == '~C') {
             let curve = new Object();
-
             let curveName = line.substring(0, line.indexOf('.')).trim();
-            let unit = line.substring(line.indexOf('.') + 1, line.indexOf(':')).trim();
+            line = line.substring(line.indexOf('.') + 1);
+
+            if(curveName == 'DEPT' || curveName == 'DEPTH' || curveName == 'TIME') return;
+
+            let unit = line.substring(0, line.indexOf(' ')).trim();
             if (unit.indexOf("00") != -1) unit = unit.substring(0, unit.indexOf("00"));
             curve.name = curveName;
             curve.unit = unit;
@@ -94,17 +101,15 @@ function extractCurves(inputURL, importData, callback) {
             curve.initValue = "abc";
             curve.family = "VNU";
             curve.idDataset = null;
-            if (!/DEPTH/.test(curve.name)) {
-                BUFFERS[curveName] = {
-                    count: 0,
-                    data: ""
-                };
-                filePaths[curveName] = hashDir.createPath(__config.basePath,importData.userInfo.username + wellInfo.name + curve.datasetname + curveName, curveName + '.txt');
-                // filePaths[curveName] = hashDir.createPath(__config.basePath, new Date().getTime().toString() + curveName , curveName + '.txt');
-                fs.writeFileSync(filePaths[curveName], "");
-                curve.path = filePaths[curveName];
-                curves.push(curve);
-            }
+            BUFFERS[curveName] = {
+                count: 0,
+                data: ""
+            };
+            filePaths[curveName] = hashDir.createPath(__config.basePath,importData.userInfo.username + wellInfo.name + curve.datasetname + curveName, curveName + '.txt');
+            // filePaths[curveName] = hashDir.createPath(__config.basePath, new Date().getTime().toString() + curveName , curveName + '.txt');
+            fs.writeFileSync(filePaths[curveName], "");
+            curve.path = filePaths[curveName];
+            curves.push(curve);
         } else if (sectionName == '~A'){
             fields = fields.concat(line.trim().split(' '));
             if(fields.length > curves.length) {
