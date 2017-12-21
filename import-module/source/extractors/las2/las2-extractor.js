@@ -51,7 +51,7 @@ function getLASVersion(inputURL, callback) {
 }
 
 function extractCurves(inputURL, importData, callback) {
-    let rl = new readline(inputURL);
+    let rl = new readline(inputURL, { skipEmptyLines : true });
     let sectionName = "";
     let curves = [];
     let count = 0;
@@ -59,6 +59,8 @@ function extractCurves(inputURL, importData, callback) {
     let filePaths = new Object();
     let BUFFERS = new Object();
     let fields = [];
+    let isFirstCurve = true;
+
     rl.on('line', function (line) {
         line = line.trim();
         line = line.toUpperCase();
@@ -86,18 +88,22 @@ function extractCurves(inputURL, importData, callback) {
                 wellInfo.null = data;
             }
         } else if (sectionName == '~C') {
+
+            if(isFirstCurve){
+                isFirstCurve = false;
+                return;
+            }
+
             let curve = new Object();
             let curveName = line.substring(0, line.indexOf('.')).trim();
             line = line.substring(line.indexOf('.') + 1);
-
-            if(curveName == 'DEPT' || curveName == 'DEPTH' || curveName == 'TIME') return;
 
             let unit = line.substring(0, line.indexOf(' ')).trim();
             if (unit.indexOf("00") != -1) unit = unit.substring(0, unit.indexOf("00"));
             curve.name = curveName;
             curve.unit = unit;
             curve.datasetname = wellInfo.name;
-            curve.wellname = wellInfo.name;
+            // curve.wellname = wellInfo.name;
             curve.initValue = "abc";
             curve.family = "VNU";
             curve.idDataset = null;
