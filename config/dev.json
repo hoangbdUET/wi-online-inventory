@@ -13,6 +13,6 @@
   },
 
   //if s3Path is defined, curves's data will be stored on aws s3, otherwise they will be stored on disk
-  "s3Path": "https://s3-ap-southeast-1.amazonaws.com/wi-inventory",
+//  "s3Path": "https://s3-ap-southeast-1.amazonaws.com/wi-inventory",
   "dataPath": "/Users/dodang/uet_work/backend/wi-online-inventory/tmp"
 }

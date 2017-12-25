@@ -24,9 +24,6 @@ function writeToCurveFile(buffer, curveFileName, index, value, defaultNull) {
     }
 }
 
-function findDataset(dataset){
-    return dataset.name == this.datasetname;
-}
 
 function extractCurves(inputURL, importData, callback) {
     let rl = new readline(inputURL, { skipEmptyLines : true });
@@ -152,11 +149,11 @@ function extractCurves(inputURL, importData, callback) {
     rl.on('end', function () {
         deleteFile(inputURL);
 
-        wellInfo.datasetInfo = [];
+        wellInfo.datasets = [];
         for(var datasetName in datasets){
             if(!datasets.hasOwnProperty(datasetName)) continue;
             let dataset = datasets[datasetName];
-            wellInfo.datasetInfo.push(dataset);
+            wellInfo.datasets.push(dataset);
             dataset.curves.forEach(curve => {
                 fs.appendFileSync(curve.path, BUFFERS[curve.name].data);
                 curve.path = curve.path.replace(config.dataPath + '/', '');

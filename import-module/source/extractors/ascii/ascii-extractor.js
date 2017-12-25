@@ -23,7 +23,7 @@ function writeToCurveFile(buffer, curveFilePath, index, value, defaultNull) {
 function extractCurves(file, importData, cb) {
 
     //importData.well
-    //importData.dataset
+    //importData.well.datasets
     //importData.columnFormat = 1/2/3/4
     //importData.curveNameStartAt
     //importData.curveUnitStartAt
@@ -40,7 +40,10 @@ function extractCurves(file, importData, cb) {
 
     let rl = new readline(file.path);
     let wellName = importData.well ? importData.well.name : fileName;
-    let datasetName = importData.dataset ? importData.dataset.name : fileName;
+    let datasetName = fileName;
+    if(importData.well && importData.datasets && importData.datasets.length > 0){
+        datasetName = importData.well.datasets[0].name;
+    }
     let lineNumber = 0;
     let curves = [];
     let count = 0;
@@ -107,11 +110,20 @@ function extractCurves(file, importData, cb) {
         if (curves) {
             curves.forEach(function (curve) {
                 fs.appendFileSync(curve.path, buffers[curve.name].data);
+                curve.path = curve.path.replace(config.dataPath + '/', '');
             });
         }
+
         let well = importData.well ? importData.well : { name : wellName};
-        well.dataset = importData.dataset ? importData.dataset : { name : datasetName};
-        well.dataset.curves = curves;
+        if(well.datasets && well.datasets.length > 0){
+            well.datasets[0].curves = curves;
+        }
+        else {
+            well.datasets = [{
+                name : datasetName,
+                curves: curves
+            }];
+        }
         cb(null, well);
     })
 }

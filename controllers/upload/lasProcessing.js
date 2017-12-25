@@ -2,82 +2,12 @@
 
 const models = require('../../models');
 const Well = models.Well;
-const Curve = models.Curve;
-const Dataset = models.Dataset;
 const asyncLoop = require('node-async-loop');
 const config = require("config");
 const wi_import = require("../../import-module");
-const curveModel = require('../curve/curve.model');
-
+const importToDB = require('./importToDB');
 
 wi_import.setBasePath(config.dataPath);
-
-function importToDB(inputWell, userInfor, callback) {
-    console.log('importToDB inputWell.idWell: ' + inputWell.idWell);
-    inputWell.username = userInfor.username;
-
-    Well.findOrCreate({
-        where : { idWell : inputWell.idWell },
-        defaults: inputWell,
-        logging: console.log
-    }).spread((well, created) => {
-        console.log('create new well? ' + created);
-        asyncLoop(inputWell.datasetInfo, (datasetInfo, nextDataset) => {
-            datasetInfo.idWell = well.idWell;
-            Dataset.create(datasetInfo)
-                .then(dataset => {
-                    let curves = datasetInfo.curves;
-                    asyncLoop(curves, function (curve, next) {
-                        if(curve) {
-                            // curve.idWell = well.idWell;
-                            Curve.create({
-                                name: curve.name,
-                                // idWell: curve.idWell,
-                                unit: curve.unit,
-                                path: curve.path,
-                                idDataset: dataset.idDataset
-                            }).then(() => {
-                                next();
-                            }).catch(err => {
-                                console.log(err);
-                                next(err);
-                            });
-                        }
-                        else next();
-                    }, function (err) {
-                        if (err) nextDataset(err);
-                        else nextDataset();
-                    });
-                })
-                .catch(err => {
-                    // console.log('create datatset failed');
-                    // throw new Error('dataset create failed: ' + err.message);
-                    // callback(err, null);
-                    nextDataset('dataset create failed: ' + err.message);
-                });
-        }, (err) => {
-            if(err) {
-                console.log("import curve failed: ", err);
-                throw new Error('import curve failed: ' + err);
-                // callback(err, null);
-            }
-            else {
-                callback(null, well);
-            }
-        });
-    }).catch(err => {
-        //delete extracted curve files if import to db failed
-        if(inputWell.datasetInfo && inputWell.datasetInfo.length > 0) {
-            asyncLoop(inputWell.datasetInfo, (dataset, nextDataset) => {
-                curveModel.deleteCurveFiles(dataset.curves);
-                nextDataset();
-            }, (err) => {
-                console.log('done deleting: ' + err);
-            })
-        }
-        callback(err, null);
-    })
-}
 
 function processFileUpload(file, importData, callback) {
     console.log("______processFileUpload________");
