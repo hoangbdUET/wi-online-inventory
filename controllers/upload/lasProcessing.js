@@ -4,7 +4,7 @@ const models = require('../../models');
 const Well = models.Well;
 const asyncLoop = require('node-async-loop');
 const config = require("config");
-const wi_import = require("../../import-module");
+const wi_import = require("../../extractors");
 const importToDB = require('./importToDB');
 
 wi_import.setBasePath(config.dataPath);

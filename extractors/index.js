@@ -1,11 +1,11 @@
 "use strict";
 
-let hashDir = require('./source/hash-dir');
-let extractLAS2 = require("./source/extractors/las2/las2-extractor");
-let extractLAS3 = require("./source/extractors/las3/las3-extractor");
-let extractAscii = require("./source/extractors/ascii/ascii-extractor");
-let extractCSV = require("./source/extractors/csv/csv-extractor");
-let decoding = require("./source/extractors/crypto-file/decrypto");
+let hashDir = require('./hash-dir');
+let extractLAS2 = require("./las2/las2-extractor");
+let extractLAS3 = require("./las3/las3-extractor");
+let extractAscii = require("./ascii/ascii-extractor");
+let extractCSV = require("./csv/csv-extractor");
+let decoding = require("./crypto-file/decrypto");
 module.exports.setBasePath = function (path) {
     extractLAS2.setBasePath(path);
     // extractASC.setBasePath(path);

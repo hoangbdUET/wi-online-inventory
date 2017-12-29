@@ -1,12 +1,9 @@
 'use strict';
 let readline = require('line-by-line');
-// let async = require('async');
-let hashDir = require('../../hash-dir');
-// let CONFIG = require('../crypto-file/crypto.config').CONFIG;
+let hashDir = require('../hash-dir');
 let fs = require('fs');
 let __config = require('../common-config');
-// const cryptorFile = require('file-encryptor');
-const s3 = require('../../../../controllers/s3');
+const s3 = require('../../controllers/s3');
 let config = require('config');
 
 function writeToCurveFile(buffer, curveFileName, index, value, defaultNull) {

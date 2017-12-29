@@ -2,7 +2,7 @@
 
 const readline = require('line-by-line');
 const fs = require('fs');
-let hashDir = require('../../hash-dir');
+let hashDir = require('../hash-dir');
 const config = require('config');
 
 function writeToCurveFile(buffer, curveFilePath, index, value, defaultNull) {
@@ -43,6 +43,7 @@ function extractCurves(file, importData, cb) {
     let datasetName = fileName;
     if(importData.well && importData.datasets && importData.datasets.length > 0){
         datasetName = importData.well.datasets[0].name;
+
     }
     let lineNumber = 0;
     let curves = [];

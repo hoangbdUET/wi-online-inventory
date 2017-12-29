@@ -4,7 +4,7 @@ var fs = require('fs');
 var byline = require('byline');
 var Transform = require('stream').Transform;
 const LEN = 8;
-var decrypto = require('./extractors/crypto-file/decrypto');
+var decrypto = require('./crypto-file/decrypto');
 let async = require('async');
 
 function createDirSync(basePath, hash, dir) {
