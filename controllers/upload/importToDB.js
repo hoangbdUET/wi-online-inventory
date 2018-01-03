@@ -70,48 +70,63 @@ function importDatasets(datasets, idWell, cb) {
     }))
 }
 
-function importToDB(inputWell, userInfor, cb) {
-    console.log('importToDB inputWell: ' + JSON.stringify(inputWell));
-    inputWell.username = userInfor.username;
-    models.Well.findOrCreate({
-        where : { idWell : inputWell.idWell },
-        defaults: inputWell,
-        logging: console.log
-    }).spread((well, created) => {
-        console.log('create new well? ' + created);
-        importDatasets(inputWell.datasets, well.idWell, (err, result) => {
-            if(err) cb(err);
-            else {
-                well = well.toJSON();
-                well.datasets = result;
-                cb(null, well);
-            }
-        })
-    }).catch(err => {
-        console.log(err);
-        inputWell.name = inputWell.name + '_1';
-        importWell(inputWell, (err, well) => {
-            if(err) return cb(err);
+function importToDB(inputWells, userInfor, cb) {
+    console.log('importToDB inputWell: ' + JSON.stringify(inputWells));
+    if(!inputWells || inputWells.length <= 0) return cb('there is no well to import');
+    let res = [];
+    asyncLoop(inputWells, (inputWell, nextWell) => {
+        inputWell.username = userInfor.username;
+        models.Well.findOrCreate({
+            where : { idWell : inputWell.idWell },
+            defaults: inputWell,
+            logging: console.log
+        }).spread((well, created) => {
+            console.log('create new well? ' + created);
             importDatasets(inputWell.datasets, well.idWell, (err, result) => {
-                if(err) cb(err);
+                if(err) nextWell(err);
                 else {
                     well = well.toJSON();
                     well.datasets = result;
-                    cb(null, well);
+                    res.push(well);
+                    nextWell();
                 }
             })
-        })
+        }).catch(err => {
+            console.log(err);
+            inputWell.name = inputWell.name + '_1';
+            importWell(inputWell, (err, well) => {
+                if(err) return nextWell(err);
+                importDatasets(inputWell.datasets, well.idWell, (err, result) => {
+                    if(err) nextWell(err);
+                    else {
+                        well = well.toJSON();
+                        well.datasets = result;
+                        res.push(well);
+                        nextWell();
+                    }
+                })
+            })
 
-        //delete extracted curve files if import to db failed
-        // if(inputWell.datasetInfo && inputWell.datasetInfo.length > 0) {
-        //     asyncLoop(inputWell.datasetInfo, (dataset, nextDataset) => {
-        //         curveModel.deleteCurveFiles(dataset.curves);
-        //         nextDataset();
-        //     }, (err) => {
-        //         console.log('done deleting: ' + err);
-        //     })
-        // }
+            //delete extracted curve files if import to db failed
+            // if(inputWell.datasetInfo && inputWell.datasetInfo.length > 0) {
+            //     asyncLoop(inputWell.datasetInfo, (dataset, nextDataset) => {
+            //         curveModel.deleteCurveFiles(dataset.curves);
+            //         nextDataset();
+            //     }, (err) => {
+            //         console.log('done deleting: ' + err);
+            //     })
+            // }
+        })
+    }, (err) => {
+        if(err){
+            console.log(err);
+            cb(err);
+        }
+        else {
+            cb(null, res);
+        }
     })
+
 }
 
 module.exports = importToDB;

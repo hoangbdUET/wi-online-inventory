@@ -125,6 +125,7 @@ function extractCurves(inputURL, importData, callback) {
     });
     rl.on('end', function () {
         deleteFile(inputURL);
+        let output = [];
         wellInfo.datasets = [];
         let dataset = {
             name: wellInfo.name,
@@ -142,7 +143,8 @@ function extractCurves(inputURL, importData, callback) {
         });
 
         wellInfo.datasets.push(dataset);
-        callback(false, wellInfo);
+        output.push(wellInfo);
+        callback(false, output);
     });
     rl.on('err', function (err) {
         deleteFile(inputURL);

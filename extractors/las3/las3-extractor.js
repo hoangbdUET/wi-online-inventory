@@ -266,6 +266,7 @@ function extractInfoOnly(inputURL, callback) {
     rl.on('end', function () {
         //result.curves = curves;
         deleteFile(inputURL);
+        let output = [];
         if (datasets.length > 0) {
             datasets.forEach(function (dataset) {
                 for (let i = 0; i < curves.length; i++) {
@@ -288,7 +289,8 @@ function extractInfoOnly(inputURL, callback) {
             datasets.push(dataset);
         }
         wellInfo.datasetInfo = datasets;
-        callback(false, wellInfo);
+        output.push(wellInfo);
+        callback(false, output);
 
     });
     rl.on('err', function (err) {

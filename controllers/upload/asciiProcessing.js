@@ -33,12 +33,14 @@ function uploadAsciiFiles(req, cb) {
     //req.body.curveUnitStartAt
     //req.body.curveDataStartAt
     //req.body.userInfo.username
+    //req.body.datasetsStartAt
 
     importData.userInfo = req.decoded;
     importData.columnFormat = req.body.columnFormat;
     importData.curveNameStartAt = req.body.curveNameStartAt;
     importData.curveUnitStartAt = req.body.curveUnitStartAt;
     importData.curveDataStartAt = req.body.curveDataStartAt;
+    importData.datasetsStartAt = req.body.datasetsStartAt;
 
     let promise = new Promise(function (resolve, reject) {
         if(req.body.createNewWell == 'true'){
