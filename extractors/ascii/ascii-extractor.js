@@ -154,11 +154,15 @@ function extractCurves(file, importData, cb) {
         if (curves) {
             curves.forEach(function (curve) {
                 fs.appendFileSync(curve.path, buffers[curve.name].data);
-                // curve.path = curve.path.replace(config.dataPath + '/', '');
             });
         }
         let output = Object.keys(wells).map((wellname) => {
-            const datasets = Object.keys(wells[wellname].datasets).map((key) => {return wells[wellname].datasets[key]});
+            const datasets = Object.keys(wells[wellname].datasets).map((key) => {
+                wells[wellname].datasets[key].curves.forEach(curve => {
+                    curve.path = curve.path.replace(config.dataPath + '/', '');
+                })
+                return wells[wellname].datasets[key]
+            });
             wells[wellname].datasets = datasets;
             return wells[wellname];
         });
