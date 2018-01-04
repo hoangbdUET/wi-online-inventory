@@ -61,4 +61,13 @@ router.post('/user/delete', function (req, res) {
     });
 });
 
+router.post('/user/fullinfo', function (req, res) {
+    User.findOne({
+        where: {username: req.decoded.username},
+        include: {all: true, include: {all: true, include: {all: true}}}
+    }).then(rs => {
+        res.send(response(200, 'Successful', rs));
+    });
+});
+
 module.exports = router;
