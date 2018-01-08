@@ -1,0 +1,8 @@
+version: 0.0
+os: linux
+files:
+  - source: ./
+    destination: /opt/wi-online-inventory
+hooks:
+  AfterInstall:
+    - location: ./install_dependencies.sh
