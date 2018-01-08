@@ -9,7 +9,7 @@ module.exports = function (sequelize, DataTypes) {
             type: DataTypes.STRING,
             allowNull: false,
             defaultValue: "",
-            // unique: "name-idWell"
+            unique: "iddataset_curvename"
         },
         path: {
             type: DataTypes.STRING,

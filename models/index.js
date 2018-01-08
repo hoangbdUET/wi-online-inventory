@@ -48,7 +48,7 @@ models.forEach(function (model) {
     });
 
     m.Dataset.belongsTo(m.Well, {
-        foreignKey: {name: "idWell", allowNull: false}
+        foreignKey: {name: "idWell", allowNull: false, unique: "idwell_datasetname"}
     });
 
     m.Dataset.hasMany(m.Curve, {
@@ -57,7 +57,7 @@ models.forEach(function (model) {
     });
 
     m.Curve.belongsTo(m.Dataset, {
-        foreignKey: {name: "idDataset", allowNull: false}
+        foreignKey: {name: "idDataset", allowNull: false, unique: "iddataset_curvename"}
     })
 })(module.exports);
 module.exports.sequelize = sequelize;

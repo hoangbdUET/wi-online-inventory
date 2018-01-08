@@ -111,8 +111,6 @@ function extractCurves(file, importData, cb) {
                     };
                 })
                 currentWell = wellname;
-
-
             }
             curves.forEach((curve, i) => {
                 writeToCurveFile(buffers[curve.name], curve.path, count, curvesData[i + startColumn], -9999);
@@ -137,10 +135,10 @@ function extractCurves(file, importData, cb) {
                 }
                 // let filePath = hashDir.createPath(config.dataPath,importData.userInfo.username + wellName + curve.datasetname + curveName, curveName + '.txt');
                 // fs.writeFileSync(filePath, "");
-                buffers[curveName] = {
-                    count: 0,
-                    data: ""
-                }
+                // buffers[curveName] = {
+                //     count: 0,
+                //     data: ""
+                // }
                 curves.push(curve);
             })
         }
