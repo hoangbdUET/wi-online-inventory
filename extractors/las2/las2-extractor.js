@@ -226,6 +226,7 @@ function extractWell(inputURL, callback) {
     });
     rl.on('end', function () {
         deleteFile(inputURL);
+        let output = [];
         wellInfo.datasetInfo = [];
         let dataset = {
             name: wellInfo.name,
@@ -235,7 +236,8 @@ function extractWell(inputURL, callback) {
         }
         dataset.curves = curves;
         wellInfo.datasetInfo.push(dataset);
-        callback(false, wellInfo);
+        output.push(wellInfo);
+        callback(false, output);
     });
     rl.on('err', function (err) {
         deleteFile(inputURL);

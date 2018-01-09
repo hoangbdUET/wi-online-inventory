@@ -145,7 +145,7 @@ function extractCurves(inputURL, importData, callback) {
 
     rl.on('end', function () {
         deleteFile(inputURL);
-
+        let output = [];
         wellInfo.datasets = [];
         for(var datasetName in datasets){
             if(!datasets.hasOwnProperty(datasetName)) continue;
@@ -160,8 +160,9 @@ function extractCurves(inputURL, importData, callback) {
             })
         }
 
-        console.log(JSON.stringify(wellInfo));
-        callback(false, wellInfo);
+        // console.log(JSON.stringify(wellInfo));
+        output.push(wellInfo);
+        callback(false, output);
         //console.log("ExtractLAS3 Done");
     });
 
