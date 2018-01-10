@@ -5,13 +5,13 @@ const Well = models.Well;
 const asyncLoop = require('node-async-loop');
 const config = require("config");
 const wi_import = require("../../extractors");
-const importToDB = require('./importToDB');
+const importToDB = require('./_importToDB');
 
 wi_import.setBasePath(config.dataPath);
 
 function processFileUpload(file, importData, callback) {
     console.log("______processFileUpload________");
-    console.log(importData.well);
+    // console.log(importData);
     let fileFormat = file.filename.substring(file.filename.lastIndexOf('.') + 1, file.filename.length);
     if (/LAS/.test(fileFormat.toUpperCase())) {
         wi_import.extractLAS2(file.path, importData, function (err, result) {
@@ -27,7 +27,7 @@ function processFileUpload(file, importData, callback) {
                         else {
                             console.log("las 3 extracted");
                             importToDB(result, importData.userInfo, (err, result) => {
-                                if(err) {
+                                if (err) {
                                     console.log("import to db failed");
                                     callback(err, null);
                                 }
@@ -45,7 +45,7 @@ function processFileUpload(file, importData, callback) {
                 }
             }
             else {
-                importToDB(result, importData.userInfo, function (err, result) {
+                importToDB(result[0], importData.userInfo, function (err, result) {
                     if (err) {
                         callback(err, null);
                     }
@@ -62,7 +62,7 @@ function processFileUpload(file, importData, callback) {
 }
 
 function uploadLasFiles(req, cb) {
-    if(!req.files) return cb('NO FILE CHOSEN!!!');
+    if (!req.files) return cb('NO FILE CHOSEN!!!');
     let output = new Array();
     let importData = {};
     importData.userInfo = req.decoded;

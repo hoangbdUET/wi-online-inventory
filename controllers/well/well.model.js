@@ -20,7 +20,7 @@ function findWellById(idWell, username) {
                 where: { username : username},
                 required: true
             }],
-            logging: console.log
+            // logging: console.log
         })
 }
 
