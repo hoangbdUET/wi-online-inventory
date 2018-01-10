@@ -2,8 +2,9 @@ const models = require('../../models');
 const asyncEach = require('async/each');
 const asyncSeries = require('async/series');
 
-let importToDB = async function (well, userInfo, callback) {
-    console.log("====", well);
+let importToDB = async function (wells, userInfo, callback) {
+    console.log("====", wells);
+    let well = wells[0];
     well.username = userInfo.username;
     try {
         let newWell = await models.Well.findOrCreate({
