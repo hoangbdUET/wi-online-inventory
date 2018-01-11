@@ -6,9 +6,9 @@ const sequelize = new Sequelize(config.dbName, config.user, config.password, {
     define: {
         freezeTableName: true
     },
+    logging: config.logging,
     dialect: config.dialect,
     port: config.port,
-    logging: config.logging,
     dialectOptions: {
         charset: 'utf8'
     },

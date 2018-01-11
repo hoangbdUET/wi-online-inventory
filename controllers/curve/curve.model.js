@@ -34,7 +34,7 @@ function findCurveById(idCurve, username) {
                 }
             }
         },
-        logging: console.log
+        //logging: console.log
     });
 }
 
@@ -101,7 +101,7 @@ function getCurves(idDataset, username) {
                 }
             }
         },
-        logging: console.log
+        // logging: console.log
     })
 }
 
