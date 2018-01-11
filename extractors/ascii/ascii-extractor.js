@@ -4,6 +4,7 @@ const readline = require('line-by-line');
 const fs = require('fs');
 let hashDir = require('../hash-dir');
 const config = require('config');
+const s3 = require('../../controllers/s3');
 
 function writeToCurveFile(buffer, curveFilePath, index, value, defaultNull) {
     buffer.count ++;
@@ -81,7 +82,8 @@ function extractCurves(file, importData, cb) {
             if(wellname != currentWell){
                 if(!wells[wellname]) wells[wellname] = {
                     name : wellname,
-                    datasets : {}
+                    datasets : {},
+                    filename: file.originalname
                 };
                 // console.log('============================' + JSON.stringify(wells));
                 curves.forEach((curve, i) => {

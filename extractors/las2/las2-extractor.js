@@ -44,16 +44,17 @@ function getLASVersion(inputURL, callback) {
     });
 }
 
-function extractCurves(inputURL, importData, callback) {
-    let rl = new readline(inputURL, { skipEmptyLines : true });
+function extractCurves(inputFile, importData, callback) {
+    let rl = new readline(inputFile.path, { skipEmptyLines : true });
     let sectionName = "";
     let curves = [];
     let count = 0;
-    let wellInfo = importData.well ? importData.well :  new Object();
+    let wellInfo = importData.well ? importData.well :  {filename : inputFile.originalname};
     let filePaths = new Object();
     let BUFFERS = new Object();
     let fields = [];
     let isFirstCurve = true;
+
 
     rl.on('line', function (line) {
         line = line.trim();
@@ -88,19 +89,22 @@ function extractCurves(inputURL, importData, callback) {
                 return;
             }
 
-            let curve = new Object();
             let curveName = line.substring(0, line.indexOf('.')).trim();
             line = line.substring(line.indexOf('.') + 1);
 
             let unit = line.substring(0, line.indexOf(' ')).trim();
             if (unit.indexOf("00") != -1) unit = unit.substring(0, unit.indexOf("00"));
-            curve.name = curveName;
-            curve.unit = unit;
-            curve.datasetname = wellInfo.name;
-            // curve.wellname = wellInfo.name;
-            curve.initValue = "abc";
-            curve.family = "VNU";
-            curve.idDataset = null;
+            let curve = {
+                name : curveName,
+                unit : unit,
+                datasetname : wellInfo.name,
+                initValue : "abc",
+                family : "VNU",
+                idDataset : null,
+                startDepth : wellInfo.start,
+                stopDepth : wellInfo.stop,
+                step : wellInfo.step,
+            }
             BUFFERS[curveName] = {
                 count: 0,
                 data: ""
@@ -124,7 +128,7 @@ function extractCurves(inputURL, importData, callback) {
         }
     });
     rl.on('end', function () {
-        deleteFile(inputURL);
+        deleteFile(inputFile.path);
         let output = [];
         wellInfo.datasets = [];
         let dataset = {
@@ -147,7 +151,7 @@ function extractCurves(inputURL, importData, callback) {
         callback(false, output);
     });
     rl.on('err', function (err) {
-        deleteFile(inputURL);
+        deleteFile(inputFile.path);
         callback(err, null);
     });
 }
@@ -246,13 +250,13 @@ function extractWell(inputURL, callback) {
 
 }
 
-function extractAll(inputURL, importData, callbackGetSections) {
-    getLASVersion(inputURL, function (err, result) {
+function extractAll(inputFile, importData, callbackGetSections) {
+    getLASVersion(inputFile.path, function (err, result) {
         if (err) {
             callbackGetSections(err, result);
         } else {
             if (result.lasVersion == 2) {
-                extractCurves(inputURL, importData, function (err, info) {
+                extractCurves(inputFile, importData, function (err, info) {
                     if (err) callbackGetSections(err, null);
                     callbackGetSections(false, info);
                 });

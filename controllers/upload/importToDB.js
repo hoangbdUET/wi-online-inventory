@@ -6,12 +6,10 @@ function importCurves(curves, idDataset, cb) {
     if(!curves || curves.length <= 0) return cb();
     let output = [];
     asyncLoop(curves, function (curveData, nextCurve) {
-        models.Curve.create({
-            name: curveData.name,
-            unit: curveData.unit,
-            path: curveData.path,
-            idDataset: idDataset
-        }).then((curve) => {
+        curveData.idDataset = idDataset;
+        console.log(JSON.stringify(curveData));
+        models.Curve.create(curveData
+        ).then((curve) => {
             output.push(curve);
             nextCurve();
         }).catch(err => {

@@ -22,12 +22,12 @@ function writeToCurveFile(buffer, curveFileName, index, value, defaultNull) {
 }
 
 
-function extractCurves(inputURL, importData, callback) {
-    let rl = new readline(inputURL, { skipEmptyLines : true });
+function extractCurves(inputFile, importData, callback) {
+    let rl = new readline(inputFile.path, { skipEmptyLines : true });
     let sectionName = "";
     let datasets = {};
     let count = 0;
-    let wellInfo = importData.well ? importData.well : new Object();
+    let wellInfo = importData.well ? importData.well : {filename : inputFile.originalname};
     let filePaths = new Object();
     let BUFFERS = new Object();
     let isFirstCurve = true;
@@ -144,7 +144,7 @@ function extractCurves(inputURL, importData, callback) {
 
 
     rl.on('end', function () {
-        deleteFile(inputURL);
+        deleteFile(inputFile.path);
         let output = [];
         wellInfo.datasets = [];
         for(var datasetName in datasets){
@@ -168,7 +168,7 @@ function extractCurves(inputURL, importData, callback) {
 
     rl.on('err', function (err) {
         console.log(err);
-        deleteFile(inputURL);
+        deleteFile(inputFile.path);
         callback(err, null);
     });
 }

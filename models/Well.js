@@ -33,6 +33,10 @@ module.exports = function (sequelize, DataTypes) {
         API: {
             type: DataTypes.STRING(100),
             allowNull: true
+        },
+        filename : {
+            type: DataTypes.STRING(100),
+            allowNull: true
         }
     });
 }
