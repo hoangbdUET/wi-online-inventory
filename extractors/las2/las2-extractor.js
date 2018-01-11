@@ -98,8 +98,6 @@ function extractCurves(inputFile, importData, callback) {
                 name : curveName,
                 unit : unit,
                 datasetname : wellInfo.name,
-                initValue : "abc",
-                family : "VNU",
                 idDataset : null,
                 startDepth : wellInfo.start,
                 stopDepth : wellInfo.stop,

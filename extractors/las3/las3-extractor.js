@@ -109,18 +109,22 @@ function extractCurves(inputFile, importData, callback) {
                 return;
             }
 
-            const datasetName = new RegExp(definitionTitle).test(sectionName) ? sectionName.substring(0, sectionName.indexOf(definitionTitle)) : wellInfo.name
-            let curve = new Object();
+            const datasetName = new RegExp(definitionTitle).test(sectionName) ? sectionName.substring(0, sectionName.indexOf(definitionTitle)) : wellInfo.name;
             let curveName = line.substring(0, line.indexOf('.')).trim();
             line = line.substring(line.indexOf('.') + 1);
 
             let unit = line.substring(0, line.indexOf(' ')).trim();
             if (unit.indexOf("00") != -1) unit = unit.substring(0, unit.indexOf("00"));
-            curve.name = curveName;
-            curve.unit = unit;
-            curve.datasetname = datasetName;
-            curve.initValue = "abc";
-            curve.family = "VNU";
+
+            let curve = {
+                name : curveName,
+                unit : unit,
+                datasetname : datasetName,
+                idDataset : null,
+                startDepth : wellInfo.start,
+                stopDepth : wellInfo.stop,
+                step : wellInfo.step,
+            }
             BUFFERS[curveName] = {
                 count: 0,
                 data: ""

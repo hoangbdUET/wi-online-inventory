@@ -22,28 +22,29 @@ module.exports.extractWellLAS2 = function (inputURL, callback) {
     });
 };
 
-module.exports.extractLAS2 = function (inputURL, importData, callback) {
-    extractLAS2.extractAll(inputURL, importData, function (err, result) {
-        if (err) return callback(err, null);
-        callback(false, result);
-    });
-};
+module.exports.extractLAS = function (inputFile, importData, cb){
+    extractLAS2.extractAll(inputFile, importData, (err, result) => {
+        if(err) {
+            if (/LAS_3_DETECTED/.test(err)) {
+                console.log("this is las 3 file");
+                extractLAS3.extractCurves(inputFile, importData, function (err, result) {
+                    if (err) cb(err);
+                    else cb(null, result);
+                });
+            }
+            else cb(err);
+        }
+        else {
+            cb(null, result);
+        }
+    })
+}
+
 
 module.exports.extractCurveLAS2 = function (inputURL) {
     extractLAS2.extractCurves(inputURL);
 };
 
-module.exports.extractLAS3 = function (inputURL, importData, callback) {
-    console.log("Extract all 3.0 ");
-    extractLAS3.extractCurves(inputURL, importData, function (err, result) {
-        //console.log(result);
-        if (err) {
-            callback(err, null);
-        } else {
-            callback(false, result);
-        }
-    });
-}
 
 module.exports.deleteFile = function (inputURL) {
     extractLAS2.deleteFile(inputURL);
