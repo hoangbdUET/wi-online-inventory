@@ -64,9 +64,12 @@ function extractCurves(inputFile, importData, callback) {
                 let datasetName = sectionName.substring(0, sectionName.indexOf(definitionTitle));
                 let dataset = {
                     name: datasetName,
-                    datasetKey: datasetName,
-                    datasetLabel: datasetName,
-                    curves: []
+                    // datasetKey: datasetName,
+                    // datasetLabel: datasetName,
+                    curves: [],
+                    top: wellInfo.start,
+                    bottom: wellInfo.stop,
+                    step: wellInfo.step
                 }
                 datasets[datasetName] = dataset;
             }
@@ -74,9 +77,12 @@ function extractCurves(inputFile, importData, callback) {
                 isFirstCurve = true;
                 let dataset = {
                     name: wellInfo.name,
-                    datasetKey: wellInfo.name,
-                    datasetLabel: wellInfo.name,
-                    curves: []
+                    // datasetKey: wellInfo.name,
+                    // datasetLabel: wellInfo.name,
+                    curves: [],
+                    top: wellInfo.start,
+                    bottom: wellInfo.stop,
+                    step: wellInfo.step
                 }
                 datasets[wellInfo.name] = dataset;
             }

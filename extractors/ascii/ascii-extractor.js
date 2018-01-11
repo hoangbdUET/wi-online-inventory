@@ -133,14 +133,11 @@ function extractCurves(file, importData, cb) {
                     name: curveName,
                     datasetname: null,
                     wellname: null,
-                    path: ''
+                    path: '',
+                    startDepth: 0,
+                    stopDepth: 0,
+                    step: 0
                 }
-                // let filePath = hashDir.createPath(config.dataPath,importData.userInfo.username + wellName + curve.datasetname + curveName, curveName + '.txt');
-                // fs.writeFileSync(filePath, "");
-                // buffers[curveName] = {
-                //     count: 0,
-                //     data: ""
-                // }
                 curves.push(curve);
             })
         }

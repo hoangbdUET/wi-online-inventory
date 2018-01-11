@@ -133,9 +133,12 @@ function extractCurves(inputFile, importData, callback) {
         wellInfo.datasets = [];
         let dataset = {
             name: wellInfo.name,
-            datasetKey: wellInfo.name,
-            datasetLabel: wellInfo.name,
-            curves: null
+            // datasetKey: wellInfo.name,
+            // datasetLabel: wellInfo.name,
+            curves: null,
+            top: wellInfo.start,
+            bottom: wellInfo.stop,
+            step: wellInfo.step
         }
         dataset.curves = curves.map(function (curve) {
             fs.appendFileSync(curve.path, BUFFERS[curve.name].data);
