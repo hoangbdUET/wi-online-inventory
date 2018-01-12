@@ -31,23 +31,23 @@ function importWell(wellData, cb) {
                 let value = '';
                 if(wellData[WellHeader[property].LASMnemnics]){
                     value = wellData[WellHeader[property].LASMnemnics];
+                    delete wellData[WellHeader[property].LASMnemnics];
                 }
                 else if(wellData[WellHeader[property].CSVMnemnics]){
                     value = wellData[WellHeader[property].CSVMnemnics];
+                    delete wellData[WellHeader[property].CSVMnemnics]
                 }
 
                 models.WellHeader.create({
                     idWell: well.idWell,
-                    header: WellHeader[property].name,
+                    header: property,
                     value: value
                 }).catch(err => {
                     console.log(err)
                 })
-
-                delete wellData[property];
             }
             for(let header in wellData){
-                if(!arr.includes(header) && wellData[header])
+                if(!arr.includes(header))
                     models.WellHeader.create({
                         idWell: well.idWell,
                         header: header,
@@ -60,7 +60,15 @@ function importWell(wellData, cb) {
         })
         .catch(err => {
             if(err.name = 'SequelizeUniqueConstraintError'){
-                wellData.name = wellData.name + '_1';
+                if(wellData.name.indexOf(' ( copy ') < 0){
+                    wellData.name = wellData.name + ' ( copy 1 )';
+                }
+                else {
+                    let copy = wellData.name.substr(wellData.name.lastIndexOf(' ( copy '), wellData.name.length);
+                    let copyNumber = parseInt(copy.replace(' ( copy ', '').replace(' )', ''));
+                    copyNumber++;
+                    wellData.name = wellData.name.replace(copy, '') + ' ( copy ' + copyNumber + ' )';
+                }
                 importWell(wellData, cb);
             }
             else {
