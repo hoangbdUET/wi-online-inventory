@@ -7,7 +7,6 @@ let Well = models.Well;
 let response = require('../response');
 let wellModel = require('./well.model');
 const lasProcessing = require('../upload/lasProcessing');
-const WellHeader = require('../wellHeader');
 
 const multer = require('multer');
 const storage = multer.diskStorage({
@@ -42,13 +41,6 @@ router.post('/well/info', function (req, res) {
                 }).then(headers => {
                     well = well.toJSON();
                     headers.forEach(header => {
-                        header = header.toJSON();
-                        for(let property in WellHeader){
-                            if(header.header == WellHeader[property].LASMnemnics || header.header == WellHeader[property].CSVMnemnics){
-                                header.header = WellHeader[property].name;
-                                break;
-                            }
-                        }
                         well[header.header] = header.value;
                     })
                     res.send(response(200, 'SUCCESSFULLY GET WELL INFOR', well));

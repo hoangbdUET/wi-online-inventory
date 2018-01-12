@@ -1,6 +1,7 @@
 'use strict'
 const asyncLoop = require('node-async-loop');
 const models = require('../../models');
+const WellHeader = require('../wellHeader');
 
 function importCurves(curves, idDataset, cb) {
     if(!curves || curves.length <= 0) return cb();
@@ -26,6 +27,25 @@ function importWell(wellData, cb) {
     models.Well.create(wellData)
         .then( well => {
             let arr = ['username', 'datasets', 'name', 'username'];
+            for(let property in WellHeader){
+                let value = '';
+                if(wellData[WellHeader[property].LASMnemnics]){
+                    value = wellData[WellHeader[property].LASMnemnics];
+                }
+                else if(wellData[WellHeader[property].CSVMnemnics]){
+                    value = wellData[WellHeader[property].CSVMnemnics];
+                }
+
+                models.WellHeader.create({
+                    idWell: well.idWell,
+                    header: WellHeader[property].name,
+                    value: value
+                }).catch(err => {
+                    console.log(err)
+                })
+
+                delete wellData[property];
+            }
             for(let header in wellData){
                 if(!arr.includes(header) && wellData[header])
                     models.WellHeader.create({
