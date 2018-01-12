@@ -7,7 +7,6 @@ function importCurves(curves, idDataset, cb) {
     let output = [];
     asyncLoop(curves, function (curveData, nextCurve) {
         curveData.idDataset = idDataset;
-        console.log(JSON.stringify(curveData));
         models.Curve.create(curveData
         ).then((curve) => {
             output.push(curve);
@@ -26,6 +25,17 @@ function importCurves(curves, idDataset, cb) {
 function importWell(wellData, cb) {
     models.Well.create(wellData)
         .then( well => {
+            let arr = ['username', 'datasets', 'name', 'username'];
+            for(let header in wellData){
+                if(!arr.includes(header) && wellData[header])
+                    models.WellHeader.create({
+                        idWell: well.idWell,
+                        header: header,
+                        value: wellData[header]
+                    }).catch(err => {
+                        console.log(err)
+                    })
+            }
             cb(null, well);
         })
         .catch(err => {
@@ -47,7 +57,7 @@ function importDatasets(datasets, idWell, cb) {
         models.Dataset.findOrCreate({
             where : { idDataset : datasetData.idDataset },
             defaults: datasetData,
-            logging: console.log
+            // logging: console.log
         }).spread((dataset, created) => {
             importCurves(datasetData.curves, dataset.idDataset, (err, result)=> {
                 if(err) next(err);
@@ -74,35 +84,37 @@ function importToDB(inputWells, userInfor, cb) {
     let res = [];
     asyncLoop(inputWells, (inputWell, nextWell) => {
         inputWell.username = userInfor.username;
-        models.Well.findOrCreate({
-            where : { idWell : inputWell.idWell },
-            defaults: inputWell,
-            logging: console.log
-        }).spread((well, created) => {
-            console.log('create new well? ' + created);
-            importDatasets(inputWell.datasets, well.idWell, (err, result) => {
-                if(err) nextWell(err);
+        models.Well.findById(inputWell.idWell)
+            .then(well => {
+                if(!well) {
+                    importWell(inputWell, (err, wellCreated) => {
+                        if(err) nextWell(err);
+                        else importDatasets(inputWell.datasets, wellCreated.idWell, (err, result) => {
+                            if(err) nextWell(err);
+                            else {
+                                wellCreated = wellCreated.toJSON();
+                                wellCreated.datasets = result;
+                                res.push(wellCreated);
+                                nextWell();
+                            }
+                        })
+                    })
+                }
                 else {
-                    well = well.toJSON();
-                    well.datasets = result;
-                    res.push(well);
-                    nextWell();
+                    importDatasets(inputWell.datasets, well.idWell, (err, result) => {
+                        if(err) nextWell(err);
+                        else {
+                            well = well.toJSON();
+                            well.datasets = result;
+                            res.push(well);
+                            nextWell();
+                        }
+                    })
                 }
             })
-        }).catch(err => {
-            console.log(err);
-            inputWell.name = inputWell.name + '_1';
-            importWell(inputWell, (err, well) => {
-                if(err) return nextWell(err);
-                importDatasets(inputWell.datasets, well.idWell, (err, result) => {
-                    if(err) nextWell(err);
-                    else {
-                        well = well.toJSON();
-                        well.datasets = result;
-                        res.push(well);
-                        nextWell();
-                    }
-                })
+            .catch(err => {
+                console.log(err)
+                nextWell(err);
             })
 
             //delete extracted curve files if import to db failed
@@ -114,7 +126,6 @@ function importToDB(inputWells, userInfor, cb) {
             //         console.log('done deleting: ' + err);
             //     })
             // }
-        })
     }, (err) => {
         if(err){
             console.log(err);

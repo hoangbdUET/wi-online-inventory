@@ -67,20 +67,15 @@ function extractCurves(inputFile, importData, callback) {
             return;
         } else if (sectionName == '~W') {
             if(importData.well) return;
-            const mnem = line.substring(0, line.indexOf('.'));
+            const mnem = line.substring(0, line.indexOf('.')).trim();
             line = line.substring(line.indexOf('.'));
             const data = line.substring(line.indexOf(' '), line.indexOf(':')).trim();
 
             if ((/WELL/).test(mnem) && !/UWI/.test(mnem)) {
                 wellInfo.name = data;
-            } else if (/STRT/.test(mnem)) {
-                wellInfo.start = data;
-            } else if (/STOP/.test(mnem)) {
-                wellInfo.stop = data;
-            } else if (/STEP/.test(mnem)) {
-                wellInfo.step = data;
-            } else if (/NULL/.test(mnem)) {
-                wellInfo.null = data;
+            }
+            else {
+                wellInfo[mnem] = data;
             }
         } else if (sectionName == '~C') {
 
@@ -98,17 +93,15 @@ function extractCurves(inputFile, importData, callback) {
                 name : curveName,
                 unit : unit,
                 datasetname : wellInfo.name,
-                idDataset : null,
-                startDepth : wellInfo.start,
-                stopDepth : wellInfo.stop,
-                step : wellInfo.step,
+                startDepth : wellInfo.STRT,
+                stopDepth : wellInfo.STOP,
+                step : wellInfo.STEP
             }
             BUFFERS[curveName] = {
                 count: 0,
                 data: ""
             };
             filePaths[curveName] = hashDir.createPath(__config.basePath,importData.userInfo.username + wellInfo.name + curve.datasetname + curveName, curveName + '.txt');
-            // filePaths[curveName] = hashDir.createPath(__config.basePath, new Date().getTime().toString() + curveName , curveName + '.txt');
             fs.writeFileSync(filePaths[curveName], "");
             curve.path = filePaths[curveName];
             curves.push(curve);
@@ -117,7 +110,7 @@ function extractCurves(inputFile, importData, callback) {
             if(fields.length > curves.length) {
                 if (curves) {
                     curves.forEach(function (curve, i) {
-                        writeToCurveFile(BUFFERS[curve.name], curve.path, count, fields[i + 1], wellInfo.null);
+                        writeToCurveFile(BUFFERS[curve.name], curve.path, count, fields[i + 1], wellInfo.NULL);
                     });
                     count++;
                 }

@@ -7,6 +7,7 @@ let Well = models.Well;
 let response = require('../response');
 let wellModel = require('./well.model');
 const lasProcessing = require('../upload/lasProcessing');
+const WellHeader = require('../wellHeader');
 
 const multer = require('multer');
 const storage = multer.diskStorage({
@@ -34,7 +35,28 @@ router.post('/well/info', function (req, res) {
     wellModel.findWellById(req.body.idWell, req.decoded.username)
         .then(well => {
             if (well) {
-                res.send(response(200, 'SUCCESSFULLY GET WELL INFOR', well));
+                models.WellHeader.findAll({
+                    where: {
+                        idWell: well.idWell
+                    }
+                }).then(headers => {
+                    well = well.toJSON();
+                    headers.forEach(header => {
+                        header = header.toJSON();
+                        for(let property in WellHeader){
+                            if(header.header == WellHeader[property].LASMnemnics || header.header == WellHeader[property].CSVMnemnics){
+                                header.header = WellHeader[property].name;
+                                break;
+                            }
+                        }
+                        well[header.header] = header.value;
+                    })
+                    res.send(response(200, 'SUCCESSFULLY GET WELL INFOR', well));
+                }).catch(err => {
+                    console.log(err);
+                    res.send(response(200, 'SUCCESSFULLY GET WELL INFOR', well));
+                })
+
             } else {
                 res.send(response(200, 'NO WELL FOUND BY ID'));
             }

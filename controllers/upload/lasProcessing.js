@@ -12,6 +12,7 @@ wi_import.setBasePath(config.dataPath);
 function processFileUpload(file, importData, callback) {
     console.log("______processFileUpload________");
     // console.log(importData);
+    console.log(JSON.stringify(file));
     let fileFormat = file.filename.substring(file.filename.lastIndexOf('.') + 1, file.filename.length);
     if (/LAS/.test(fileFormat.toUpperCase())) {
         wi_import.extractLAS(file, importData, function (err, result) {

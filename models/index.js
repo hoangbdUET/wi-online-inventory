@@ -28,7 +28,8 @@ var models = [
     'Curve',
     'Well',
     'User',
-    'Dataset'
+    'Dataset',
+    'WellHeader'
 ];
 models.forEach(function (model) {
     module.exports[model] = sequelize.import(__dirname + '/' + model);
@@ -59,5 +60,7 @@ models.forEach(function (model) {
     m.Curve.belongsTo(m.Dataset, {
         foreignKey: {name: "idDataset", allowNull: false, unique: "iddataset_curvename"}
     })
+
+
 })(module.exports);
 module.exports.sequelize = sequelize;

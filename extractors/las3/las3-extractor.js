@@ -67,9 +67,9 @@ function extractCurves(inputFile, importData, callback) {
                     // datasetKey: datasetName,
                     // datasetLabel: datasetName,
                     curves: [],
-                    top: wellInfo.start,
-                    bottom: wellInfo.stop,
-                    step: wellInfo.step
+                    top: wellInfo.STRT,
+                    bottom: wellInfo.STOP,
+                    step: wellInfo.STEP
                 }
                 datasets[datasetName] = dataset;
             }
@@ -80,28 +80,23 @@ function extractCurves(inputFile, importData, callback) {
                     // datasetKey: wellInfo.name,
                     // datasetLabel: wellInfo.name,
                     curves: [],
-                    top: wellInfo.start,
-                    bottom: wellInfo.stop,
-                    step: wellInfo.step
+                    top: wellInfo.STRT,
+                    bottom: wellInfo.STOP,
+                    step: wellInfo.STEP
                 }
                 datasets[wellInfo.name] = dataset;
             }
         } else if(sectionName == wellTitle){
             if(importData.well) return;
-            const mnem = line.substring(0, line.indexOf('.'));
+            const mnem = line.substring(0, line.indexOf('.')).trim();
             line = line.substring(line.indexOf('.'));
             const data = line.substring(line.indexOf(' '), line.indexOf(':')).trim();
 
             if ((/WELL/).test(mnem) && !/UWI/.test(mnem)) {
                 wellInfo.name = data;
-            } else if (/STRT/.test(mnem)) {
-                wellInfo.start = data;
-            } else if (/STOP/.test(mnem)) {
-                wellInfo.stop = data;
-            } else if (/STEP/.test(mnem)) {
-                wellInfo.step = data;
-            } else if (/NULL/.test(mnem)) {
-                wellInfo.null = data;
+            }
+            else {
+                wellInfo[mnem] = data;
             }
         } else if(sectionName == curveTitle ||new RegExp(definitionTitle).test(sectionName)){
             if(isFirstCurve){
@@ -120,10 +115,9 @@ function extractCurves(inputFile, importData, callback) {
                 name : curveName,
                 unit : unit,
                 datasetname : datasetName,
-                idDataset : null,
-                startDepth : wellInfo.start,
-                stopDepth : wellInfo.stop,
-                step : wellInfo.step,
+                startDepth : wellInfo.STRT,
+                stopDepth : wellInfo.STOP,
+                step : wellInfo.STEP,
             }
             BUFFERS[curveName] = {
                 count: 0,
@@ -141,7 +135,7 @@ function extractCurves(inputFile, importData, callback) {
             if(fields.length > datasets[datasetName].curves.length) {
                 if (datasets[datasetName].curves) {
                     datasets[datasetName].curves.forEach(function (curve, i) {
-                        writeToCurveFile(BUFFERS[curve.name], curve.path, count, fields[i + 1], wellInfo.null);
+                        writeToCurveFile(BUFFERS[curve.name], curve.path, count, fields[i + 1], wellInfo.NULL);
                     });
                     count++;
                 }
