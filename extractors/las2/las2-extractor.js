@@ -85,6 +85,7 @@ function extractCurves(inputFile, importData, callback) {
             }
 
             let curveName = line.substring(0, line.indexOf('.')).trim();
+            curveName = curveName.replace('/', '_');
             while (true){
                 let rename = curves.every(curve => {
                     if(curveName == curve.name){

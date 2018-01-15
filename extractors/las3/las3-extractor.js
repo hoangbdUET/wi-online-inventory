@@ -104,6 +104,7 @@ function extractCurves(inputFile, importData, callback) {
 
             const datasetName = new RegExp(definitionTitle).test(sectionName) ? sectionName.substring(0, sectionName.indexOf(definitionTitle)) : wellInfo.name;
             let curveName = line.substring(0, line.indexOf('.')).trim();
+            curveName = curveName.replace('/', '_');
             while (true){
                 let rename = datasets[datasetName].curves.every(curve => {
                     if(curveName == curve.name){

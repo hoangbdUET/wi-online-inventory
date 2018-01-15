@@ -127,7 +127,8 @@ router.post('/well/editHeader', function (req, res) {
         where: {
             idWell: req.body.idWell,
             header: req.body.header
-        }.then (well_header => {
+        }})
+        .then (well_header => {
             Object.assign(well_header, req.body);
             well_header.save().then(c => {
                 res.send(response(200, 'SUCCESSFULLY EDIT WELL HEADER', c));
@@ -135,7 +136,7 @@ router.post('/well/editHeader', function (req, res) {
                 res.send(response(500, 'FAILED TO EDIT WELL HEADER', e));
             })
         })
-    })
+
 })
 
 module.exports = router;
