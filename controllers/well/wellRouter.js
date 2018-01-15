@@ -95,15 +95,32 @@ router.post('/well/copyDatasets', function (req, res) {
 })
 
 router.post('/wells', function (req, res) {
-    Well.findAll({
+    let opts = {
         where: {
             username: req.decoded.username,
         },
         include : {
             model: models.WellHeader,
             attributes: ['header', 'value']
+        },
+        order: ['idWell']
+    };
+    if (req.body.start && req.body.limit) {
+        opts.limit = req.body.limit;
+        if (req.body.forward) {
+            opts.where.idWell = {
+                [Op.gt]: req.body.start
+            }
         }
-    })
+        else {
+            opts.where.idWell = {
+                [Op.lt]: req.body.start
+            },
+            opts.order = [["idWell", 'DESC']]
+        }
+    }
+    console.log(opts);
+    Well.findAll(opts)
         .then((wells) => {
             res.send(response(200, 'SUCCESSFULLY GET WELLS', wells));
         })
