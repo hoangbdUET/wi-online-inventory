@@ -107,7 +107,7 @@ router.post('/wells', function (req, res) {
         },
         order: ['idWell']
     };
-    if (req.body.start && req.body.limit) {
+    if (!isNaN(req.body.start) && req.body.limit) {
         opts.limit = req.body.limit;
         if (req.body.forward) {
             opts.where.idWell = {
