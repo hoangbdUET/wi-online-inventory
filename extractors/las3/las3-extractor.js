@@ -114,10 +114,6 @@ function extractCurves(inputFile, importData, callback) {
                 });
                 if(rename) break;
             }
-            // datasets[datasetName].curves.forEach(curve => {
-            //     if(curveName == curve.name)
-            //         curveName = curveName + '_1';
-            // })
             line = line.substring(line.indexOf('.') + 1);
 
             let unit = line.substring(0, line.indexOf(' ')).trim();
