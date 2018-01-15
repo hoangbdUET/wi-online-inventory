@@ -117,7 +117,7 @@ router.post('/wells', function (req, res) {
         else {
             opts.where.idWell = {
                 [Op.lt]: req.body.start
-            },
+            };
             opts.order = [["idWell", 'DESC']]
         }
     }
