@@ -148,20 +148,42 @@ function copyDatasets(req, cb) {
 }
 
 function editWell(body, username, cb){
-    findWellById(body.idWell, username)
+    let attributes = {
+        datasets: ['idDataset', 'name'],
+        curves: ['idCurve', 'name']
+    }
+    findWellById(body.idWell, username, attributes)
         .then(well => {
             if (well) {
-                Object.assign(well, req.body);
+                if(well.name != body.name){
+                    let changeSet = {
+                        username: username,
+                        oldWellName: well.name,
+                        newWellName: body.name,
+                        datasets: well.datasets
+                    }
+                    let changedCurves = require('../fileManagement').moveWellFiles(changeSet);
+                    changedCurves.forEach(changedCurve => {
+                        models.Curve.findById(changedCurve.idCurve)
+                            .then(curve=> {
+                                Object.assign(curve, changedCurve);
+                                curve.save().catch(err => {
+                                    console.log(err);
+                                })
+                            })
+                    })
+                }
+                Object.assign(well, body);
                 well.save().then(c => {
-                    res.send(response(200, 'SUCCESSFULLY EDIT WELL', c));
+                    cb(null, c);
                 }).catch(e => {
-                    res.send(response(500, 'FAILED TO EDIT WELL', e));
+                    cb(e);
                 })
             } else {
-                res.send(response(200, 'NO WELL FOUND TO EDIT'));
+                cb('NO WELL FOUND TO EDIT');
             }
         }).catch(err => {
-        res.send(response(500, 'FAILED TO FIND WELL', err));
+            cb(err);
     });
 }
 
