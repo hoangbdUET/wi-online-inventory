@@ -77,8 +77,6 @@ function extractCurves(inputFile, importData, callback) {
                 isFirstCurve = true;
                 let dataset = {
                     name: wellInfo.name,
-                    // datasetKey: wellInfo.name,
-                    // datasetLabel: wellInfo.name,
                     curves: [],
                     top: wellInfo.STRT,
                     bottom: wellInfo.STOP,
@@ -93,7 +91,7 @@ function extractCurves(inputFile, importData, callback) {
             const data = line.substring(line.indexOf(' '), line.indexOf(':')).trim();
 
             if ((/WELL/).test(mnem) && !/UWI/.test(mnem)) {
-                wellInfo.name = data;
+                wellInfo.name = data ? data : inputFile.originalname;
             }
             else {
                 wellInfo[mnem] = data;
@@ -106,6 +104,20 @@ function extractCurves(inputFile, importData, callback) {
 
             const datasetName = new RegExp(definitionTitle).test(sectionName) ? sectionName.substring(0, sectionName.indexOf(definitionTitle)) : wellInfo.name;
             let curveName = line.substring(0, line.indexOf('.')).trim();
+            while (true){
+                let rename = datasets[datasetName].curves.every(curve => {
+                    if(curveName == curve.name){
+                        curveName = curveName + '_1';
+                        return false;
+                    }
+                    return true;
+                });
+                if(rename) break;
+            }
+            // datasets[datasetName].curves.forEach(curve => {
+            //     if(curveName == curve.name)
+            //         curveName = curveName + '_1';
+            // })
             line = line.substring(line.indexOf('.') + 1);
 
             let unit = line.substring(0, line.indexOf(' ')).trim();

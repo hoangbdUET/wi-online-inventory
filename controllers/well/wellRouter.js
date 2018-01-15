@@ -108,7 +108,7 @@ router.post('/wells', function (req, res) {
     Well.findAll({
         where: {
             username: req.decoded.username,
-         }
+        }
     })
         .then((wells) => {
             res.send(response(200, 'SUCCESSFULLY GET WELLS', wells));
@@ -116,6 +116,22 @@ router.post('/wells', function (req, res) {
         .catch((err) => {
             res.send(response(500, 'FAILED TO GET WELLS', err));
         })
+})
+
+router.post('/well/editHeader', function (req, res) {
+    models.WellHeader.findOne({
+        where: {
+            idWell: req.body.idWell,
+            header: req.body.header
+        }.then (well_header => {
+            Object.assign(well_header, req.body);
+            well_header.save().then(c => {
+                res.send(response(200, 'SUCCESSFULLY EDIT WELL HEADER', c));
+            }).catch(e => {
+                res.send(response(500, 'FAILED TO EDIT WELL HEADER', e));
+            })
+        })
+    })
 })
 
 module.exports = router;
