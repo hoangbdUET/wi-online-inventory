@@ -109,11 +109,11 @@ router.post('/wells', function (req, res) {
     };
     if (req.body.start && req.body.limit) {
         opts.limit = req.body.limit;
-	if (req.body.forward) {
+        if (req.body.forward) {
             opts.where.idWell = {
                 [Op.gt]: req.body.start
             }
-	}
+        }
         else {
             opts.where.idWell = {
                 [Op.lt]: req.body.start

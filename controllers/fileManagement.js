@@ -40,6 +40,24 @@ function moveWellFiles(changeSet) {
     //changeSet.oldWellName
     //changeSet.newWellName
     //changeSet.datasets
+    let output = [];
+    changeSet.datasets.forEach(dataset => {
+        dataset.curves.forEach(curve=> {
+            const oldCurve = {
+                username: changeSet.username,
+                wellname: changeSet.oldWellName,
+                datasetname: dataset.name,
+                curvename: curve.name
+            }
+            const newCurve = Object.assign({}, oldCurve);
+            newCurve.wellname = changeSet.newWellName;
+            output.push({
+                idCurve: curve.idCurve,
+                path: moveCurveFile(oldCurve, newCurve)
+            });
+        })
+    })
+    return output;
 }
 
 module.exports = {
