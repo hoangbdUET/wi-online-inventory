@@ -52,23 +52,18 @@ router.post('/curve/data', function (req, res) {
 })
 
 router.post('/curve/edit', function (req, res) {
-    curveModel.findCurveById(req.body.idCurve, req.decoded.username)
-        .then(curve => {
-            if (curve) {
-                Object.assign(curve, req.body);
-                curve.save().then(c => {
-                    res.send(response(200, 'SUCCESSFULLY EDIT CURVE', c));
-                }).catch(e => {
-                    res.send(response(500, 'FAILED TO EDIT CURVE', e));
-                })
-            } else {
-                res.send(response(200, 'NO CURVE FOUND FOR EDIT'));
-            }
-        }).catch(err => {
-        res.send(response(500, 'FAILED TO FIND CURVE', err));
-    });
-});
 
+    curveModel.editCurve(req.body, req.decoded.username, (err, result) => {
+        if(err){
+            console.log(err);
+            res.send(response(500, 'FAILED TO EDIT CURVE', err));
+        }
+        else {
+            res.send(response(200, 'SUCCESSFULLY EDIT CURVE', result));
+        }
+    })
+
+});
 router.post('/curve/delete', function (req, res) {
     curveModel.findCurveById(req.body.idCurve, req.decoded.username)
         .then(curve => {

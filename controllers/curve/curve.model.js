@@ -14,19 +14,19 @@ function createCurve(body, cb) {
     });
 }
 
-function findCurveById(idCurve, username) {
+function findCurveById(idCurve, username, attributes) {
     return Curve.findById(idCurve, {
         include : {
             model: Dataset,
-            attributes : [],
+            attributes : attributes && attributes.dataset ? attributes.dataset : [],
             required: true,
             include: {
                 model: Well,
-                attributes: [],
+                attributes: attributes && attributes.well? attributes.well : [],
                 required: true,
                 include: {
                     model: User,
-                    attributes: [],
+                    attributes: attributes && attributes.user ? attributes.user : [],
                     required: true,
                     where: {
                         username: username
@@ -105,6 +105,41 @@ function getCurves(idDataset, username) {
     })
 }
 
+function editCurve(body, username, cb){
+    let attributes = {
+        well: ['name'],
+        dataset: ['name']
+    }
+    findCurveById(body.idCurve, username, attributes)
+        .then(curve => {
+            if (curve) {
+                if(curve.name != body.name){
+                    const oldCurve = {
+                        username: username,
+                        wellname: curve.dataset.well.name,
+                        datasetname: curve.dataset.name,
+                        curvename: curve.name
+                    }
+                    const newCurve = Object.assign({}, oldCurve);
+                    newCurve.curvename = body.name;
+
+                    body.path = require('../fileManagement').moveCurveFile(oldCurve, newCurve);
+                }
+                Object.assign(curve, body);
+                curve.save().then(c => {
+                    cb(null, c);
+                }).catch(e => {
+                    cb(e);
+                })
+            } else {
+                cb('NO CURVE FOUND FOR EDIT');
+            }
+        }).catch(err => {
+        console.log('===========' + err)
+        cb('FAILED TO FIND CURVE');
+    });
+}
+
 
 
 module.exports = {
@@ -112,5 +147,6 @@ module.exports = {
     deleteCurve : deleteCurve,
     getCurves: getCurves,
     deleteCurveFiles: deleteCurveFiles,
-    createCurve: createCurve
+    createCurve: createCurve,
+    editCurve: editCurve
 }

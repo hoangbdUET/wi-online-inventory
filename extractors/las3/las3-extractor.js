@@ -64,8 +64,6 @@ function extractCurves(inputFile, importData, callback) {
                 let datasetName = sectionName.substring(0, sectionName.indexOf(definitionTitle));
                 let dataset = {
                     name: datasetName,
-                    // datasetKey: datasetName,
-                    // datasetLabel: datasetName,
                     curves: [],
                     top: wellInfo.STRT,
                     bottom: wellInfo.STOP,
@@ -119,6 +117,8 @@ function extractCurves(inputFile, importData, callback) {
 
             let unit = line.substring(0, line.indexOf(' ')).trim();
             if (unit.indexOf("00") != -1) unit = unit.substring(0, unit.indexOf("00"));
+
+            console.log('unit=================== ' + unit);
 
             let curve = {
                 name : curveName,
