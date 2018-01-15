@@ -108,6 +108,10 @@ router.post('/wells', function (req, res) {
     Well.findAll({
         where: {
             username: req.decoded.username,
+        },
+        include : {
+            model: models.WellHeader,
+            attributes: ['header', 'value']
         }
     })
         .then((wells) => {

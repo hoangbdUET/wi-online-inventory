@@ -31,25 +31,19 @@ function importWell(wellData, cb) {
                 let value = '';
                 if(wellData[WellHeader[property].LASMnemnics]){
                     value = wellData[WellHeader[property].LASMnemnics];
-                    delete wellData[WellHeader[property]];
                 }
                 else if(wellData[WellHeader[property].CSVMnemnics]){
                     value = wellData[WellHeader[property].CSVMnemnics];
-                    delete wellData[WellHeader[property]]
                 }
-
-
-
+                arr.push(property);
                 models.WellHeader.create({
                     idWell: well.idWell,
                     header: property,
                     value: value
                 }).catch(err => {
-                    console.log(err)
+                    console.log('=============' + err)
                 })
             }
-
-
 
             for(let header in wellData){
                 if(!arr.includes(header))

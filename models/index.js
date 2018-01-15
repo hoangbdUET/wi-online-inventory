@@ -61,6 +61,11 @@ models.forEach(function (model) {
         foreignKey: {name: "idDataset", allowNull: false, unique: "iddataset_curvename"}
     })
 
+    m.Well.hasMany(m.WellHeader, {
+        foreignKey: 'idWell',
+        sourceKey: 'idWell'
+    })
+
 
 })(module.exports);
 module.exports.sequelize = sequelize;
