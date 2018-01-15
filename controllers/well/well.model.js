@@ -10,16 +10,28 @@ const hashDir = importModule.hashDir;
 const config = require('config');
 
 
-function findWellById(idWell, username) {
+function findWellById(idWell, username, attributes) {
+    let include = [ {
+        model: User,
+        attributes: [],
+        where: { username : username},
+        required: true
+    }]
+    if(attributes && attributes.datasets){
+        let includeDatasets = {
+            model: models.Dataset,
+            attributes: ['idDataset', 'name']
+        }
+        if(attributes.curves) includeDatasets.include = {
+            model: models.Curve,
+            attributes: ['idCurve', 'name']
+        }
+        include.push(includeDatasets);
+    }
     return Well.findById(
         idWell,
         {
-            include : [ {
-                model: User,
-                attributes: [],
-                where: { username : username},
-                required: true
-            }],
+            include : include
             // logging: console.log
         })
 }
@@ -135,8 +147,27 @@ function copyDatasets(req, cb) {
 
 }
 
+function editWell(body, username, cb){
+    findWellById(body.idWell, username)
+        .then(well => {
+            if (well) {
+                Object.assign(well, req.body);
+                well.save().then(c => {
+                    res.send(response(200, 'SUCCESSFULLY EDIT WELL', c));
+                }).catch(e => {
+                    res.send(response(500, 'FAILED TO EDIT WELL', e));
+                })
+            } else {
+                res.send(response(200, 'NO WELL FOUND TO EDIT'));
+            }
+        }).catch(err => {
+        res.send(response(500, 'FAILED TO FIND WELL', err));
+    });
+}
+
 module.exports = {
     findWellById: findWellById,
     deleteWell: deleteWell,
-    copyDatasets: copyDatasets
+    copyDatasets: copyDatasets,
+    editWell: editWell
 }

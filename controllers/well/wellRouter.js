@@ -58,21 +58,11 @@ router.post('/well/info', function (req, res) {
 });
 
 router.post('/well/edit', function (req, res) {
-    wellModel.findWellById(req.body.idWell, req.decoded.username)
-        .then(well => {
-            if (well) {
-                Object.assign(well, req.body);
-                well.save().then(c => {
-                    res.send(response(200, 'SUCCESSFULLY EDIT WELL', c));
-                }).catch(e => {
-                    res.send(response(500, 'FAILED TO EDIT WELL', e));
-                })
-            } else {
-                res.send(response(200, 'NO WELL FOUND TO EDIT'));
-            }
-        }).catch(err => {
-        res.send(response(500, 'FAILED TO FIND WELL', err));
-    });
+    wellModel.editWell(req.body, req.decoded.username, (err, result)=>{
+        if(err) res.send(response(500, 'FAILED TO EDIT WELL', err));
+        else res.send(response(200, 'SUCCESSFULLY EDIT WELL', result));
+    })
+
 });
 
 router.post('/well/delete', function (req, res) {

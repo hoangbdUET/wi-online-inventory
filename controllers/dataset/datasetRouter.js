@@ -21,7 +21,6 @@ router.post('/dataset/new', function (req, res) {
 });
 
 router.post('/dataset/info', function (req, res) {
-    console.log(req);
     datasetModel.findDatasetById(req.body.idDataset, req.decoded.username)
         .then(dataset => {
             if (dataset)
@@ -47,7 +46,12 @@ router.post('/dataset/delete', function (req, res) {
 })
 
 router.post('/dataset/edit', function (req, res) {
-    res.send(response(200, "chua lam cai nay nhe"));
+    datasetModel.editDataset(req.body, req.decoded.username, (err, result)=> {
+        if(err) res.send(response(500, "FAILED TO EDIT DATASET", err));
+        else {
+            res.send(response(200, "SUCCESSFULLY EDIT DATASET", result));
+        }
+    })
 })
 
 router.post('dataset/addCurves', function (req, res) {
