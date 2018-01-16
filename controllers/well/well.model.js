@@ -11,18 +11,18 @@ const config = require('config');
 
 
 function findWellById(idWell, username, attributes) {
-    let include = [ {
+    let include = [{
         model: User,
         attributes: [],
-        where: { username : username},
+        where: {username: username},
         required: true
     }]
-    if(attributes && attributes.datasets){
+    if (attributes && attributes.datasets) {
         let includeDatasets = {
             model: models.Dataset,
             attributes: ['idDataset', 'name']
         }
-        if(attributes.curves) includeDatasets.include = {
+        if (attributes.curves) includeDatasets.include = {
             model: models.Curve,
             attributes: ['idCurve', 'name']
         }
@@ -31,7 +31,7 @@ function findWellById(idWell, username, attributes) {
     return Well.findById(
         idWell,
         {
-            include : include
+            include: include
             // logging: console.log
         })
 }
@@ -43,16 +43,16 @@ function getCurves(idWell, cb) {
         where: {
             idWell: idWell
         },
-        include : [{
+        include: [{
             model: models.Curve
         }]
     }).then(datasets => {
-        if(!datasets || datasets.length <= 0) return cb(curves);
+        if (!datasets || datasets.length <= 0) return cb(curves);
         asyncLoop(datasets, (dataset, nextDataset) => {
             curves = curves.concat(dataset.curves);
             nextDataset();
         }, (err) => {
-            if(err) console.log(err);
+            if (err) console.log(err);
             cb(curves);
         })
     })
@@ -63,7 +63,7 @@ function deleteWell(idWell, username, callback) {
         .then((well) => {
             getCurves(well.idWell, (curves) => {
                 well.destroy()
-                    .then((rs)=>{
+                    .then((rs) => {
                         curveModel.deleteCurveFiles(curves);
                         callback(null, rs);
                     })
@@ -93,29 +93,29 @@ function copyDatasets(req, cb) {
                     delete dataset.updatedAt;
                     dataset.idWell = well.idWell;
                     datasetModel.createDataset(dataset, (err, newDataset) => {
-                        if(!err) {
+                        if (!err) {
                             asyncLoop(curves, (curve, nextCurve) => {
                                 delete curve.idCurve;
                                 delete curve.createdAt;
                                 delete curve.updatedAt;
                                 curve.idDataset = newDataset.idDataset;
                                 const hashedNewCurveDir = hashDir.getHashPath(req.decoded.username + well.name + dataset.name + curve.name);
-                                if(!config.s3Path) {
+                                if (!config.s3Path) {
                                     hashDir.copyFile(config.dataPath, curve.path, hashedNewCurveDir, curve.name + '.txt');
                                 }
                                 else {
                                     require('../s3').copyCurve(curve.path, hashedNewCurveDir + curve.name + '.txt');
                                 }
                                 curve.path = hashedNewCurveDir + curve.name + '.txt';
-                                curveModel.createCurve(curve, (err, newCurve)=> {
-                                    if(err) {
+                                curveModel.createCurve(curve, (err, newCurve) => {
+                                    if (err) {
                                         console.log('curve ' + err);
                                         nextCurve(err);
                                     }
                                     else nextCurve();
                                 })
-                            }, (err)=> {
-                                if(err) {
+                            }, (err) => {
+                                if (err) {
                                     console.log(err);
                                     nextDataset(err);
                                 }
@@ -131,7 +131,7 @@ function copyDatasets(req, cb) {
                     })
                 })
             }, (err) => {
-                if(!err) {
+                if (!err) {
                     cb(null, newDatasets);
                 }
                 else {
@@ -147,7 +147,7 @@ function copyDatasets(req, cb) {
 
 }
 
-function editWell(body, username, cb){
+function editWell(body, username, cb) {
     let attributes = {
         datasets: ['idDataset', 'name'],
         curves: ['idCurve', 'name']
@@ -155,7 +155,7 @@ function editWell(body, username, cb){
     findWellById(body.idWell, username, attributes)
         .then(well => {
             if (well) {
-                if(well.name != body.name){
+                if (well.name != body.name) {
                     let changeSet = {
                         username: username,
                         oldWellName: well.name,
@@ -165,7 +165,7 @@ function editWell(body, username, cb){
                     let changedCurves = require('../fileManagement').moveWellFiles(changeSet);
                     changedCurves.forEach(changedCurve => {
                         models.Curve.findById(changedCurve.idCurve)
-                            .then(curve=> {
+                            .then(curve => {
                                 Object.assign(curve, changedCurve);
                                 curve.save().catch(err => {
                                     console.log(err);
@@ -183,13 +183,87 @@ function editWell(body, username, cb){
                 cb('NO WELL FOUND TO EDIT');
             }
         }).catch(err => {
-            cb(err);
+        cb(err);
     });
+}
+
+function makeFileFromJSON(JSONdata, callback) {
+    const tempfile = require('tempfile');
+    const fs = require('fs');
+    const json2csv = require('json2csv');
+    let path = tempfile('.csv');
+    let fields = JSONdata.fields;
+    let csv = json2csv({data: JSONdata.data, fields: fields});
+    fs.writeFile(path, csv, function (err) {
+        if (err) {
+            callback(err, null);
+        }
+        callback(null, path);
+    });
+};
+
+function exportWellHeader(idWells, callback) {
+    const asyncEach = require('async/each');
+    let JSONdata = {};
+    JSONdata.fields = ['WELL_NAME', 'API', 'AREA', 'AUTHOR', 'CNTY', 'CODE', 'COMP', 'COMPANY', 'COUN', 'CTRY', 'DATE', 'EASTING', 'filename', 'FLD', 'GDAT', 'GEN1', 'GEN2', 'GEN3', 'GEN4', 'GEN5', 'GEN6', 'GL', 'ID', 'KB', 'LATI', 'LIC', 'LOC', 'LOGDATE', 'LONG', 'LOSTARTIME', 'NAME', 'NORTHING', 'NULL', 'OPERATOR', 'PROJ', 'PROV', 'SRVC', 'STATE', 'STATUS', 'STEP', 'STOP', 'STRT', 'TD', 'TOP', 'TYPE', 'UWI', 'WELL'];
+    JSONdata.data = [];
+    if (!idWells) {
+        callback("NO_WELL", null);
+    } else {
+        if (idWells.length == 0) {
+            //all well
+            console.log("ALL WELL");
+            Well.findAll({include: models.WellHeader}).then(rs => {
+                asyncEach(rs, function (well, nextWell) {
+                    let data = {};
+                    asyncLoop(well.well_headers, function (header, nextHeader) {
+                        data.WELL_NAME = well.name;
+                        data[header.header] = header.value.toString();
+                        nextHeader();
+                    }, function () {
+                        JSONdata.data.push(data);
+                        nextWell();
+                    });
+                }, function () {
+                    makeFileFromJSON(JSONdata, function (err, path) {
+                        console.log("OK ", path);
+                        callback(err, path);
+                    });
+
+                });
+            }).catch(err => {
+                callback(err, null);
+            });
+        } else {
+            asyncEach(idWells, function (idWell, nextWell) {
+                Well.findById(idWell, {include: models.WellHeader}).then(well => {
+                    let data = {};
+                    asyncEach(well.well_headers, function (header, nextHeader) {
+                        data.WELL_NAME = well.name;
+                        data[header.header] = header.value;
+                        nextHeader();
+                    }, function () {
+                        JSONdata.data.push(data);
+                        nextWell();
+                    });
+                }).catch(err => {
+                    nextWell();
+                    callback(err, null);
+                })
+            }, function (err) {
+                makeFileFromJSON(JSONdata, function (err, path) {
+                    console.log("OK ", path);
+                    callback(err, path);
+                });
+            });
+        }
+    }
 }
 
 module.exports = {
     findWellById: findWellById,
     deleteWell: deleteWell,
     copyDatasets: copyDatasets,
-    editWell: editWell
+    editWell: editWell,
+    exportWellHeader: exportWellHeader
 }

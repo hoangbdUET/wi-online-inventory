@@ -60,8 +60,8 @@ router.post('/well/info', function (req, res) {
 });
 
 router.post('/well/edit', function (req, res) {
-    wellModel.editWell(req.body, req.decoded.username, (err, result)=>{
-        if(err) res.send(response(500, 'FAILED TO EDIT WELL', err));
+    wellModel.editWell(req.body, req.decoded.username, (err, result) => {
+        if (err) res.send(response(500, 'FAILED TO EDIT WELL', err));
         else res.send(response(200, 'SUCCESSFULLY EDIT WELL', result));
     })
 
@@ -69,7 +69,7 @@ router.post('/well/edit', function (req, res) {
 
 router.post('/well/delete', function (req, res) {
     wellModel.deleteWell(req.body.idWell, req.decoded.username, (err, rs) => {
-        if(!err) res.send(response(200, 'SUCCESSFULLY DELETE WELL', rs));
+        if (!err) res.send(response(200, 'SUCCESSFULLY DELETE WELL', rs));
         else {
             console.log(err);
             res.send(response(200, 'FAILED TO DELETE WELL: ', err));
@@ -80,8 +80,8 @@ router.post('/well/delete', function (req, res) {
 router.post('/well/addDatasets', upload.array('file'), function (req, res) {
     //this route is for upload and import datasets to an existing well
     //req.body.idWell
-    lasProcessing.uploadLasFiles(req, (err, result)=> {
-        if(err) res.send(response(500, 'ADD DATASETS FAILED'));
+    lasProcessing.uploadLasFiles(req, (err, result) => {
+        if (err) res.send(response(500, 'ADD DATASETS FAILED'));
         else res.send(response(200, 'SUCCESSFULLY ADD DATASETS', result));
     })
 
@@ -90,8 +90,8 @@ router.post('/well/addDatasets', upload.array('file'), function (req, res) {
 router.post('/well/copyDatasets', function (req, res) {
     //copy datasets from another well
     //req.body.datasets = [], req.body.idWell
-    wellModel.copyDatasets(req, (err, rs)=> {
-        if(err) res.send(response(500, 'COPY DATASETS FAILED', err));
+    wellModel.copyDatasets(req, (err, rs) => {
+        if (err) res.send(response(500, 'COPY DATASETS FAILED', err));
         else res.send(response(200, 'SUCCESSFULLY COPY DATASETS', rs));
     })
 })
@@ -101,7 +101,7 @@ router.post('/wells', function (req, res) {
         where: {
             username: req.decoded.username,
         },
-        include : {
+        include: {
             model: models.WellHeader,
             attributes: ['header', 'value']
         },
@@ -136,8 +136,9 @@ router.post('/well/editHeader', function (req, res) {
         where: {
             idWell: req.body.idWell,
             header: req.body.header
-        }})
-        .then (well_header => {
+        }
+    })
+        .then(well_header => {
             Object.assign(well_header, req.body);
             well_header.save().then(c => {
                 res.send(response(200, 'SUCCESSFULLY EDIT WELL HEADER', c));
@@ -146,6 +147,21 @@ router.post('/well/editHeader', function (req, res) {
             })
         })
 
-})
+});
+
+router.post('/well/exportHeader', function (req, res) {
+    let idWells = req.body.idWells;
+    wellModel.exportWellHeader(idWells, function (err, result) {
+        if (err) {
+            res.send(err);
+        } else {
+            res.status(200).sendFile(result, function (err) {
+                if (err) console.log(err);
+                require('fs').unlinkSync(result);
+                console.log("Tmpfile removed");
+            });
+        }
+    });
+});
 
 module.exports = router;
