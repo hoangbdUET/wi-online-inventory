@@ -109,7 +109,7 @@ function extractCurves(inputFile, importData, callback) {
             curveName = curveName.replace('/', '_');
             while (true){
                 let rename = datasets[datasetName].curves.every(curve => {
-                    if(curveName == curve.name){
+                    if(curveName.toLowerCase() == curve.name.toLowerCase()){
                         curveName = curveName + '_1';
                         return false;
                     }

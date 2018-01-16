@@ -21,17 +21,17 @@ module.exports = function (sequelize, DataTypes) {
             allowNull: false
         },
         startDepth: {
-            type: DataTypes.DOUBLE,
+            type: DataTypes.STRING,
             allowNull: false,
             defaultValue: 0
         },
         stopDepth: {
-            type: DataTypes.DOUBLE,
+            type: DataTypes.STRING,
             allowNull: false,
             defaultValue: 0
         },
         step: {
-            type: DataTypes.DOUBLE,
+            type: DataTypes.STRING,
             allowNull: false,
             defaultValue: 0
         }

@@ -21,17 +21,17 @@ module.exports = function (sequelize, DataTypes) {
             defaultValue: 'M'
         },
         top: {
-            type: DataTypes.DOUBLE,
+            type: DataTypes.STRING,
             allowNull: false,
             defaultValue: 0
         },
         bottom: {
-            type: DataTypes.DOUBLE,
+            type: DataTypes.STRING,
             allowNull: false,
             defaultValue: 0
         },
         step: {
-            type: DataTypes.DOUBLE,
+            type: DataTypes.STRING,
             allowNull: false,
             defaultValue: 0
         }
