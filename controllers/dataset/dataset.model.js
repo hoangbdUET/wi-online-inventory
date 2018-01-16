@@ -90,28 +90,30 @@ function editDataset(body, username, cb) {
     }
     findDatasetById(body.idDataset, username, attributes)
         .then(dataset=> {
-            if(dataset.name != body.name){
-                let changeSet = {
-                    username: username,
-                    wellname: dataset.well.name,
-                    oldDatasetName: dataset.name,
-                    newDatasetName: body.name,
-                    curves: dataset.curves
-                }
-                let changedCurves = require('../fileManagement').moveDatasetFiles(changeSet);
-                changedCurves.forEach(changedCurve => {
-                    models.Curve.findById(changedCurve.idCurve)
-                        .then(curve=> {
-                            Object.assign(curve, changedCurve);
-                            curve.save().catch(err => {
-                                console.log(err);
-                            })
-                        })
-                })
-            }
+            const oldDatasetName = dataset.name;
+
             Object.assign(dataset, body);
-            dataset.save().then(c => {
-                cb(null, c);
+            dataset.save().then(dataset => {
+                if(dataset.name != oldDatasetName){
+                    let changeSet = {
+                        username: username,
+                        wellname: dataset.well.name,
+                        oldDatasetName: oldDatasetName,
+                        newDatasetName: dataset.name,
+                        curves: dataset.curves
+                    }
+                    let changedCurves = require('../fileManagement').moveDatasetFiles(changeSet);
+                    changedCurves.forEach(changedCurve => {
+                        models.Curve.findById(changedCurve.idCurve)
+                            .then(curve=> {
+                                Object.assign(curve, changedCurve);
+                                curve.save().catch(err => {
+                                    console.log(err);
+                                })
+                            })
+                    })
+                }
+                cb(null, dataset);
             }).catch(e => {
                 cb(e);
             })

@@ -155,26 +155,27 @@ function editWell(body, username, cb){
     findWellById(body.idWell, username, attributes)
         .then(well => {
             if (well) {
-                if(well.name != body.name){
-                    let changeSet = {
-                        username: username,
-                        oldWellName: well.name,
-                        newWellName: body.name,
-                        datasets: well.datasets
-                    }
-                    let changedCurves = require('../fileManagement').moveWellFiles(changeSet);
-                    changedCurves.forEach(changedCurve => {
-                        models.Curve.findById(changedCurve.idCurve)
-                            .then(curve=> {
-                                Object.assign(curve, changedCurve);
-                                curve.save().catch(err => {
-                                    console.log(err);
-                                })
-                            })
-                    })
-                }
+                const oldWellName = well.name;
                 Object.assign(well, body);
                 well.save().then(c => {
+                    if(well.name != oldWellName){
+                        let changeSet = {
+                            username: username,
+                            oldWellName: oldWellName,
+                            newWellName: well.name,
+                            datasets: well.datasets
+                        }
+                        let changedCurves = require('../fileManagement').moveWellFiles(changeSet);
+                        changedCurves.forEach(changedCurve => {
+                            models.Curve.findById(changedCurve.idCurve)
+                                .then(curve=> {
+                                    Object.assign(curve, changedCurve);
+                                    curve.save().catch(err => {
+                                        console.log(err);
+                                    })
+                                })
+                        })
+                    }
                     cb(null, c);
                 }).catch(e => {
                     cb(e);

@@ -113,24 +113,25 @@ function editCurve(body, username, cb){
     findCurveById(body.idCurve, username, attributes)
         .then(curve => {
             if (curve) {
-                if(curve.name != body.name){
-                    const oldCurve = {
-                        username: username,
-                        wellname: curve.dataset.well.name,
-                        datasetname: curve.dataset.name,
-                        curvename: curve.name
-                    }
-                    const newCurve = Object.assign({}, oldCurve);
-                    newCurve.curvename = body.name;
-
-                    body.path = require('../fileManagement').moveCurveFile(oldCurve, newCurve);
-                }
+                const oldCurveName = curve.name;
                 Object.assign(curve, body);
                 curve.save().then(c => {
+                    if(oldCurveName != curve.name){
+                        const oldCurve = {
+                            username: username,
+                            wellname: curve.dataset.well.name,
+                            datasetname: curve.dataset.name,
+                            curvename: oldCurveName
+                        }
+                        const newCurve = Object.assign({}, oldCurve);
+                        newCurve.curvename = body.name;
+
+                        body.path = require('../fileManagement').moveCurveFile(oldCurve, newCurve);
+                    }
                     cb(null, c);
-                }).catch(e => {
-                    cb(e);
-                })
+                    }).catch(e => {
+                        cb(e);
+                    })
             } else {
                 cb('NO CURVE FOUND FOR EDIT');
             }

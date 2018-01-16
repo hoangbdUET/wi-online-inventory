@@ -45,7 +45,7 @@ function getLASVersion(inputURL, callback) {
 }
 
 function extractCurves(inputFile, importData, callback) {
-    let rl = new readline(inputFile.path, { skipEmptyLines : true });
+    let rl = new readline(inputFile.path, {encoding: 'latin1', skipEmptyLines : true });
     let sectionName = "";
     let curves = [];
     let count = 0;
@@ -72,7 +72,7 @@ function extractCurves(inputFile, importData, callback) {
             const data = line.substring(line.indexOf(' '), line.indexOf(':')).trim();
 
             if ((/WELL/).test(mnem) && !/UWI/.test(mnem)) {
-                wellInfo.name = data;
+                wellInfo.name = data ? data : inputFile.originalname;
             }
             else {
                 wellInfo[mnem] = data;
@@ -153,6 +153,7 @@ function extractCurves(inputFile, importData, callback) {
 
         wellInfo.datasets.push(dataset);
         output.push(wellInfo);
+        console.log('completely extract LAS 2')
         callback(false, output);
     });
     rl.on('err', function (err) {
@@ -267,6 +268,9 @@ function extractAll(inputFile, importData, callbackGetSections) {
                 });
             } else if (result.lasVersion == 3) {
                 callbackGetSections("LAS_3_DETECTED", null);
+            }
+            else {
+                callbackGetSections("THIS IS NOT LAS FILE");
             }
         }
     });

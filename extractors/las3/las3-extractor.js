@@ -5,6 +5,7 @@ let fs = require('fs');
 let __config = require('../common-config');
 const s3 = require('../../controllers/s3');
 let config = require('config');
+const detectCharacterEncoding = require('detect-character-encoding');
 
 function writeToCurveFile(buffer, curveFileName, index, value, defaultNull) {
     buffer.count += 1;
@@ -23,7 +24,10 @@ function writeToCurveFile(buffer, curveFileName, index, value, defaultNull) {
 
 
 function extractCurves(inputFile, importData, callback) {
-    let rl = new readline(inputFile.path, { skipEmptyLines : true });
+    const fileBuffer = fs.readFileSync(inputFile.path);
+    const fileEncoding = detectCharacterEncoding(fileBuffer).encoding == 'ISO-8859-1' ? 'latin1' : 'utf8';
+
+    let rl = new readline(inputFile.path, { encoding: fileEncoding, skipEmptyLines : true });
     let sectionName = "";
     let datasets = {};
     let count = 0;
@@ -118,7 +122,6 @@ function extractCurves(inputFile, importData, callback) {
             let unit = line.substring(0, line.indexOf(' ')).trim();
             if (unit.indexOf("00") != -1) unit = unit.substring(0, unit.indexOf("00"));
 
-            console.log('unit=================== ' + unit);
 
             let curve = {
                 name : curveName,
@@ -157,7 +160,7 @@ function extractCurves(inputFile, importData, callback) {
 
 
     rl.on('end', function () {
-        deleteFile(inputFile.path);
+        // deleteFile(inputFile.path);
         let output = [];
         wellInfo.datasets = [];
         for(var datasetName in datasets){
@@ -175,6 +178,7 @@ function extractCurves(inputFile, importData, callback) {
 
         // console.log(JSON.stringify(wellInfo));
         output.push(wellInfo);
+        console.log('completely extract LAS 3')
         callback(false, output);
         //console.log("ExtractLAS3 Done");
     });
