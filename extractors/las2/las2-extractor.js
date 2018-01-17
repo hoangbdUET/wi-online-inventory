@@ -33,6 +33,7 @@ function getLASVersion(inputURL, callback) {
                     let dlmString = line.substring(dotPosition + 1, colon);
                     result.delimiting = dlmString.trim();
                 }
+                rl.close();
             }
         }
     });

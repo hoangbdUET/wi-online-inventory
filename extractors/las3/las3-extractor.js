@@ -36,13 +36,15 @@ function extractCurves(inputFile, importData, callback) {
     let BUFFERS = new Object();
     let isFirstCurve = true;
     let fields = [];
-    const wellTitle = 'WELL';
-    const curveTitle = 'CURVE';
-    const definitionTitle = '_DEFINITION';
-    const dataTitle = '_DATA';
-    const asciiTitle = 'ASCII';
+    let wellTitle = 'WELL';
+    let curveTitle = 'CURVE';
+    let definitionTitle = '_DEFINITION';
+    let dataTitle = '_DATA';
+    let asciiTitle = 'ASCII';
     let lasCheck = 0;
     let currentDataset = '';
+    let lasVersion = 3;
+    let delimitingChar = ' ';
 
     rl.on('line', function (line) {
         line = line.trim();
@@ -54,7 +56,10 @@ function extractCurves(inputFile, importData, callback) {
             line = line.toUpperCase();
             const firstSpace = line.indexOf(' ');
             const barIndex = line.indexOf('|');
-            if(firstSpace != -1 && barIndex != -1) {
+            if(lasVersion == 2){
+                sectionName = line.substr(line.indexOf('~') + 1, 1);
+            }
+            else if(firstSpace != -1 && barIndex != -1) {
                 sectionName = line.substring(line.indexOf('~') + 1, firstSpace < barIndex ? firstSpace : barIndex);
             }
             else if(firstSpace != barIndex){
@@ -65,22 +70,18 @@ function extractCurves(inputFile, importData, callback) {
             }
 
             if(/VERSION/.test(sectionName)) {
-                console.log('=========> ' + sectionName + '.........' + lasCheck);
                 lasCheck++;
             }
             if(sectionName == wellTitle){
-                console.log('=========> ' + sectionName + '.........' + lasCheck);
-                if(lasCheck < 1) return callback('THIS IS NOT LAS FILE')
+                if(lasCheck < 1) return callback('THIS IS NOT LAS FILE, MISSING VERSION SECTION')
                 else lasCheck++;
             };
             if(sectionName == curveTitle ||new RegExp(definitionTitle).test(sectionName)){
-                console.log('=========> ' + sectionName + '.........' + lasCheck);
-                if(lasCheck != 2) return callback('THIS IS NOT LAS FILE')
+                if(lasCheck < 2) return callback('THIS IS NOT LAS FILE, MISSING WELL SECTION')
                 else lasCheck++;
             };
-            if(sectionName == 'A' || sectionName == asciiTitle || new RegExp(dataTitle).test(sectionName)){
-                console.log('=========> ' + sectionName + '.........' + lasCheck);
-                if(lasCheck !=3) return callback('THIS IS NOT LAS FILE')
+            if(sectionName == asciiTitle || new RegExp(dataTitle).test(sectionName)){
+                if(lasCheck < 3) return callback('THIS IS NOT LAS FILE, MISSING DEFINITION SECTION')
                 else lasCheck--;
             };
 
@@ -107,6 +108,25 @@ function extractCurves(inputFile, importData, callback) {
                 }
                 datasets[wellInfo.name] = dataset;
             }
+            console.log('section name: ' + sectionName)
+        } else if(/VERSION/.test(sectionName)){
+            if (/VERS/.test(line)) {
+                const dotPosition = line.indexOf('.');
+                const colon = line.indexOf(':');
+                const versionString = line.substring(dotPosition + 1, colon);
+                /2/.test(versionString) ? lasVersion = 2 : lasVersion = 3;
+                if(lasVersion == 2){
+                    wellTitle = 'W';
+                    curveTitle = 'C';
+                    asciiTitle = 'A';
+                }
+                console.log('LAS VERSION: ' + lasVersion)
+            } else if (/DLM/.test(line)) {
+                const dotPosition = line.indexOf('.');
+                const colon = line.indexOf(':');
+                const dlmString = line.substring(dotPosition + 1, colon);
+                delimitingChar = dlmString.trim();
+            }
         } else if(sectionName == wellTitle){
             if(importData.well) return;
 
@@ -127,6 +147,7 @@ function extractCurves(inputFile, importData, callback) {
             }
 
             const datasetName = new RegExp(definitionTitle).test(sectionName) ? sectionName.substring(0, sectionName.indexOf(definitionTitle)) : wellInfo.name;
+            console.log('.....' + datasetName);
             let curveName = line.substring(0, line.indexOf('.')).trim();
             curveName = curveName.replace('/', '_');
             while (true){
@@ -155,8 +176,8 @@ function extractCurves(inputFile, importData, callback) {
                 path: ''
             }
             datasets[datasetName].curves.push(curve);
-        } else if(sectionName == 'A' || sectionName == asciiTitle || new RegExp(dataTitle).test(sectionName)){
-            let datasetName = (sectionName == 'A' || sectionName == asciiTitle) ? wellInfo.name : sectionName.substring(0, sectionName.indexOf(dataTitle));
+        } else if(sectionName == asciiTitle || new RegExp(dataTitle).test(sectionName)){
+            let datasetName = sectionName == asciiTitle ? wellInfo.name : sectionName.substring(0, sectionName.indexOf(dataTitle));
             if(datasetName != currentDataset) {
                 currentDataset = datasetName;
                 datasets[currentDataset].curves.forEach(curve => {
@@ -170,8 +191,8 @@ function extractCurves(inputFile, importData, callback) {
                 })
             }
 
-            let separator = sectionName == asciiTitle ? ' ' : ',';
-            fields = fields.concat(line.trim().split(separator));
+            // let separator = sectionName == asciiTitle ? ' ' : ',';
+            fields = fields.concat(line.trim().split(delimitingChar));
             if(fields.length > datasets[datasetName].curves.length) {
                 if (datasets[datasetName].curves) {
                     datasets[datasetName].curves.forEach(function (curve, i) {
@@ -188,8 +209,8 @@ function extractCurves(inputFile, importData, callback) {
 
 
     rl.on('end', function () {
-        // deleteFile(inputFile.path);
-        if(lasCheck != 2) return callback('THIS IS NOT LAS FILE');
+        deleteFile(inputFile.path);
+        if(lasCheck != 2) return callback('THIS IS NOT LAS FILE, MISSING DATA SECTION');
         let output = [];
         wellInfo.datasets = [];
         for(var datasetName in datasets){
