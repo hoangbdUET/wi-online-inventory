@@ -4,18 +4,15 @@ const models = require('../../models');
 const Well = models.Well;
 const asyncLoop = require('node-async-loop');
 const config = require("config");
-const wi_import = require("../../extractors");
+const LASExtractor = require("../../extractors/las/las-extractor");
 const importToDB = require('./importToDB');
-
-wi_import.setBasePath(config.dataPath);
 
 function processFileUpload(file, importData, callback) {
     console.log("______processFileUpload________");
-    // console.log(importData);
     console.log(JSON.stringify(file));
     let fileFormat = file.filename.substring(file.filename.lastIndexOf('.') + 1);
     if (/LAS/.test(fileFormat.toUpperCase())) {
-        wi_import.extractLAS(file, importData, function (err, result) {
+        LASExtractor(file, importData, function (err, result) {
             if (err) {
                 console.log("extract las file failed");
                 callback(err, null);

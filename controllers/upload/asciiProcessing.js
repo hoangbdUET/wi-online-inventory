@@ -1,7 +1,7 @@
 'use strict';
 const asyncLoop = require('node-async-loop');
 const models = require('../../models');
-const asciiExtractor = require('../../extractors').extractAscii;
+const asciiExtractor = require('../../extractors/ascii/ascii-extractor');
 const importToDB = require('./importToDB');
 
 

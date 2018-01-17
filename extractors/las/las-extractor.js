@@ -2,7 +2,6 @@
 let readline = require('line-by-line');
 let hashDir = require('../hash-dir');
 let fs = require('fs');
-let __config = require('../common-config');
 const s3 = require('../../controllers/s3');
 let config = require('config');
 const detectCharacterEncoding = require('detect-character-encoding');
@@ -23,7 +22,7 @@ function writeToCurveFile(buffer, curveFileName, index, value, defaultNull) {
 }
 
 
-function extractCurves(inputFile, importData, callback) {
+module.exports = function (inputFile, importData, callback) {
     const fileBuffer = fs.readFileSync(inputFile.path);
     const fileEncoding = detectCharacterEncoding(fileBuffer).encoding == 'ISO-8859-1' ? 'latin1' : 'utf8';
 
@@ -184,7 +183,7 @@ function extractCurves(inputFile, importData, callback) {
                         count: 0,
                         data: ""
                     };
-                    filePaths[curve.name] = hashDir.createPath(__config.basePath,importData.userInfo.username + wellInfo.name + curve.datasetname + curve.name, curve.name + '.txt');
+                    filePaths[curve.name] = hashDir.createPath(config.dataPath,importData.userInfo.username + wellInfo.name + curve.datasetname + curve.name, curve.name + '.txt');
                     fs.writeFileSync(filePaths[curve.name], "");
                     curve.path = filePaths[curve.name];
                 })
@@ -239,154 +238,8 @@ function extractCurves(inputFile, importData, callback) {
     });
 }
 
-
-function extractInfoOnly(inputURL, callback) {
-    let result = {};
-    let rl = new readline(inputURL);
-    let sectionName = "";
-    let datasets = [];
-    let curves = [];
-    let count = 0;
-    let wellInfo = new Object();
-    let filePaths = new Object();
-    let BUFFERS = new Object();
-    //console.log("FILE : " + inputURL);
-    rl.on('line', function (line) {
-        line = line.trim();
-        line = line.toUpperCase();
-        line = line.replace(/\s+\s/g, " ");
-        if (/^~/.test(line)) {
-            sectionName = line;
-            if (/_DEFINITION/.test(sectionName) && !/DATA/.test(sectionName)) {
-                let datasetName = sectionName.substring(1, sectionName.indexOf("_DEFINITION"));
-                let dataset = {
-                    name: datasetName,
-                    datasetKey: datasetName,
-                    datasetLabel: datasetName,
-                    curves: []
-                }
-                datasets.push(dataset);
-            } else if (/^~ASCII/.test(sectionName)) {
-
-            }
-        } else if (/^[A-z]/.test(line)) {
-            if (/WELL/.test(sectionName)) {
-                let wellName = "";
-                let start = "";
-                let stop = "";
-                let step = "";
-                let NULL = "";
-                if (/WELL/.test(line) && !/UWI/.test(line)) {
-                    wellName = line.substring(line.indexOf('.') + 1, line.indexOf(':')).trim();
-                    //console.log("WELL NAME : " + wellName);
-                    wellInfo.name = wellName;
-                } else if (/STRT/.test(line)) {
-                    start = line.substring(line.indexOf('.') + 2, line.indexOf(':')).trim();
-                    wellInfo.start = start;
-                } else if (/STOP/.test(line)) {
-                    stop = line.substring(line.indexOf('.') + 2, line.indexOf(':')).trim();
-                    wellInfo.stop = stop;
-                } else if (/STEP/.test(line)) {
-                    step = line.substring(line.indexOf('.') + 2, line.indexOf(':')).trim();
-                    wellInfo.step = step;
-                } else if (/NULL/.test(line)) {
-                    NULL = line.substring(line.indexOf('.') + 1, line.indexOf(':')).trim();
-                    wellInfo.null = NULL;
-                }
-                result.wellinfo = wellInfo;
-            } else if (/~CURVE/.test(sectionName)) {
-                //curve info;
-                let curve = new Object();
-                let curvename = "";
-                let unit = "";
-                curveName = line.substring(0, line.indexOf('.')).trim();
-                unit = line.substring(line.indexOf('.') + 1, line.indexOf(':')).trim();
-                curve.name = curveName;
-                curve.unit = unit;
-                curve.datasetname = wellInfo.name;
-                curve.wellname = wellInfo.name;
-                if (!/DEPTH/.test(curve.name)) {
-                    curves.push(curve);
-                }
-            } else if (/_DEFINITION/.test(sectionName) && !/_DATA/.test(sectionName)) {
-                //
-                count = 0;
-                let datasetName = sectionName.substring(1, sectionName.indexOf("_DEFINITION"));
-                let curve = new Object();
-                let unit = "";
-                let curvename = "";
-                curveName = line.substring(0, line.indexOf('.')).trim();
-                unit = line.substring(line.indexOf('.') + 1, line.indexOf(':')).trim();
-                curve.name = curveName;
-                curve.unit = unit;
-                curve.datasetname = datasetName;
-                curve.wellname = wellInfo.name;
-                if (!/DEPTH/.test(curve.name)) {
-                    curves.push(curve);
-                }
-            } else {
-
-            }
-        }
-
-    });
-    rl.on('end', function () {
-        //result.curves = curves;
-        deleteFile(inputURL);
-        let output = [];
-        if (datasets.length > 0) {
-            datasets.forEach(function (dataset) {
-                for (let i = 0; i < curves.length; i++) {
-                    if (curves[i].datasetname == dataset.name) {
-                        dataset.curves.push(curves[i]);
-                    }
-                }
-            });
-        } else {
-            let dataset = {
-                name: wellInfo.name,
-                datasetKey: wellInfo.name,
-                datasetLabel: wellInfo.name,
-                curves: []
-            }
-            for (let i = 0; i < curves.length; i++) {
-                dataset.curves.push(curves[i]);
-
-            }
-            datasets.push(dataset);
-        }
-        wellInfo.datasetInfo = datasets;
-        output.push(wellInfo);
-        callback(false, output);
-
-    });
-    rl.on('err', function (err) {
-        console.log(err);
-        deleteFile(inputURL);
-        callbac(err, null);
-    })
-}
-
-function extractAll(inputURL, callback) {
-    extractCurves(inputURL);
-}
-
 function deleteFile(inputURL) {
     fs.unlink(inputURL, function (err) {
         if (err) return console.log(err);
     });
 }
-
-
-module.exports.extractCurves = extractCurves;
-module.exports.extractInfoOnly = extractInfoOnly;
-module.exports.extractAll = extractAll;
-module.exports.deleteFile = deleteFile;
-module.exports.setBasePath = function (basePath) {
-    __config.basePath = basePath;
-};
-
-module.exports.getBasePath = function () {
-    return __config.basePath;
-};
-

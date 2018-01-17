@@ -5,8 +5,7 @@ let User = models.User;
 let curveModel = require('../curve/curve.model');
 const datasetModel = require('../dataset/dataset.model');
 const asyncLoop = require('node-async-loop');
-const importModule = require('../../extractors');
-const hashDir = importModule.hashDir;
+const hashDir = require('../../extractors/hash-dir');
 const config = require('config');
 
 
