@@ -1,23 +1,16 @@
 'use strict'
 
-const models = require('../../models');
-const Well = models.Well;
-const asyncLoop = require('node-async-loop');
-const config = require("config");
-const wi_import = require("../../extractors");
-const importToDB = require('./importToDB');
-
-wi_import.setBasePath(config.dataPath);
+const coredataExtractor = require('../../extractors/core_data/core_data-extractor')
+const importToDB = require('./importToDB')
+const models = require('../../models')
+const asyncLoop = require('node-async-loop')
 
 function processFileUpload(file, importData, callback) {
-    console.log("______processFileUpload________");
-    // console.log(importData);
-    console.log(JSON.stringify(file));
     let fileFormat = file.filename.substring(file.filename.lastIndexOf('.') + 1);
-    if (/LAS/.test(fileFormat.toUpperCase())) {
-        wi_import.extractLAS(file, importData, function (err, result) {
+    if (/CSV/.test(fileFormat.toUpperCase())) {
+        coredataExtractor(file, importData, function (err, result) {
             if (err) {
-                console.log("extract las file failed");
+                console.log("extract core data file failed");
                 callback(err, null);
             }
             else {
@@ -37,12 +30,12 @@ function processFileUpload(file, importData, callback) {
     }
 }
 
-function uploadLasFiles(req, cb) {
+module.exports.uploadFiles = function (req, cb) {
     if (!req.files) return cb('NO FILE CHOSEN!!!');
     let output = new Array();
     let importData = {};
     importData.userInfo = req.decoded;
-    Well.findById(req.body.idWell)
+    models.Well.findById(req.body.idWell)
         .then(well => {
             importData.well = well;
             asyncLoop(req.files, (file, next) => {
@@ -59,9 +52,4 @@ function uploadLasFiles(req, cb) {
                 else cb(null, output);
             })
         })
-
-}
-
-module.exports = {
-    uploadLasFiles: uploadLasFiles
 }
