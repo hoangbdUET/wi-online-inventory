@@ -41,6 +41,8 @@ function extractCurves(inputFile, importData, callback) {
     const definitionTitle = '_DEFINITION';
     const dataTitle = '_DATA';
     const asciiTitle = 'ASCII';
+    let lasCheck = 0;
+    let currentDataset = '';
 
     rl.on('line', function (line) {
         line = line.trim();
@@ -62,6 +64,25 @@ function extractCurves(inputFile, importData, callback) {
                 sectionName = line.substring(line.indexOf('~') + 1);
             }
 
+            if(/VERSION/.test(sectionName)) {
+                console.log('=========> ' + sectionName + '.........' + lasCheck);
+                lasCheck++;
+            }
+            if(sectionName == wellTitle){
+                console.log('=========> ' + sectionName + '.........' + lasCheck);
+                if(lasCheck < 1) return callback('THIS IS NOT LAS FILE')
+                else lasCheck++;
+            };
+            if(sectionName == curveTitle ||new RegExp(definitionTitle).test(sectionName)){
+                console.log('=========> ' + sectionName + '.........' + lasCheck);
+                if(lasCheck != 2) return callback('THIS IS NOT LAS FILE')
+                else lasCheck++;
+            };
+            if(sectionName == 'A' || sectionName == asciiTitle || new RegExp(dataTitle).test(sectionName)){
+                console.log('=========> ' + sectionName + '.........' + lasCheck);
+                if(lasCheck !=3) return callback('THIS IS NOT LAS FILE')
+                else lasCheck--;
+            };
 
             if (new RegExp(definitionTitle).test(sectionName)) {
                 isFirstCurve = true;
@@ -88,6 +109,7 @@ function extractCurves(inputFile, importData, callback) {
             }
         } else if(sectionName == wellTitle){
             if(importData.well) return;
+
             const mnem = line.substring(0, line.indexOf('.')).trim();
             line = line.substring(line.indexOf('.'));
             const data = line.substring(line.indexOf(' '), line.indexOf(':')).trim();
@@ -130,18 +152,24 @@ function extractCurves(inputFile, importData, callback) {
                 startDepth : wellInfo.STRT,
                 stopDepth : wellInfo.STOP,
                 step : wellInfo.STEP,
+                path: ''
             }
-            BUFFERS[curveName] = {
-                count: 0,
-                data: ""
-            };
-            filePaths[curveName] = hashDir.createPath(__config.basePath,importData.userInfo.username + wellInfo.name + curve.datasetname + curveName, curveName + '.txt');
-            // filePaths[curveName] = hashDir.createPath(__config.basePath, new Date().getTime().toString() + curveName , curveName + '.txt');
-            fs.writeFileSync(filePaths[curveName], "");
-            curve.path = filePaths[curveName];
             datasets[datasetName].curves.push(curve);
-        } else if(sectionName == asciiTitle || new RegExp(dataTitle).test(sectionName)){
-            let datasetName = sectionName == asciiTitle ? wellInfo.name : sectionName.substring(0, sectionName.indexOf(dataTitle));
+        } else if(sectionName == 'A' || sectionName == asciiTitle || new RegExp(dataTitle).test(sectionName)){
+            let datasetName = (sectionName == 'A' || sectionName == asciiTitle) ? wellInfo.name : sectionName.substring(0, sectionName.indexOf(dataTitle));
+            if(datasetName != currentDataset) {
+                currentDataset = datasetName;
+                datasets[currentDataset].curves.forEach(curve => {
+                    BUFFERS[curve.name] = {
+                        count: 0,
+                        data: ""
+                    };
+                    filePaths[curve.name] = hashDir.createPath(__config.basePath,importData.userInfo.username + wellInfo.name + curve.datasetname + curve.name, curve.name + '.txt');
+                    fs.writeFileSync(filePaths[curve.name], "");
+                    curve.path = filePaths[curve.name];
+                })
+            }
+
             let separator = sectionName == asciiTitle ? ' ' : ',';
             fields = fields.concat(line.trim().split(separator));
             if(fields.length > datasets[datasetName].curves.length) {
@@ -161,6 +189,7 @@ function extractCurves(inputFile, importData, callback) {
 
     rl.on('end', function () {
         // deleteFile(inputFile.path);
+        if(lasCheck != 2) return callback('THIS IS NOT LAS FILE');
         let output = [];
         wellInfo.datasets = [];
         for(var datasetName in datasets){
