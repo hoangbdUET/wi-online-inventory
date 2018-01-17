@@ -83,10 +83,9 @@ module.exports = function (inputFile, importData, callback) {
                 if(lasCheck < 3) return callback('THIS IS NOT LAS FILE, MISSING DEFINITION SECTION')
                 else lasCheck--;
             };
-
             if (new RegExp(definitionTitle).test(sectionName)) {
                 isFirstCurve = true;
-                let datasetName = sectionName.substring(0, sectionName.indexOf(definitionTitle));
+                const datasetName = sectionName.substring(0, sectionName.indexOf(definitionTitle));
                 let dataset = {
                     name: datasetName,
                     curves: [],
@@ -108,6 +107,21 @@ module.exports = function (inputFile, importData, callback) {
                 datasets[wellInfo.name] = dataset;
             }
             console.log('section name: ' + sectionName)
+            if(sectionName == asciiTitle || new RegExp(dataTitle).test(sectionName)) {
+                const datasetName = sectionName == asciiTitle? wellInfo.name : sectionName.substring(0, sectionName.indexOf(dataTitle));
+                if (datasetName != currentDataset) {
+                    currentDataset = datasetName;
+                    datasets[currentDataset].curves.forEach(curve => {
+                        BUFFERS[curve.name] = {
+                            count: 0,
+                            data: ""
+                        };
+                        filePaths[curve.name] = hashDir.createPath(config.dataPath, importData.userInfo.username + wellInfo.name + curve.datasetname + curve.name, curve.name + '.txt');
+                        fs.writeFileSync(filePaths[curve.name], "");
+                        curve.path = filePaths[curve.name];
+                    })
+                }
+            }
         } else if(/VERSION/.test(sectionName)){
             if (/VERS/.test(line)) {
                 const dotPosition = line.indexOf('.');
@@ -145,7 +159,8 @@ module.exports = function (inputFile, importData, callback) {
                 return;
             }
 
-            const datasetName = new RegExp(definitionTitle).test(sectionName) ? sectionName.substring(0, sectionName.indexOf(definitionTitle)) : wellInfo.name;
+            // const datasetName = new RegExp(definitionTitle).test(sectionName) ? sectionName.substring(0, sectionName.indexOf(definitionTitle)) : wellInfo.name;
+            const datasetName = sectionName == curveTitle ? wellInfo.name : sectionName.substring(0, sectionName.indexOf(definitionTitle));
             let curveName = line.substring(0, line.indexOf('.')).trim();
             curveName = curveName.replace('/', '_');
             while (true){
@@ -175,21 +190,8 @@ module.exports = function (inputFile, importData, callback) {
             }
             datasets[datasetName].curves.push(curve);
         } else if(sectionName == asciiTitle || new RegExp(dataTitle).test(sectionName)){
-            let datasetName = sectionName == asciiTitle ? wellInfo.name : sectionName.substring(0, sectionName.indexOf(dataTitle));
-            if(datasetName != currentDataset) {
-                currentDataset = datasetName;
-                datasets[currentDataset].curves.forEach(curve => {
-                    BUFFERS[curve.name] = {
-                        count: 0,
-                        data: ""
-                    };
-                    filePaths[curve.name] = hashDir.createPath(config.dataPath,importData.userInfo.username + wellInfo.name + curve.datasetname + curve.name, curve.name + '.txt');
-                    fs.writeFileSync(filePaths[curve.name], "");
-                    curve.path = filePaths[curve.name];
-                })
-            }
-
             // let separator = sectionName == asciiTitle ? ' ' : ',';
+            const datasetName = sectionName == asciiTitle ? wellInfo.name : sectionName.substring(0, sectionName.indexOf(dataTitle));
             fields = fields.concat(line.trim().split(delimitingChar));
             if(fields.length > datasets[datasetName].curves.length) {
                 if (datasets[datasetName].curves) {
