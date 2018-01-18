@@ -30,7 +30,10 @@ module.exports = function (inputFile, importData, callback) {
     let sectionName = "";
     let datasets = {};
     let count = 0;
-    let wellInfo = importData.well ? importData.well : {filename : inputFile.originalname};
+    let wellInfo = importData.well ? importData.well : {
+        filename : inputFile.originalname,
+        name: inputFile.originalname
+    };
     let filePaths = new Object();
     let BUFFERS = new Object();
     let isFirstCurve = true;
@@ -165,7 +168,6 @@ module.exports = function (inputFile, importData, callback) {
                 line = line.substring(line.indexOf('.'));
                 const data = line.substring(line.indexOf(' '), line.indexOf(':')).trim();
 
-                wellInfo.name = inputFile.originalname;
                 if ((/WELL/).test(mnem) && !/UWI/.test(mnem)) {
                     wellInfo.name = data ? data : inputFile.originalname;
                 }
@@ -231,8 +233,8 @@ module.exports = function (inputFile, importData, callback) {
 
     rl.on('end', function () {
         deleteFile(inputFile.path);
-        if(lasCheck != 2) return callback('THIS IS NOT LAS FILE, MISSING DATA SECTION');
         if(lasFormatError && lasFormatError.length > 0) return callback(lasFormatError);
+        if(lasCheck != 2) return callback('THIS IS NOT LAS FILE, MISSING DATA SECTION');
 
         let output = [];
         wellInfo.datasets = [];
