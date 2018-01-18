@@ -44,11 +44,12 @@ module.exports = function (inputFile, importData, callback) {
     let currentDataset = '';
     let lasVersion = 3;
     let delimitingChar = ' ';
+    let lasFormatError = '';
 
     rl.on('line', function (line) {
         line = line.trim();
         line = line.replace(/\s+\s/g, " ");
-        if(/^#/.test(line)){
+        if(/^#/.test(line) || lasFormatError.length > 0){
             return;
         }
         if (/^~/.test(line)) {
@@ -72,15 +73,25 @@ module.exports = function (inputFile, importData, callback) {
                 lasCheck++;
             }
             if(sectionName == wellTitle){
-                if(lasCheck < 1) return callback('THIS IS NOT LAS FILE, MISSING VERSION SECTION')
+                if(lasCheck < 1) {
+                    lasFormatError = 'THIS IS NOT LAS FILE, MISSING VERSION SECTION';
+                    return rl.close();
+                }
                 else lasCheck++;
             };
             if(sectionName == curveTitle ||new RegExp(definitionTitle).test(sectionName)){
-                if(lasCheck < 2) return callback('THIS IS NOT LAS FILE, MISSING WELL SECTION')
+                if(lasCheck < 2) {
+                    lasFormatError = 'THIS IS NOT LAS FILE, MISSING WELL SECTION';
+                    return rl.close();
+                }
                 else lasCheck++;
             };
+
             if(sectionName == asciiTitle || new RegExp(dataTitle).test(sectionName)){
-                if(lasCheck < 3) return callback('THIS IS NOT LAS FILE, MISSING DEFINITION SECTION')
+                if(lasCheck < 3) {
+                    lasFormatError = 'THIS IS NOT LAS FILE, MISSING DEFINITION SECTION';
+                    return rl.close();
+                }
                 else lasCheck--;
             };
             if (new RegExp(definitionTitle).test(sectionName)) {
@@ -210,10 +221,11 @@ module.exports = function (inputFile, importData, callback) {
 
     });
 
-
     rl.on('end', function () {
         deleteFile(inputFile.path);
         if(lasCheck != 2) return callback('THIS IS NOT LAS FILE, MISSING DATA SECTION');
+        if(lasFormatError && lasFormatError.length > 0) return callback(lasFormatError);
+
         let output = [];
         wellInfo.datasets = [];
         for(var datasetName in datasets){
