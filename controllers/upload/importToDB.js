@@ -3,15 +3,45 @@ const asyncLoop = require('node-async-loop');
 const models = require('../../models');
 const WellHeader = require('../wellHeader');
 
-function importCurves(curves, idDataset, cb) {
+function importCurves(curves, dataset, cb) {
     if(!curves || curves.length <= 0) return cb();
     let output = [];
+    console.log(JSON.stringify(curves[0]));
+    console.log(JSON.stringify(dataset));
     asyncLoop(curves, function (curveData, nextCurve) {
-        curveData.idDataset = idDataset;
+        curveData.idDataset = dataset.idDataset;
         models.Curve.create(curveData
         ).then((curve) => {
-            output.push(curve);
-            nextCurve();
+            if(curveData.wellname != dataset.wellname || curveData.datasetname != dataset.name){
+                const oldCurve = {
+                    username: dataset.username,
+                    wellname: curveData.wellname,
+                    datasetname: curveData.datasetname,
+                    curvename: curveData.name
+                }
+                const newCurve = {
+                    username: dataset.username,
+                    wellname: dataset.wellname,
+                    datasetname: dataset.name,
+                    curvename: curveData.name
+                };
+                const changeSet = {};
+                changeSet.path = require('../fileManagement').moveCurveFile(oldCurve, newCurve);
+                console.log(changeSet.path);
+                Object.assign(curve, changeSet);
+                curve.save().then(curve=>{
+                    output.push(curve);
+                    nextCurve();
+                }).catch(err => {
+                    console.log(err);
+                    nextCurve(err);
+                })
+            }
+            else {
+                output.push(curve);
+                nextCurve();
+            }
+
         }).catch(err => {
             console.log(err);
             nextCurve(err);
@@ -58,6 +88,7 @@ function importWell(wellData, cb) {
             cb(null, well);
         })
         .catch(err => {
+            console.log('===' + err)
             if(err.name = 'SequelizeUniqueConstraintError'){
                 if(wellData.name.indexOf(' ( copy ') < 0){
                     wellData.name = wellData.name + ' ( copy 1 )';
@@ -76,20 +107,22 @@ function importWell(wellData, cb) {
         })
 }
 
-function importDatasets(datasets, idWell, cb) {
+function importDatasets(datasets, well, cb) {
     if (!datasets || datasets.length <= 0) return cb();
     let output = [];
     asyncLoop(datasets, (datasetData, next) => {
-        datasetData.idWell = idWell;
+        datasetData.idWell = well.idWell;
         models.Dataset.findOrCreate({
             where : { idDataset : datasetData.idDataset },
             defaults: datasetData,
             // logging: console.log
         }).spread((dataset, created) => {
-            importCurves(datasetData.curves, dataset.idDataset, (err, result)=> {
+            dataset = dataset.toJSON();
+            dataset.wellname = well.name;
+            dataset.username = well.username;
+            importCurves(datasetData.curves, dataset, (err, result)=> {
                 if(err) next(err);
                 else {
-                    dataset = dataset.toJSON();
                     dataset.curves = result;
                     output.push(dataset);
                     next();
@@ -116,7 +149,7 @@ function importToDB(inputWells, userInfor, cb) {
                 if(!well) {
                     importWell(inputWell, (err, wellCreated) => {
                         if(err) nextWell(err);
-                        else importDatasets(inputWell.datasets, wellCreated.idWell, (err, result) => {
+                        else importDatasets(inputWell.datasets, wellCreated, (err, result) => {
                             if(err) nextWell(err);
                             else {
                                 wellCreated = wellCreated.toJSON();
@@ -128,7 +161,7 @@ function importToDB(inputWells, userInfor, cb) {
                     })
                 }
                 else {
-                    importDatasets(inputWell.datasets, well.idWell, (err, result) => {
+                    importDatasets(inputWell.datasets, well, (err, result) => {
                         if(err) nextWell(err);
                         else {
                             well = well.toJSON();

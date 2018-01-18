@@ -158,8 +158,8 @@ module.exports = function (inputFile, importData, callback) {
                 } else if (/DLM/.test(line)) {
                     const dotPosition = line.indexOf('.');
                     const colon = line.indexOf(':');
-                    const dlmString = line.substring(dotPosition + 1, colon);
-                    delimitingChar = dlmString.trim();
+                    const dlmString = line.substring(dotPosition + 1, colon).trim();
+                    delimitingChar = dlmString == 'COMMA' ? ',' : ' ';
                 }
             } else if(sectionName == wellTitle){
                 if(importData.well) return;
@@ -206,6 +206,7 @@ module.exports = function (inputFile, importData, callback) {
                     name : curveName,
                     unit : unit,
                     datasetname : datasetName,
+                    wellname: wellInfo.name,
                     startDepth : wellInfo.STRT,
                     stopDepth : wellInfo.STOP,
                     step : wellInfo.STEP,

@@ -125,8 +125,9 @@ function editCurve(body, username, cb){
                         }
                         const newCurve = Object.assign({}, oldCurve);
                         newCurve.curvename = body.name;
-
                         body.path = require('../fileManagement').moveCurveFile(oldCurve, newCurve);
+                        Object.assign(curve, body);
+                        curve.save();
                     }
                     cb(null, c);
                     }).catch(e => {
