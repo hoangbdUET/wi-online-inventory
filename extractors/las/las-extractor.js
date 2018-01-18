@@ -133,88 +133,96 @@ module.exports = function (inputFile, importData, callback) {
                     })
                 }
             }
-        } else if(/VERSION/.test(sectionName)){
-            if (/VERS/.test(line)) {
-                const dotPosition = line.indexOf('.');
-                const colon = line.indexOf(':');
-                const versionString = line.substring(dotPosition + 1, colon);
-                /2/.test(versionString) ? lasVersion = 2 : lasVersion = 3;
-                if(lasVersion == 2){
-                    wellTitle = 'W';
-                    curveTitle = 'C';
-                    asciiTitle = 'A';
-                }
-                console.log('LAS VERSION: ' + lasVersion)
-            } else if (/DLM/.test(line)) {
-                const dotPosition = line.indexOf('.');
-                const colon = line.indexOf(':');
-                const dlmString = line.substring(dotPosition + 1, colon);
-                delimitingChar = dlmString.trim();
-            }
-        } else if(sectionName == wellTitle){
-            if(importData.well) return;
-
-            const mnem = line.substring(0, line.indexOf('.')).trim();
-            line = line.substring(line.indexOf('.'));
-            const data = line.substring(line.indexOf(' '), line.indexOf(':')).trim();
-
-            wellInfo.name = inputFile.originalname;
-            if ((/WELL/).test(mnem) && !/UWI/.test(mnem)) {
-                wellInfo.name = data ? data : inputFile.originalname;
-            }
-            else {
-                wellInfo[mnem] = data;
-            }
-        } else if(sectionName == curveTitle ||new RegExp(definitionTitle).test(sectionName)){
-            if(isFirstCurve){
-                isFirstCurve = false;
-                return;
+        }
+        else {
+            if(sectionName != asciiTitle && !new RegExp(dataTitle).test(sectionName) && line.indexOf(':') < 0){
+                lasFormatError = 'WRONG FORMAT';
+                return rl.close();
             }
 
-            // const datasetName = new RegExp(definitionTitle).test(sectionName) ? sectionName.substring(0, sectionName.indexOf(definitionTitle)) : wellInfo.name;
-            const datasetName = sectionName == curveTitle ? wellInfo.name : sectionName.substring(0, sectionName.indexOf(definitionTitle));
-            let curveName = line.substring(0, line.indexOf('.')).trim();
-            curveName = curveName.replace('/', '_');
-            let suffix = 1;
-            while (true){
-                let rename = datasets[datasetName].curves.every(curve => {
-                    if(curveName.toLowerCase() == curve.name.toLowerCase()){
-                        curveName = curveName.replace('_' + (suffix - 1), '') + '_' + suffix;
-                        suffix++;
-                        return false;
+            if(/VERSION/.test(sectionName)){
+                if (/VERS/.test(line)) {
+                    const dotPosition = line.indexOf('.');
+                    const colon = line.indexOf(':');
+                    const versionString = line.substring(dotPosition + 1, colon);
+                    /2/.test(versionString) ? lasVersion = 2 : lasVersion = 3;
+                    if(lasVersion == 2){
+                        wellTitle = 'W';
+                        curveTitle = 'C';
+                        asciiTitle = 'A';
                     }
-                    return true;
-                });
-                if(rename) break;
-            }
-            line = line.substring(line.indexOf('.') + 1);
-
-            let unit = line.substring(0, line.indexOf(' ')).trim();
-            if (unit.indexOf("00") != -1) unit = unit.substring(0, unit.indexOf("00"));
-
-
-            let curve = {
-                name : curveName,
-                unit : unit,
-                datasetname : datasetName,
-                startDepth : wellInfo.STRT,
-                stopDepth : wellInfo.STOP,
-                step : wellInfo.STEP,
-                path: ''
-            }
-            datasets[datasetName].curves.push(curve);
-        } else if(sectionName == asciiTitle || new RegExp(dataTitle).test(sectionName)){
-            // let separator = sectionName == asciiTitle ? ' ' : ',';
-            const datasetName = sectionName == asciiTitle ? wellInfo.name : sectionName.substring(0, sectionName.indexOf(dataTitle));
-            fields = fields.concat(line.trim().split(delimitingChar));
-            if(fields.length > datasets[datasetName].curves.length) {
-                if (datasets[datasetName].curves) {
-                    datasets[datasetName].curves.forEach(function (curve, i) {
-                        writeToCurveFile(BUFFERS[curve.name], curve.path, count, fields[i + 1], wellInfo.NULL);
-                    });
-                    count++;
+                    console.log('LAS VERSION: ' + lasVersion)
+                } else if (/DLM/.test(line)) {
+                    const dotPosition = line.indexOf('.');
+                    const colon = line.indexOf(':');
+                    const dlmString = line.substring(dotPosition + 1, colon);
+                    delimitingChar = dlmString.trim();
                 }
-                fields = [];
+            } else if(sectionName == wellTitle){
+                if(importData.well) return;
+
+                const mnem = line.substring(0, line.indexOf('.')).trim();
+                line = line.substring(line.indexOf('.'));
+                const data = line.substring(line.indexOf(' '), line.indexOf(':')).trim();
+
+                wellInfo.name = inputFile.originalname;
+                if ((/WELL/).test(mnem) && !/UWI/.test(mnem)) {
+                    wellInfo.name = data ? data : inputFile.originalname;
+                }
+                else {
+                    wellInfo[mnem] = data;
+                }
+            } else if(sectionName == curveTitle ||new RegExp(definitionTitle).test(sectionName)){
+                if(isFirstCurve){
+                    isFirstCurve = false;
+                    return;
+                }
+
+                // const datasetName = new RegExp(definitionTitle).test(sectionName) ? sectionName.substring(0, sectionName.indexOf(definitionTitle)) : wellInfo.name;
+                const datasetName = sectionName == curveTitle ? wellInfo.name : sectionName.substring(0, sectionName.indexOf(definitionTitle));
+                let curveName = line.substring(0, line.indexOf('.')).trim();
+                curveName = curveName.replace('/', '_');
+                let suffix = 1;
+                while (true){
+                    let rename = datasets[datasetName].curves.every(curve => {
+                        if(curveName.toLowerCase() == curve.name.toLowerCase()){
+                            curveName = curveName.replace('_' + (suffix - 1), '') + '_' + suffix;
+                            suffix++;
+                            return false;
+                        }
+                        return true;
+                    });
+                    if(rename) break;
+                }
+                line = line.substring(line.indexOf('.') + 1);
+
+                let unit = line.substring(0, line.indexOf(' ')).trim();
+                if (unit.indexOf("00") != -1) unit = unit.substring(0, unit.indexOf("00"));
+
+
+                let curve = {
+                    name : curveName,
+                    unit : unit,
+                    datasetname : datasetName,
+                    startDepth : wellInfo.STRT,
+                    stopDepth : wellInfo.STOP,
+                    step : wellInfo.STEP,
+                    path: ''
+                }
+                datasets[datasetName].curves.push(curve);
+            } else if(sectionName == asciiTitle || new RegExp(dataTitle).test(sectionName)){
+                // let separator = sectionName == asciiTitle ? ' ' : ',';
+                const datasetName = sectionName == asciiTitle ? wellInfo.name : sectionName.substring(0, sectionName.indexOf(dataTitle));
+                fields = fields.concat(line.trim().split(delimitingChar));
+                if(fields.length > datasets[datasetName].curves.length) {
+                    if (datasets[datasetName].curves) {
+                        datasets[datasetName].curves.forEach(function (curve, i) {
+                            writeToCurveFile(BUFFERS[curve.name], curve.path, count, fields[i + 1], wellInfo.NULL);
+                        });
+                        count++;
+                    }
+                    fields = [];
+                }
             }
         }
 
