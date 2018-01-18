@@ -147,6 +147,7 @@ module.exports = function (inputFile, importData, callback) {
             line = line.substring(line.indexOf('.'));
             const data = line.substring(line.indexOf(' '), line.indexOf(':')).trim();
 
+            wellInfo.name = inputFile.originalname;
             if ((/WELL/).test(mnem) && !/UWI/.test(mnem)) {
                 wellInfo.name = data ? data : inputFile.originalname;
             }
@@ -163,10 +164,12 @@ module.exports = function (inputFile, importData, callback) {
             const datasetName = sectionName == curveTitle ? wellInfo.name : sectionName.substring(0, sectionName.indexOf(definitionTitle));
             let curveName = line.substring(0, line.indexOf('.')).trim();
             curveName = curveName.replace('/', '_');
+            let suffix = 1;
             while (true){
                 let rename = datasets[datasetName].curves.every(curve => {
                     if(curveName.toLowerCase() == curve.name.toLowerCase()){
-                        curveName = curveName + '_1';
+                        curveName = curveName.replace('_' + (suffix - 1), '') + '_' + suffix;
+                        suffix++;
                         return false;
                     }
                     return true;
