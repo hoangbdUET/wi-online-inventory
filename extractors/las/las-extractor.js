@@ -229,9 +229,9 @@ module.exports = function (inputFile, importData, callback) {
                     unit : unit,
                     datasetname : datasetName,
                     wellname: wellInfo.name,
-                    startDepth : datasets[datasetName].STRT,
-                    stopDepth : datasets[datasetName].STOP,
-                    step : datasets[datasetName].STEP,
+                    startDepth : datasets[datasetName].top,
+                    stopDepth : datasets[datasetName].bottom,
+                    step : datasets[datasetName].step,
                     path: ''
                 }
                 datasets[datasetName].curves.push(curve);
