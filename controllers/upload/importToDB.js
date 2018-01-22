@@ -6,8 +6,6 @@ const WellHeader = require('../wellHeader');
 function importCurves(curves, dataset, cb) {
     if(!curves || curves.length <= 0) return cb();
     let output = [];
-    console.log(JSON.stringify(curves[0]));
-    console.log(JSON.stringify(dataset));
     asyncLoop(curves, function (curveData, nextCurve) {
         curveData.idDataset = dataset.idDataset;
         models.Curve.create(curveData
@@ -27,7 +25,6 @@ function importCurves(curves, dataset, cb) {
                 };
                 const changeSet = {};
                 changeSet.path = require('../fileManagement').moveCurveFile(oldCurve, newCurve);
-                console.log(changeSet.path);
                 Object.assign(curve, changeSet);
                 curve.save().then(curve=>{
                     output.push(curve);
@@ -56,21 +53,20 @@ function importCurves(curves, dataset, cb) {
 function importWell(wellData, cb) {
     models.Well.create(wellData)
         .then( well => {
-            let arr = ['username', 'datasets', 'name', 'username'];
+            let arr = ['username', 'datasets', 'name', 'params'];
             for(let property in WellHeader){
-                let value = '';
+                let well_header = {};
                 if(wellData[WellHeader[property].LASMnemnics]){
-                    value = wellData[WellHeader[property].LASMnemnics];
+                    well_header = wellData[WellHeader[property].LASMnemnics];
                 }
                 else if(wellData[WellHeader[property].CSVMnemnics]){
-                    value = wellData[WellHeader[property].CSVMnemnics];
+                    well_header = wellData[WellHeader[property].CSVMnemnics];
                 }
                 arr.push(property);
-                models.WellHeader.create({
-                    idWell: well.idWell,
-                    header: property,
-                    value: value
-                }).catch(err => {
+                well_header.idWell = well.idWell;
+                well_header.header = property;
+                models.WellHeader.create(well_header)
+                    .catch(err => {
                     console.log('=============' + err)
                 })
             }
@@ -80,15 +76,24 @@ function importWell(wellData, cb) {
                     models.WellHeader.create({
                         idWell: well.idWell,
                         header: header,
-                        value: wellData[header]
+                        value: wellData[header].value,
+                        description: wellData[header].description,
+                        standard: false
                     }).catch(err => {
                         console.log(err)
                     })
             }
+            wellData.params.forEach(param => {
+                param.idWell = well.idWell;
+                models.WellParameter.create(param)
+                    .catch(err => {
+                        console.log('import to well_parameter failed ===> ' + err);
+                    })
+            })
             cb(null, well);
         })
         .catch(err => {
-            console.log('===' + err)
+            console.log('===' + err + "===> It's ok, rename now")
             if(err.name = 'SequelizeUniqueConstraintError'){
                 if(wellData.name.indexOf(' ( copy ') < 0){
                     wellData.name = wellData.name + ' ( copy 1 )';
@@ -129,7 +134,7 @@ function importDatasets(datasets, well, cb) {
                 }
             })
         }).catch(err => {
-            console.log(err);
+            console.log('import dataset failed: ' + err);
             next(err);
         })
     }, (err => {

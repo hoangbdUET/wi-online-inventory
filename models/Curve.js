@@ -34,6 +34,10 @@ module.exports = function (sequelize, DataTypes) {
             type: DataTypes.STRING,
             allowNull: false,
             defaultValue: 0
+        },
+        description: {
+            type: DataTypes.STRING,
+            defaultValue: ''
         }
     });
 }

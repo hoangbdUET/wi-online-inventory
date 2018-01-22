@@ -32,7 +32,8 @@ module.exports = function (inputFile, importData, callback) {
     let count = 0;
     let wellInfo = importData.well ? importData.well : {
         filename : inputFile.originalname,
-        name: inputFile.originalname
+        name: inputFile.originalname,
+        params: []
     };
     let filePaths = new Object();
     let BUFFERS = new Object();
@@ -43,6 +44,7 @@ module.exports = function (inputFile, importData, callback) {
     let definitionTitle = '_DEFINITION';
     let dataTitle = '_DATA';
     let asciiTitle = 'ASCII';
+    let parameterTitle = 'PARAMETER';
     let lasCheck = 0;
     let currentDataset = '';
     let lasVersion = 3;
@@ -103,9 +105,9 @@ module.exports = function (inputFile, importData, callback) {
                 let dataset = {
                     name: datasetName,
                     curves: [],
-                    top: wellInfo.STRT,
-                    bottom: wellInfo.STOP,
-                    step: wellInfo.STEP
+                    top: wellInfo.STRT.value,
+                    bottom: wellInfo.STOP.value,
+                    step: wellInfo.STEP.value
                 }
                 datasets[datasetName] = dataset;
             }
@@ -114,9 +116,9 @@ module.exports = function (inputFile, importData, callback) {
                 let dataset = {
                     name: wellInfo.name,
                     curves: [],
-                    top: wellInfo.STRT,
-                    bottom: wellInfo.STOP,
-                    step: wellInfo.STEP
+                    top: wellInfo.STRT.value,
+                    bottom: wellInfo.STOP.value,
+                    step: wellInfo.STEP.value
                 }
                 datasets[wellInfo.name] = dataset;
             }
@@ -153,6 +155,7 @@ module.exports = function (inputFile, importData, callback) {
                         wellTitle = 'W';
                         curveTitle = 'C';
                         asciiTitle = 'A';
+                        parameterTitle = 'P';
                     }
                     console.log('LAS VERSION: ' + lasVersion)
                 } else if (/DLM/.test(line)) {
@@ -166,21 +169,40 @@ module.exports = function (inputFile, importData, callback) {
 
                 const mnem = line.substring(0, line.indexOf('.')).trim();
                 line = line.substring(line.indexOf('.'));
-                const data = line.substring(line.indexOf(' '), line.indexOf(':')).trim();
+                const data = line.substring(line.indexOf(' '), line.lastIndexOf(':')).trim();
+                const description = line.substring(line.lastIndexOf(':') + 1).trim();
 
-                if ((/WELL/).test(mnem) && !/UWI/.test(mnem)) {
-                    wellInfo.name = data ? data : inputFile.originalname;
+                // if ((/WELL/).test(mnem) && !/UWI/.test(mnem)) {
+                //     wellInfo.name = data ? data : inputFile.originalname;
+                // }
+                // else {
+                //     wellInfo[mnem] = data;
+                // }
+                if((/WELL/).test(mnem) && data){
+                    wellInfo.name = data;
                 }
-                else {
-                    wellInfo[mnem] = data;
+                wellInfo[mnem] = {
+                    value: data,
+                    description: description
                 }
+            } else if(sectionName == parameterTitle){
+                if(importData.well) return;
+
+                const mnem = line.substring(0, line.indexOf('.')).trim();
+                line = line.substring(line.indexOf('.'));
+                const data = line.substring(line.indexOf(' '), line.lastIndexOf(':')).trim();
+                const description = line.substring(line.lastIndexOf(':') + 1).trim();
+                wellInfo.params.push({
+                    parameter: mnem,
+                    value: data,
+                    description: description
+                })
             } else if(sectionName == curveTitle ||new RegExp(definitionTitle).test(sectionName)){
                 if(isFirstCurve){
                     isFirstCurve = false;
                     return;
                 }
 
-                // const datasetName = new RegExp(definitionTitle).test(sectionName) ? sectionName.substring(0, sectionName.indexOf(definitionTitle)) : wellInfo.name;
                 const datasetName = sectionName == curveTitle ? wellInfo.name : sectionName.substring(0, sectionName.indexOf(definitionTitle));
                 let curveName = line.substring(0, line.indexOf('.')).trim();
                 curveName = curveName.replace('/', '_');
@@ -207,9 +229,9 @@ module.exports = function (inputFile, importData, callback) {
                     unit : unit,
                     datasetname : datasetName,
                     wellname: wellInfo.name,
-                    startDepth : wellInfo.STRT,
-                    stopDepth : wellInfo.STOP,
-                    step : wellInfo.STEP,
+                    startDepth : datasets[datasetName].STRT,
+                    stopDepth : datasets[datasetName].STOP,
+                    step : datasets[datasetName].STEP,
                     path: ''
                 }
                 datasets[datasetName].curves.push(curve);

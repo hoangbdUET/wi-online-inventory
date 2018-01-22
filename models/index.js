@@ -30,7 +30,8 @@ var models = [
     'Well',
     'User',
     'Dataset',
-    'WellHeader'
+    'WellHeader',
+    'WellParameter'
 ];
 models.forEach(function (model) {
     module.exports[model] = sequelize.import(__dirname + '/' + model);

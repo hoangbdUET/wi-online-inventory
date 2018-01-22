@@ -1,10 +1,10 @@
 module.exports = function (sequelize, DataTypes) {
-    return sequelize.define('well_header', {
+    return sequelize.define('well_parameter', {
         idWell: {
             type: DataTypes.INTEGER,
             primaryKey: true
         },
-        header: {
+        parameter: {
             type: DataTypes.STRING,
             primaryKey: true
         },
@@ -16,11 +16,6 @@ module.exports = function (sequelize, DataTypes) {
         description: {
             type: DataTypes.STRING,
             defaultValue: ''
-        },
-        standard: {
-            type: DataTypes.BOOLEAN,
-            allowNull: false,
-            defaultValue: true
         }
     });
 }
