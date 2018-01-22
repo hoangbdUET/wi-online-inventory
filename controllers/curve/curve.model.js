@@ -114,6 +114,7 @@ function editCurve(body, username, cb){
         .then(curve => {
             if (curve) {
                 const oldCurveName = curve.name;
+                body.path = require('../../extractors/hash-dir').getHashPath(username + curve.dataset.well.name + curve.dataset.name + body.name) + body.name + '.txt';
                 Object.assign(curve, body);
                 curve.save().then(c => {
                     if(oldCurveName != curve.name){
@@ -126,8 +127,6 @@ function editCurve(body, username, cb){
                         const newCurve = Object.assign({}, oldCurve);
                         newCurve.curvename = body.name;
                         body.path = require('../fileManagement').moveCurveFile(oldCurve, newCurve);
-                        Object.assign(curve, body);
-                        curve.save();
                     }
                     cb(null, c);
                     }).catch(e => {

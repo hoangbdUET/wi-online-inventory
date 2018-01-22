@@ -21,31 +21,37 @@ function writeToCurveFile(buffer, curveFilePath, index, value, defaultNull) {
 }
 
 module.exports = function(inputFile, importData, cb) {
+    //importData.isUnitsRow
     const fileName = inputFile.originalname.substring(0, inputFile.originalname.lastIndexOf('.'));
     const fileFormat = inputFile.originalname.substring(inputFile.originalname.lastIndexOf('.') + 1);
+    console.log('======> ' + importData.isUnitsRow)
 
     const rl = new readline(inputFile.path, {skipEmptyLines : true});
     let curveNames = [];
+    let units = [];
     let wells = [];
     let currentWell = importData.well? importData.well : { name : ''};
-    let isFirstLine = true;
+    let lineIndex = 0;
     let count = 1;
     let BUFFERS = new Object();
     let lastDepth = '';
 
     rl.on('line', line => {
+        lineIndex++;
         line = line.trim();
         const lineSplited = line.split(',');
 
-        if(isFirstLine){
-            isFirstLine = false;
+        if(lineIndex == 1){
             curveNames = lineSplited.slice(2);
             curveNames.forEach((name, i) => {
                 name.replace('/', '_');
+                let suffix = 0;
                 while (true){
                     let rename = curveNames.every((curveName, idx) => {
                         if(curveName.toLowerCase() == name.toLowerCase() && i != idx){
-                            name = name + '_1';
+                            name = name.replace('_' + suffix, '');
+                            suffix++;
+                            name = name + '_' + suffix;
                             return false;
                         }
                         return true;
@@ -55,6 +61,10 @@ module.exports = function(inputFile, importData, cb) {
                 curveNames[i] = name;
             })
             console.log(curveNames.join(','));
+        }
+        else if(importData.isUnitsRow && lineIndex == 2){
+            units = lineSplited;
+            console.log(units.join('/'))
         }
         else {
             if(lineSplited[0] != currentWell.name){
@@ -72,6 +82,14 @@ module.exports = function(inputFile, importData, cb) {
                         })
                     }
                 })
+                currentWell = {
+                    name: lineSplited[0],
+                    filename: fileName,
+                    STRT: lineSplited[1],
+                    STOP: '',
+                    STEP: '',
+                    datasets: []
+                }
                 let dataset = {
                     name: lineSplited[0],
                     top: lineSplited[1],
@@ -79,13 +97,14 @@ module.exports = function(inputFile, importData, cb) {
                     step: '',
                     curves: []
                 }
-                curveNames.forEach(curveName => {
-                    const path = hashDir.createPath(config.dataPath, importData.username + currentWell.name + dataset.name + curveName, curveName + '.txt');
+                curveNames.forEach((curveName, idx) => {
+                    const path = hashDir.createPath(config.dataPath, importData.userInfor.username + currentWell.name + dataset.name + curveName, curveName + '.txt');
                     fs.writeFileSync(path, '');
                     let curve = {
                         name: curveName,
-                        unit : '',
+                        unit : units.length > 0 ? units[idx + 2] : '',
                         datasetname : dataset.name,
+                        wellname: currentWell.name,
                         startDepth : lineSplited[1],
                         stopDepth : '',
                         step : '',
@@ -97,14 +116,7 @@ module.exports = function(inputFile, importData, cb) {
                     };
                     dataset.curves.push(curve);
                 })
-                currentWell = {
-                    name: lineSplited[0],
-                    filename: fileName,
-                    STRT: lineSplited[1],
-                    STOP: '',
-                    STEP: '',
-                    datasets: []
-                }
+
                 currentWell.datasets.push(dataset)
                 wells.push(currentWell);
                 count = 1;

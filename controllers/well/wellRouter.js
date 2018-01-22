@@ -121,7 +121,6 @@ router.post('/wells', function (req, res) {
             opts.order = [["idWell", 'DESC']]
         }
     }
-    console.log(opts);
     Well.findAll(opts)
         .then((wells) => {
             res.send(response(200, 'SUCCESSFULLY GET WELLS', wells));

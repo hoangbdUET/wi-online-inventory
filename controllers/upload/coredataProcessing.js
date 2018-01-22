@@ -14,7 +14,7 @@ function processFileUpload(file, importData, callback) {
                 callback(err, null);
             }
             else {
-                importToDB(result, importData.userInfo, function (err, result) {
+                importToDB(result, importData.userInfor, function (err, result) {
                     if (err) {
                         callback(err, null);
                     }
@@ -34,7 +34,8 @@ module.exports.uploadFiles = function (req, cb) {
     if (!req.files) return cb('NO FILE CHOSEN!!!');
     let output = new Array();
     let importData = {};
-    importData.userInfo = req.decoded;
+    importData.userInfor = req.decoded;
+    importData.isUnitsRow = req.body.isUnitsRow;
     models.Well.findById(req.body.idWell)
         .then(well => {
             importData.well = well;
