@@ -83,13 +83,6 @@ function importWell(wellData, cb) {
                         console.log(err)
                     })
             }
-            wellData.params.forEach(param => {
-                param.idWell = well.idWell;
-                models.WellParameter.create(param)
-                    .catch(err => {
-                        console.log('import to well_parameter failed ===> ' + err);
-                    })
-            })
             cb(null, well);
         })
         .catch(err => {
@@ -125,6 +118,14 @@ function importDatasets(datasets, well, cb) {
             dataset = dataset.toJSON();
             dataset.wellname = well.name;
             dataset.username = well.username;
+
+            datasetData.params.forEach(param => {
+                param.idDataset = dataset.idDataset;
+                models.DatasetParams.create(param)
+                    .catch(err => {
+                        console.log('import to well_parameter failed ===> ' + err);
+                    })
+            })
             importCurves(datasetData.curves, dataset, (err, result)=> {
                 if(err) next(err);
                 else {

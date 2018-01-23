@@ -1,10 +1,10 @@
 module.exports = function (sequelize, DataTypes) {
-    return sequelize.define('well_parameter', {
-        idWell: {
+    return sequelize.define('dataset_params', {
+        idDataset: {
             type: DataTypes.INTEGER,
             primaryKey: true
         },
-        parameter: {
+        mnem: {
             type: DataTypes.STRING,
             primaryKey: true
         },

@@ -32,8 +32,7 @@ module.exports = function (inputFile, importData, callback) {
     let count = 0;
     let wellInfo = importData.well ? importData.well : {
         filename : inputFile.originalname,
-        name: inputFile.originalname,
-        params: []
+        name: inputFile.originalname
     };
     let filePaths = new Object();
     let BUFFERS = new Object();
@@ -107,18 +106,21 @@ module.exports = function (inputFile, importData, callback) {
                     curves: [],
                     top: wellInfo.STRT.value,
                     bottom: wellInfo.STOP.value,
-                    step: wellInfo.STEP.value
+                    step: wellInfo.STEP.value,
+                    params: []
                 }
                 datasets[datasetName] = dataset;
             }
-            if(sectionName == curveTitle) {
+            if(sectionName == parameterTitle || sectionName == curveTitle) {
+                if(datasets[wellInfo.name]) return;
                 isFirstCurve = true;
                 let dataset = {
                     name: wellInfo.name,
                     curves: [],
                     top: wellInfo.STRT.value,
                     bottom: wellInfo.STOP.value,
-                    step: wellInfo.STEP.value
+                    step: wellInfo.STEP.value,
+                    params: []
                 }
                 datasets[wellInfo.name] = dataset;
             }
@@ -185,18 +187,28 @@ module.exports = function (inputFile, importData, callback) {
                     value: data,
                     description: description
                 }
-            } else if(sectionName == parameterTitle){
+            } else if(sectionName == parameterTitle || new RegExp(parameterTitle).test(sectionName)){
                 if(importData.well) return;
 
                 const mnem = line.substring(0, line.indexOf('.')).trim();
                 line = line.substring(line.indexOf('.'));
                 const data = line.substring(line.indexOf(' '), line.lastIndexOf(':')).trim();
                 const description = line.substring(line.lastIndexOf(':') + 1).trim();
-                wellInfo.params.push({
-                    parameter: mnem,
-                    value: data,
-                    description: description
-                })
+                console.log(JSON.stringify(datasets))
+                if(sectionName == parameterTitle){
+                    datasets[wellInfo.name].params.push({
+                        mnem: mnem,
+                        value: data,
+                        description: description
+                    })
+                }
+                else {
+                    datasets[sectionName.replace('_' + parameterTitle)].params.push({
+                        mnem: mnem,
+                        value: data,
+                        description: description
+                    })
+                }
             } else if(sectionName == curveTitle ||new RegExp(definitionTitle).test(sectionName)){
                 if(isFirstCurve){
                     isFirstCurve = false;
