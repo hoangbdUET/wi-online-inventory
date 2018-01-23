@@ -98,9 +98,11 @@ module.exports = function (inputFile, importData, callback) {
                 }
                 else lasCheck--;
             };
-            if (new RegExp(definitionTitle).test(sectionName)) {
+
+            if (new RegExp(definitionTitle).test(sectionName) || new RegExp(parameterTitle).test(sectionName)) {
                 isFirstCurve = true;
-                const datasetName = sectionName.substring(0, sectionName.indexOf(definitionTitle));
+                const datasetName = sectionName.substring(0, sectionName.lastIndexOf('_'));
+                if(datasets[datasetName]) return;
                 let dataset = {
                     name: datasetName,
                     curves: [],
@@ -110,6 +112,7 @@ module.exports = function (inputFile, importData, callback) {
                     params: []
                 }
                 datasets[datasetName] = dataset;
+                console.log('=================>  ' + JSON.stringify(datasets[datasetName]));
             }
             if(sectionName == parameterTitle || sectionName == curveTitle) {
                 if(datasets[wellInfo.name]) return;
@@ -142,7 +145,8 @@ module.exports = function (inputFile, importData, callback) {
             }
         }
         else {
-            if(sectionName != asciiTitle && !new RegExp(dataTitle).test(sectionName) && line.indexOf(':') < 0){
+            if(sectionName != asciiTitle && !new RegExp(dataTitle).test(sectionName)
+                && sectionName != 'O' && line.indexOf(':') < 0){
                 lasFormatError = 'WRONG FORMAT';
                 return rl.close();
             }
@@ -203,7 +207,7 @@ module.exports = function (inputFile, importData, callback) {
                     })
                 }
                 else {
-                    datasets[sectionName.replace('_' + parameterTitle)].params.push({
+                    datasets[sectionName.replace('_' + parameterTitle, '')].params.push({
                         mnem: mnem,
                         value: data,
                         description: description
