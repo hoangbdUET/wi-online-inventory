@@ -65,33 +65,18 @@ router.post('/curve/edit', function (req, res) {
 
 });
 router.post('/curve/delete', function (req, res) {
-    curveModel.findCurveById(req.body.idCurve, req.decoded.username)
-        .then(curve => {
-            if (curve) {
-                curveModel.deleteCurve(curve, (err, rs)=>{
-                    if(err) {
-                        console.log(err);
-                        res.send(response(500, 'FAILED TO DELETE CURVE', err));
-                    }
-                    else res.send(response(200, 'SUCCESSFULLY DELETE CURVE', rs));
-                })
-            } else {
-                res.send(response(500, 'NO CURVE FOUND FOR DELETE'));
-            }
-        }).catch(err => {
-            console.log(err);
-            res.send(response(500, 'FAILED TO FIND CURVE', err));
-    });
+    curveModel.deleteCurve(req.body.idCurve, req.decoded.username, (err, result) => {
+        if(err) res.send(response(500, 'FAILED TO DELETE CURVE', err));
+        else res.send(response(200, 'SUCCESSFULLY DELETE CURVE', result));
+    })
+
 });
 
 router.post('/curves', function (req, res) {
-    curveModel.getCurves(req.body.idDataset, req.decoded.username)
-        .then((curves) => {
-            res.send(response(200, 'SUCCESSFULLY GET CURVES', curves));
-        })
-        .catch((err) => {
-            res.send(response(500, 'FAILED TO FIND CURVES', err));
-        })
+    curveModel.getCurves(req.body.idDataset, req.decoded.username, (err, result) => {
+        if(err)res.send(response(500, 'FAILED TO FIND CURVES', err));
+        else res.send(response(200, 'SUCCESSFULLY GET CURVES', result));
+    })
 })
 
 

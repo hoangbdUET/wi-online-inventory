@@ -99,21 +99,6 @@ module.exports = function (inputFile, importData, callback) {
                 else lasCheck--;
             };
 
-            if (new RegExp(definitionTitle).test(sectionName) || new RegExp(parameterTitle).test(sectionName)) {
-                isFirstCurve = true;
-                const datasetName = sectionName.substring(0, sectionName.lastIndexOf('_'));
-                if(datasets[datasetName]) return;
-                let dataset = {
-                    name: datasetName,
-                    curves: [],
-                    top: wellInfo.STRT.value,
-                    bottom: wellInfo.STOP.value,
-                    step: wellInfo.STEP.value,
-                    params: []
-                }
-                datasets[datasetName] = dataset;
-                console.log('=================>  ' + JSON.stringify(datasets[datasetName]));
-            }
             if(sectionName == parameterTitle || sectionName == curveTitle) {
                 if(datasets[wellInfo.name]) return;
                 isFirstCurve = true;
@@ -127,6 +112,21 @@ module.exports = function (inputFile, importData, callback) {
                 }
                 datasets[wellInfo.name] = dataset;
             }
+            else if (new RegExp(definitionTitle).test(sectionName) || new RegExp(parameterTitle).test(sectionName)) {
+                isFirstCurve = true;
+                const datasetName = sectionName.substring(0, sectionName.lastIndexOf('_'));
+                if(datasets[datasetName]) return;
+                let dataset = {
+                    name: datasetName,
+                    curves: [],
+                    top: wellInfo.STRT.value,
+                    bottom: wellInfo.STOP.value,
+                    step: wellInfo.STEP.value,
+                    params: []
+                }
+                datasets[datasetName] = dataset;
+            }
+
             console.log('section name: ' + sectionName)
             if(sectionName == asciiTitle || new RegExp(dataTitle).test(sectionName)) {
                 const datasetName = sectionName == asciiTitle? wellInfo.name : sectionName.substring(0, sectionName.indexOf(dataTitle));
@@ -198,7 +198,6 @@ module.exports = function (inputFile, importData, callback) {
                 line = line.substring(line.indexOf('.'));
                 const data = line.substring(line.indexOf(' '), line.lastIndexOf(':')).trim();
                 const description = line.substring(line.lastIndexOf(':') + 1).trim();
-                console.log(JSON.stringify(datasets))
                 if(sectionName == parameterTitle){
                     datasets[wellInfo.name].params.push({
                         mnem: mnem,

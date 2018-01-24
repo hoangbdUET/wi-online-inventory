@@ -43,7 +43,10 @@ function getCurves(idWell, cb) {
             idWell: idWell
         },
         include: [{
-            model: models.Curve
+            model: models.Curve,
+            include: {
+                model: models.CurveRevision
+            }
         }]
     }).then(datasets => {
         if (!datasets || datasets.length <= 0) return cb(curves);

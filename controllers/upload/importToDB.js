@@ -6,10 +6,15 @@ const WellHeader = require('../wellHeader');
 function importCurves(curves, dataset, cb) {
     if(!curves || curves.length <= 0) return cb();
     let output = [];
-    asyncLoop(curves, function (curveData, nextCurve) {
-        curveData.idDataset = dataset.idDataset;
-        models.Curve.create(curveData
-        ).then((curve) => {
+    asyncLoop(curves, async (curveData, nextCurve) => {
+        try {
+            curveData.idDataset = dataset.idDataset;
+            const curve = await models.Curve.create(curveData);
+
+            curveData.idCurve = curve.idCurve;
+            curveData.isCurrentRevision = true;
+            const curveRevision = await models.CurveRevision.create(curveData);
+
             if(curveData.wellname != dataset.wellname || curveData.datasetname != dataset.name){
                 const oldCurve = {
                     username: dataset.username,
@@ -26,29 +31,22 @@ function importCurves(curves, dataset, cb) {
                 const changeSet = {};
                 changeSet.path = require('../fileManagement').moveCurveFile(oldCurve, newCurve);
                 Object.assign(curve, changeSet);
-                curve.save().then(curve=>{
-                    output.push(curve);
-                    nextCurve();
-                }).catch(err => {
-                    console.log(err);
-                    nextCurve(err);
-                })
+                const updatedCurve = await curve.save();
+                output.push(updatedCurve);
             }
-            else {
-                output.push(curve);
-                nextCurve();
-            }
-
-        }).catch(err => {
-            console.log(err);
-            nextCurve(err);
-        });
-
-    }, (err) => {
-        if(err) cb(err);
-        else cb(null, output);
+            nextCurve();
+        } catch (err) {
+            nextCurve(err)
+        }
+    }, err => {
+        if(err) {
+            console.log('import curves failed: ' + err);
+            cb(err);
+        }
+        else cb(null, output)
     })
 }
+
 
 function importWell(wellData, cb) {
     models.Well.create(wellData)
