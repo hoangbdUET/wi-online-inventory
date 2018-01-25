@@ -5,9 +5,13 @@ const hash_dir = require('../extractors/hash-dir');
 const config = require('config');
 
 function moveCurveFile(oldCurve, newCurve) {
-    const srcPath = config.dataPath + '/' + hash_dir.getHashPath(oldCurve.username + oldCurve.wellname + oldCurve.datasetname + oldCurve.curvename) + oldCurve.curvename + '.txt';
-    const desPath = hash_dir.createPath(config.dataPath, newCurve.username + newCurve.wellname + newCurve.datasetname + newCurve.curvename, newCurve.curvename + '.txt');
-    fs.renameSync(srcPath, desPath);
+    const srcHashStr = oldCurve.username + oldCurve.wellname + oldCurve.datasetname + oldCurve.curvename + oldCurve.unit + oldCurve.step;
+    const srcPath = config.dataPath + '/' + hash_dir.getHashPath(srcHashStr) + oldCurve.curvename + '.txt';
+    const desHashStr = newCurve.username + newCurve.wellname + newCurve.datasetname + newCurve.curvename + newCurve.unit + newCurve.step;
+    const desPath = hash_dir.createPath(config.dataPath, desHashStr , newCurve.curvename + '.txt');
+    fs.rename(srcPath, desPath, (err, rs)=> {
+        if(err) console.log(err);
+    })
     return desPath.replace(config.dataPath + '/', '');
 }
 

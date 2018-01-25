@@ -20,13 +20,17 @@ function importCurves(curves, dataset, cb) {
                     username: dataset.username,
                     wellname: curveData.wellname,
                     datasetname: curveData.datasetname,
-                    curvename: curveData.name
+                    curvename: curveData.name,
+                    unit: curveData.unit,
+                    step: curveData.step
                 }
                 const newCurve = {
                     username: dataset.username,
                     wellname: dataset.wellname,
                     datasetname: dataset.name,
-                    curvename: curveData.name
+                    curvename: curveData.name,
+                    unit: curveData.unit,
+                    step: curveData.step
                 };
                 const changeSet = {};
                 changeSet.path = require('../fileManagement').moveCurveFile(oldCurve, newCurve);

@@ -137,7 +137,8 @@ module.exports = function (inputFile, importData, callback) {
                             count: 0,
                             data: ""
                         };
-                        filePaths[curve.name] = hashDir.createPath(config.dataPath, importData.userInfo.username + wellInfo.name + curve.datasetname + curve.name, curve.name + '.txt');
+                        const hashstr = importData.userInfo.username + wellInfo.name + curve.datasetname + curve.name + curve.unit + curve.step;
+                        filePaths[curve.name] = hashDir.createPath(config.dataPath, hashstr, curve.name + '.txt');
                         fs.writeFileSync(filePaths[curve.name], "");
                         curve.path = filePaths[curve.name];
                     })
