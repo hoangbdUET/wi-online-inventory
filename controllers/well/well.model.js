@@ -25,6 +25,9 @@ function findWellById(idWell, username, attributes) {
             model: models.Curve,
             attributes: ['idCurve', 'name']
         }
+        if(attributes.revision) includeDatasets.include.include = {
+            model: models.CurveRevision
+        }
         include.push(includeDatasets);
     }
     return Well.findById(
@@ -152,7 +155,8 @@ function copyDatasets(req, cb) {
 function editWell(body, username, cb) {
     let attributes = {
         datasets: ['idDataset', 'name'],
-        curves: ['idCurve', 'name']
+        curves: ['idCurve', 'name'],
+        revision: true
     }
     findWellById(body.idWell, username, attributes)
         .then(well => {

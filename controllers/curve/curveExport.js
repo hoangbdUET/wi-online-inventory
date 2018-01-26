@@ -71,56 +71,62 @@ function convertCurve(curve, newUnit, callback) {
     }
 }
 
-module.exports = function (curve, unit, callback) {
+module.exports = function (curve, unit, step, callback) {
     console.log('~~~curveExport~~~');
     console.log('config.s3Path: ' + config.s3Path);
-    console.log('curvePath: ' + curve.path);
-    if (!unit || unit == curve.unit){
-        if(config.s3Path){
-            callback(null, getCurveDataFromS3(curve.path));
-        }
-        else {
-            callback(null, fs.createReadStream(config.dataPath + '/' + curve.path));
-        }
-    } else {
-        if(!unitConversion.unitCheck(curve.unit)) {
-            return callback('Can not convert ' + curve.unit + ' to ' + unit);
-        }
 
-        let filePath = curve.path.substring(0, curve.path.lastIndexOf('/') + 1) + unit + '_' + curve.name + '.txt';
-        console.log('filePath: ' + filePath);
-        if(config.s3Path){
-            let params = {
-                Bucket: "wi-inventory",
-                Key: filePath
-            }
-            s3.headObject(params, (err, data) => {
-                if(err && err.code == 'NotFound'){
-                    console.log('file with ' + unit + ' does not exists');
-                    console.log('curvePath: ' + curve.path);
+    curve.curve_revisions.forEach(revision => {
+        if(revision.isCurrentRevision){
+            callback(null, fs.createReadStream(config.dataPath + '/' + revision.path))
+        }
+    })
 
-                    convertCurve(curve, unit, (err, path)=> {
-                        if(!err){
-                            console.log('convert done!!!');
-                            callback(null, getCurveDataFromS3(path));
-                        }
-                    })
-                } else {
-                    console.log('file with ' + unit + ' exists');
-                    return callback(null, getCurveDataFromS3(filePath));
-                }
-            })
-        }
-        else {
-            if(fs.existsSync(filePath)){
-                callback(null, fs.createReadStream(filePath));
-            }
-            else {
-                convertCurve(curve, unit, (err, path)=> {
-                    if(!err) callback(null, fs.createReadStream(path));
-                    else console.log(err);
-                })
-            }
-        }
-    }
+    // if (!unit || unit == curve.unit){
+    //     if(config.s3Path){
+    //         callback(null, getCurveDataFromS3(curve.path));
+    //     }
+    //     else {
+    //         callback(null, fs.createReadStream(config.dataPath + '/' + curve.path));
+    //     }
+    // } else {
+    //     if(!unitConversion.unitCheck(curve.unit)) {
+    //         return callback('Can not convert ' + curve.unit + ' to ' + unit);
+    //     }
+    //
+    //     let filePath = curve.path.substring(0, curve.path.lastIndexOf('/') + 1) + unit + '_' + curve.name + '.txt';
+    //     console.log('filePath: ' + filePath);
+    //     if(config.s3Path){
+    //         let params = {
+    //             Bucket: "wi-inventory",
+    //             Key: filePath
+    //         }
+    //         s3.headObject(params, (err, data) => {
+    //             if(err && err.code == 'NotFound'){
+    //                 console.log('file with ' + unit + ' does not exists');
+    //                 console.log('curvePath: ' + curve.path);
+    //
+    //                 convertCurve(curve, unit, (err, path)=> {
+    //                     if(!err){
+    //                         console.log('convert done!!!');
+    //                         callback(null, getCurveDataFromS3(path));
+    //                     }
+    //                 })
+    //             } else {
+    //                 console.log('file with ' + unit + ' exists');
+    //                 return callback(null, getCurveDataFromS3(filePath));
+    //             }
+    //         })
+    //     }
+    //     else {
+    //         if(fs.existsSync(filePath)){
+    //             callback(null, fs.createReadStream(filePath));
+    //         }
+    //         else {
+    //             convertCurve(curve, unit, (err, path)=> {
+    //                 if(!err) callback(null, fs.createReadStream(path));
+    //                 else console.log(err);
+    //             })
+    //         }
+    //     }
+    // }
 }

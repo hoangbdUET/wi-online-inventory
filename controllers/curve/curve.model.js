@@ -147,6 +147,7 @@ async function editCurve(body, username, cb){
             if (body.name && curve.name != body.name) editCurveName(curve, body.name, cb)
             else if(body.unit && body.unit != currentRevision.unit) editCurveUnit(curve, body.unit, cb)
             else if(body.step && body.step != currentRevision.step) editCurveStep(curve, body.step, cb)
+            else return cb();
         }
         else {
             return cb('No curve found to edit')

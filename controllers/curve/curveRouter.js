@@ -18,7 +18,10 @@ router.post('/curve/new', function (req, res) {
 });
 
 router.post('/curve/info', function (req, res) {
-    curveModel.findCurveById(req.body.idCurve, req.decoded.username)
+    const attributes = {
+        revision: true
+    }
+    curveModel.findCurveById(req.body.idCurve, req.decoded.username, attributes)
         .then(curve => {
             if (curve) {
                 res.send(response(200, 'SUCCESSFULLY GET CURVE INFOR', curve));
@@ -31,10 +34,13 @@ router.post('/curve/info', function (req, res) {
 });
 
 router.post('/curve/data', function (req, res) {
-    curveModel.findCurveById(req.body.idCurve, req.decoded.username)
+    const attributes = {
+        revision: true
+    }
+    curveModel.findCurveById(req.body.idCurve, req.decoded.username, attributes)
         .then((curve) => {
             if (curve) {
-                curveExport(curve, req.body.unit, (err, readStream) => {
+                curveExport(curve, req.body.unit, req.body.step, (err, readStream) => {
                     if(!err){
                         readStream.pipe(res);
                     }
