@@ -159,19 +159,36 @@ async function editCurve(body, username, cb){
 
 }
 
-async function createRevision(curve, revision) {
+async function createRevision(curve, newUnit, newStep) {
     try {
-        delete revision.createdAt;
-        delete revision.updatedAt;
-        const oldPath = config.dataPath + '/' + revision.path;
-        const dir = curve.username + curve.dataset.well.name + curve.dataset.name + curve.name + revision.unit + revision.step;
-        const filePath = hashDir.createPath(config.dataPath, dir, curve.name + '.txt');
-        revision.path = filePath.replace(config.dataPath + '/', '');
-        const newRevision = await models.CurveRevision.create(revision);
+        let currentRevision = {};
+        for (const revision of curve.curve_revisions) {
+            if (revision.isCurrentRevision) currentRevision = revision;
+        }
+        let newRevision = Object.assign({}, currentRevision.toJSON());
+        currentRevision.isCurrentRevision = false;
+        currentRevision.save();
+        console.log(newRevision)
+        delete newRevision.createdAt;
+        delete newRevision.updatedAt;
+        delete newRevision.idRevision;
+        if(newStep) newRevision.step = newStep;
+        else if(newUnit) newRevision.unit = newUnit;
 
-        const fs = require('fs');
-        fs.createReadStream(oldPath).pipe(fs.createWriteStream(filePath));
-        return newRevision;
+        const oldPath = config.dataPath + '/' + currentRevision.path;
+        const dir = curve.username + curve.dataset.well.name + curve.dataset.name + curve.name + newRevision.unit + newRevision.step;
+        const filePath = hashDir.createPath(config.dataPath, dir, curve.name + '.txt');
+        newRevision.path = filePath.replace(config.dataPath + '/', '');
+        if(newStep)curveInterpolation(currentRevision, newRevision);
+        else if(newUnit){
+            const fs = require('fs');
+            fs.createReadStream(oldPath).pipe(fs.createWriteStream(filePath));
+        }
+        const updatedRevision = await models.CurveRevision.create(newRevision);
+
+        // const fs = require('fs');
+        // fs.createReadStream(oldPath).pipe(fs.createWriteStream(filePath));
+        return updatedRevision;
         // const desHashStr = newCurve.username + newCurve.wellname + newCurve.datasetname + newCurve.curvename + newCurve.unit + newCurve.step;
         // const desPath = hash_dir.createPath(config.dataPath, desHashStr , newCurve.curvename + '.txt');
     }
@@ -217,8 +234,7 @@ async function editCurveUnit(curve, newUnit, cb) {
         for (const revision of curve.curve_revisions) {
             if (revision.isCurrentRevision) currentRevision = revision;
         }
-        currentRevision.isCurrentRevision = false;
-        await currentRevision.save();
+
         let isRevisionExisted = false;
         for (let revision of curve.curve_revisions) {
             if (revision.unit == newUnit && revision.step == currentRevision.step) {
@@ -228,11 +244,7 @@ async function editCurveUnit(curve, newUnit, cb) {
             }
         }
         if(!isRevisionExisted){
-            currentRevision = currentRevision.toJSON();
-            delete currentRevision.idRevision;
-            currentRevision.unit = newUnit;
-            currentRevision.isCurrentRevision = true;
-            updatedCurve = await createRevision(curve, currentRevision);
+            updatedCurve = await createRevision(curve, newUnit);
         }
         return cb(null, updatedCurve);
 
@@ -251,11 +263,12 @@ async function editCurveStep(curve, newStep, cb) {
             if (revision.isCurrentRevision) currentRevision = revision;
             if (!steps.includes(revision.step)) steps.push(revision.step);
         }
-        currentRevision.isCurrentRevision = false;
-        currentRevision.save();
         let isRevisionExisted = false;
         for (let revision of curve.curve_revisions) {
             if (revision.step == newStep && revision.unit == currentRevision.unit) {
+                currentRevision.isCurrentRevision = false;
+                currentRevision.save();
+
                 revision.isCurrentRevision = true;
                 isRevisionExisted = true;
                 updatedCurve = await revision.save();
@@ -263,19 +276,36 @@ async function editCurveStep(curve, newStep, cb) {
             }
         }
         if(!isRevisionExisted) {
-            currentRevision.isCurrentRevision = false;
-            currentRevision.save();
-            //create new revision;
-            currentRevision = currentRevision.toJSON();
-            delete currentRevision.idRevision;
-            currentRevision.step = newStep;
-            currentRevision.isCurrentRevision = true;
-            updatedCurve = await createRevision(curve, currentRevision);
+            updatedCurve = await createRevision(curve, null, newStep);
         }
         cb(null, updatedCurve);
     }catch (err){
         console.log(err);
         cb(err);
+    }
+}
+
+function curveInterpolation(originRevision, newRevision) {
+    const fs = require('fs');
+    const originPath = config.dataPath + '/' + originRevision.path;
+    const path = config.dataPath + '/' + newRevision.path;
+    const curveContents = fs.readFileSync(originPath, 'utf8').trim().split('\n');
+    let curveDatas = [];
+    for (const line of curveContents){
+        curveDatas.push(Number(line.trim().split(' ')[1]));
+    }
+    const numberOfPoint = Math.floor((Number(newRevision.stopDepth) - Number(newRevision.startDepth))/Number(newRevision.step));
+    for(let i = 0; i < numberOfPoint; i++){
+        const originIndex = i * newRevision.step / originRevision.step;
+        if(Number.isInteger(originIndex)){
+            fs.appendFileSync(path, i + ' ' + curveDatas[originIndex] + '\n');
+        }
+        else {
+            const preIndex = Math.floor(originIndex);
+            const postIndex = Math.ceil(originIndex);
+            const value = (curveDatas[postIndex] - curveDatas[preIndex]) * (originIndex - preIndex) / (postIndex - preIndex) + curveDatas[preIndex];
+            fs.appendFileSync(path, i + ' ' + value + '\n');
+        }
     }
 }
 

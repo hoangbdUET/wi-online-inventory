@@ -131,6 +131,7 @@ router.post('/wells', function (req, res) {
 })
 
 router.post('/well/editHeader', function (req, res) {
+    console.log("============= " + req.body.idWell +  ' ' + req.body.header);
     models.WellHeader.findOne({
         where: {
             idWell: req.body.idWell,
@@ -138,14 +139,15 @@ router.post('/well/editHeader', function (req, res) {
         }
     })
         .then(well_header => {
+            console.log(JSON.stringify(well_header))
             Object.assign(well_header, req.body);
             well_header.save().then(c => {
+                console.log("==========> saved")
                 res.send(response(200, 'SUCCESSFULLY EDIT WELL HEADER', c));
             }).catch(e => {
                 res.send(response(500, 'FAILED TO EDIT WELL HEADER', e));
             })
         })
-
 });
 
 router.post('/well/exportHeader', function (req, res) {
@@ -162,5 +164,27 @@ router.post('/well/exportHeader', function (req, res) {
         }
     });
 });
+
+router.post('/well/findbyname', function (req, res) {
+    Well.findOne({
+        where: {
+            name: req.body.wellname
+        },
+        include: [{
+            model: models.WellHeader
+        },{
+            model: models.User,
+            attributes: [],
+            where: {
+                username: req.decoded.username
+            }
+        }]
+    }).then(well => {
+        res.send(response(200, 'SUCCESSFULLY GET WELL', well));
+    }).catch(err => {
+        console.log(err);
+        res.send(response(500, 'FAILED TO GET WELL', err));
+    })
+})
 
 module.exports = router;
