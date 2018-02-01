@@ -154,7 +154,7 @@ router.post('/well/editHeader', function (req, res) {
                     res.send(response(500, 'FAILED TO EDIT WELL HEADER', e));
                 })
             } else {
-                res.send(response(200, 'SUCCESSFULLY CREATE NEW HEADER', c));
+                res.send(response(200, 'SUCCESSFULLY CREATE NEW HEADER', well_header[0]));
             }
         })
 });
