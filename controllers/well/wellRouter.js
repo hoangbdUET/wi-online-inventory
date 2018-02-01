@@ -143,9 +143,10 @@ router.post('/well/editHeader', function (req, res) {
             idWell: req.body.idWell
         }
     })
-        .then(well_header => {
-            if (!well_header[1]) {
-                console.log(JSON.stringify(well_header))
+        .then(rs => {
+            let well_header = rs[0];
+            if (!rs[1]) {
+                // console.log(JSON.stringify(well_header))
                 Object.assign(well_header, req.body);
                 well_header.save().then(c => {
                     console.log("==========> saved")
@@ -154,7 +155,7 @@ router.post('/well/editHeader', function (req, res) {
                     res.send(response(500, 'FAILED TO EDIT WELL HEADER', e));
                 })
             } else {
-                res.send(response(200, 'SUCCESSFULLY CREATE NEW HEADER', well_header[0]));
+                res.send(response(200, 'SUCCESSFULLY CREATE NEW HEADER', rs[0]));
             }
         })
 });
