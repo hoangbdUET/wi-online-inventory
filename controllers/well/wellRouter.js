@@ -131,22 +131,32 @@ router.post('/wells', function (req, res) {
 })
 
 router.post('/well/editHeader', function (req, res) {
-    console.log("============= " + req.body.idWell +  ' ' + req.body.header);
-    models.WellHeader.findOne({
+    console.log("============= " + req.body.idWell + ' ' + req.body.header);
+    models.WellHeader.findOrCreate({
         where: {
             idWell: req.body.idWell,
             header: req.body.header
+        },
+        defaults: {
+            header: req.body.header,
+            value: req.body.value,
+            idWell: req.body.idWell
         }
     })
-        .then(well_header => {
-            console.log(JSON.stringify(well_header))
-            Object.assign(well_header, req.body);
-            well_header.save().then(c => {
-                console.log("==========> saved")
-                res.send(response(200, 'SUCCESSFULLY EDIT WELL HEADER', c));
-            }).catch(e => {
-                res.send(response(500, 'FAILED TO EDIT WELL HEADER', e));
-            })
+        .then(rs => {
+            let well_header = rs[0];
+            if (!rs[1]) {
+                // console.log(JSON.stringify(well_header))
+                Object.assign(well_header, req.body);
+                well_header.save().then(c => {
+                    console.log("==========> saved")
+                    res.send(response(200, 'SUCCESSFULLY EDIT WELL HEADER', c));
+                }).catch(e => {
+                    res.send(response(500, 'FAILED TO EDIT WELL HEADER', e));
+                })
+            } else {
+                res.send(response(200, 'SUCCESSFULLY CREATE NEW HEADER', rs[0]));
+            }
         })
 });
 
@@ -172,7 +182,7 @@ router.post('/well/findbyname', function (req, res) {
         },
         include: [{
             model: models.WellHeader
-        },{
+        }, {
             model: models.User,
             attributes: [],
             where: {
