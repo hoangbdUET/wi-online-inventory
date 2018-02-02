@@ -22,7 +22,7 @@ function writeToCurveFile(buffer, curveFileName, index, value, defaultNull) {
 }
 
 
-module.exports = function (inputFile, importData, callback) {
+module.exports = async function (inputFile, importData, callback) {
     const fileBuffer = fs.readFileSync(inputFile.path);
     const fileEncoding = detectCharacterEncoding(fileBuffer).encoding == 'ISO-8859-1' ? 'latin1' : 'utf8';
 
@@ -270,31 +270,40 @@ module.exports = function (inputFile, importData, callback) {
 
     });
 
-    rl.on('end', function () {
-        deleteFile(inputFile.path);
-        if(lasFormatError && lasFormatError.length > 0) return callback(lasFormatError);
-        if(lasCheck != 2) return callback('THIS IS NOT LAS FILE, MISSING DATA SECTION');
+    rl.on('end',async function () {
+        try {
+            deleteFile(inputFile.path);
+            if (lasFormatError && lasFormatError.length > 0) return callback(lasFormatError);
+            if (lasCheck != 2) return callback('THIS IS NOT LAS FILE, MISSING DATA SECTION');
 
-        let output = [];
-        wellInfo.datasets = [];
-        for(var datasetName in datasets){
-            if(!datasets.hasOwnProperty(datasetName)) continue;
-            let dataset = datasets[datasetName];
-            wellInfo.datasets.push(dataset);
-            dataset.curves.forEach(curve => {
-                fs.appendFileSync(curve.path, BUFFERS[curve.name].data);
-                curve.path = curve.path.replace(config.dataPath + '/', '');
-                if(config.s3Path) {
-                    s3.upload(curve);
+            let output = [];
+            wellInfo.datasets = [];
+            for (var datasetName in datasets) {
+                if (!datasets.hasOwnProperty(datasetName)) continue;
+                let dataset = datasets[datasetName];
+                wellInfo.datasets.push(dataset);
+                const uploadPromises = dataset.curves.map(async curve => {
+                    fs.appendFileSync(curve.path, BUFFERS[curve.name].data);
+                    curve.path = curve.path.replace(config.dataPath + '/', '');
+                    if (config.s3Path) {
+                        return s3.upload(curve);
+                        //delete curve file on disk
+                    }
+                })
+                if (config.s3Path) {
+                    await Promise.all(uploadPromises);
                 }
-            })
-        }
+            }
 
-        // console.log(JSON.stringify(wellInfo));
-        output.push(wellInfo);
-        console.log('completely extract LAS 3')
-        callback(false, output);
-        //console.log("ExtractLAS3 Done");
+            // console.log(JSON.stringify(wellInfo));
+            output.push(wellInfo);
+            console.log('completely extract LAS 3')
+            callback(false, output);
+            //console.log("ExtractLAS3 Done");
+        }catch (err){
+            console.log(err);
+            callback(err);
+        }
     });
 
     rl.on('err', function (err) {

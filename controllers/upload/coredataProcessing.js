@@ -14,7 +14,7 @@ function processFileUpload(file, importData, callback) {
                 callback(err, null);
             }
             else {
-                importToDB(result, importData.userInfor, function (err, result) {
+                importToDB(result, importData, function (err, result) {
                     if (err) {
                         callback(err, null);
                     }

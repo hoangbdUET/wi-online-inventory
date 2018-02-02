@@ -3,15 +3,22 @@
 const fs = require('fs')
 const hash_dir = require('../extractors/hash-dir');
 const config = require('config');
+const s3 = require('./s3');
 
 async function moveCurveFile(oldCurve, newCurve) {
     try {
         const srcHashStr = oldCurve.username + oldCurve.wellname + oldCurve.datasetname + oldCurve.curvename + oldCurve.unit + oldCurve.step;
-        const srcPath = config.dataPath + '/' + hash_dir.getHashPath(srcHashStr) + oldCurve.curvename + '.txt';
+        const srcKey = hash_dir.getHashPath(srcHashStr) + oldCurve.curvename + '.txt';
         const desHashStr = newCurve.username + newCurve.wellname + newCurve.datasetname + newCurve.curvename + newCurve.unit + newCurve.step;
+
         const desPath = hash_dir.createPath(config.dataPath, desHashStr, newCurve.curvename + '.txt');
-        fs.renameSync(srcPath, desPath);
-        return desPath.replace(config.dataPath + '/', '');
+        const desKey = desPath.replace(config.dataPath + '/', '');
+        if(config.s3Path){
+            s3.moveCurve(srcKey, desKey);
+        }else {
+            fs.renameSync(config.dataPath + '/' + srcKey, desPath);
+        }
+        return desKey;
     }catch (err){
         console.log(err);
         return null;

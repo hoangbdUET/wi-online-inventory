@@ -3,13 +3,12 @@ const asyncLoop = require('node-async-loop');
 const models = require('../../models');
 const WellHeader = require('../wellHeader');
 
-function importCurves(curves, dataset, cb) {
-    if(!curves || curves.length <= 0) return cb();
-    let output = [];
-    asyncLoop(curves, async (curveData, nextCurve) => {
+async function importCurves(curves, dataset) {
+    if(!curves || curves.length <= 0) return;
+    const promises = curves.map(async curveData => {
         try {
             curveData.idDataset = dataset.idDataset;
-            const curve = await models.Curve.create(curveData);
+            let curve = await models.Curve.create(curveData);
 
             curveData.idCurve = curve.idCurve;
             curveData.isCurrentRevision = true;
@@ -35,88 +34,114 @@ function importCurves(curves, dataset, cb) {
                 const changeSet = {};
                 changeSet.path = require('../fileManagement').moveCurveFile(oldCurve, newCurve);
                 Object.assign(curve, changeSet);
-                const updatedCurve = await curve.save();
-                output.push(updatedCurve);
+                curve = await curve.save();
             }
-            nextCurve();
+            return curve;
         } catch (err) {
-            nextCurve(err)
+            // console.log('-------->' + err);
+            // throw err;
+            if(err.name == 'SequelizeUniqueConstraintError')
+                return await models.Curve.findOne({
+                    where: {
+                        name: curveData.name
+                    }
+                })
+            else {
+                console.log('-------->' + err);
+                throw err;
+            }
         }
-    }, err => {
-        if(err) {
-            console.log('import curves failed: ' + err);
-            cb(err);
-        }
-        else cb(null, output)
+
     })
+    return Promise.all(promises);
 }
 
 
-function importWell(wellData, cb) {
-    models.Well.create(wellData)
-        .then( well => {
-            let arr = ['username', 'datasets', 'name', 'params'];
-            for(let property in WellHeader){
-                let well_header = {};
-                if(wellData[WellHeader[property].LASMnemnics]){
-                    well_header = wellData[WellHeader[property].LASMnemnics];
-                }
-                else if(wellData[WellHeader[property].CSVMnemnics]){
-                    well_header = wellData[WellHeader[property].CSVMnemnics];
-                }
-                arr.push(property);
-                well_header.idWell = well.idWell;
-                well_header.header = property;
-                models.WellHeader.create(well_header)
-                    .catch(err => {
+async function importWell(wellData) {
+    try {
+        let well = await models.Well.create(wellData);
+        let arr = ['username', 'datasets', 'name', 'params'];
+        for(let property in WellHeader){
+            let well_header = {};
+            if(wellData[WellHeader[property].LASMnemnics]){
+                well_header = wellData[WellHeader[property].LASMnemnics];
+            }
+            else if(wellData[WellHeader[property].CSVMnemnics]){
+                well_header = wellData[WellHeader[property].CSVMnemnics];
+            }
+            arr.push(property);
+            well_header.idWell = well.idWell;
+            well_header.header = property;
+            models.WellHeader.create(well_header)
+                .catch(err => {
                     console.log('=============' + err)
                 })
-            }
+        }
 
-            for(let header in wellData){
-                if(!arr.includes(header))
-                    models.WellHeader.create({
-                        idWell: well.idWell,
-                        header: header,
-                        value: wellData[header].value,
-                        description: wellData[header].description,
-                        standard: false
-                    }).catch(err => {
-                        console.log(err)
-                    })
-            }
-            cb(null, well);
-        })
-        .catch(err => {
-            console.log('===' + err + "===> It's ok, rename now")
-            if(err.name = 'SequelizeUniqueConstraintError'){
-                if(wellData.name.indexOf(' ( copy ') < 0){
-                    wellData.name = wellData.name + ' ( copy 1 )';
-                }
-                else {
-                    let copy = wellData.name.substr(wellData.name.lastIndexOf(' ( copy '), wellData.name.length);
-                    let copyNumber = parseInt(copy.replace(' ( copy ', '').replace(' )', ''));
-                    copyNumber++;
-                    wellData.name = wellData.name.replace(copy, '') + ' ( copy ' + copyNumber + ' )';
-                }
-                importWell(wellData, cb);
+        for(let header in wellData){
+            if(!arr.includes(header))
+                models.WellHeader.create({
+                    idWell: well.idWell,
+                    header: header,
+                    value: wellData[header].value,
+                    description: wellData[header].description,
+                    standard: false
+                }).catch(err => {
+                    console.log(err)
+                })
+        }
+        const datasets = await importDatasets(wellData.datasets, well, false);
+        well.datasets = datasets;
+        return well;
+    }catch (err){
+        console.log('===' + err + "===> It's ok, rename now")
+        if(err.name == 'SequelizeUniqueConstraintError'){
+            if(wellData.name.indexOf(' ( copy ') < 0){
+                wellData.name = wellData.name + ' ( copy 1 )';
             }
             else {
-                cb(err);
+                let copy = wellData.name.substr(wellData.name.lastIndexOf(' ( copy '), wellData.name.length);
+                let copyNumber = parseInt(copy.replace(' ( copy ', '').replace(' )', ''));
+                copyNumber++;
+                wellData.name = wellData.name.replace(copy, '') + ' ( copy ' + copyNumber + ' )';
             }
-        })
+            return await importWell(wellData);
+        }
+        else {
+            throw err;
+        }
+    }
 }
 
-function importDatasets(datasets, well, cb) {
-    if (!datasets || datasets.length <= 0) return cb();
-    let output = [];
-    asyncLoop(datasets, (datasetData, next) => {
-        datasetData.idWell = well.idWell;
-        models.Dataset.findOrCreate({
-            where : { idDataset : datasetData.idDataset },
-            defaults: datasetData,
-            // logging: console.log
-        }).spread((dataset, created) => {
+async function importDatasets(datasets, well, override) {
+    if (!datasets || datasets.length <= 0) return ;
+    try {
+        const promises = datasets.map(async datasetData => {
+            let dataset = null;
+            datasetData.idWell = well.idWell;
+            if (datasetData.idDataset) {
+                dataset = await models.Dataset.findOne({
+                    where: {
+                        idDataset: datasetData.idDataset
+                    }
+                })
+            }
+            else if (override) {
+                dataset = await models.Dataset.findOne({
+                    where: {
+                        name: datasetData.name
+                    }
+                })
+            }
+            console.log('1+++++++++++++ ' + JSON.stringify(dataset));
+            try {
+                if (!dataset) dataset = await models.Dataset.create(datasetData);
+            } catch (err) {
+                console.log('>>>>>>>' + err);
+                throw err;
+            }
+            console.log('2++++++++++++++++ ' + JSON.stringify(dataset));
+
             dataset = dataset.toJSON();
             dataset.wellname = well.name;
             dataset.username = well.username;
@@ -128,82 +153,53 @@ function importDatasets(datasets, well, cb) {
                         console.log('import to well_parameter failed ===> ' + err);
                     })
             })
-            importCurves(datasetData.curves, dataset, (err, result)=> {
-                if(err) next(err);
-                else {
-                    dataset.curves = result;
-                    output.push(dataset);
-                    next();
-                }
-            })
-        }).catch(err => {
-            console.log('import dataset failed: ' + err);
-            next(err);
+            const curves = await importCurves(datasetData.curves, dataset)
+            dataset.curves = curves;
+            return dataset;
         })
-    }, (err => {
-        if(err) cb(err);
-        else cb(null, output);
-    }))
+        return Promise.all(promises);
+    }catch (err){
+        throw err;
+    }
+
 }
 
-function importToDB(inputWells, userInfor, cb) {
+function importToDB(inputWells, importData, cb) {
     console.log('importToDB inputWell: ' + JSON.stringify(inputWells));
     if(!inputWells || inputWells.length <= 0) return cb('there is no well to import');
     let res = [];
-    asyncLoop(inputWells, (inputWell, nextWell) => {
-        inputWell.username = userInfor.username;
-        models.Well.findById(inputWell.idWell)
-            .then(well => {
-                if(!well) {
-                    importWell(inputWell, (err, wellCreated) => {
-                        if(err) nextWell(err);
-                        else importDatasets(inputWell.datasets, wellCreated, (err, result) => {
-                            if(err) nextWell(err);
-                            else {
-                                wellCreated = wellCreated.toJSON();
-                                wellCreated.datasets = result;
-                                res.push(wellCreated);
-                                nextWell();
-                            }
-                        })
-                    })
-                }
-                else {
-                    importDatasets(inputWell.datasets, well, (err, result) => {
-                        if(err) nextWell(err);
-                        else {
-                            well = well.toJSON();
-                            well.datasets = result;
-                            res.push(well);
-                            nextWell();
-                        }
-                    })
-                }
-            })
-            .catch(err => {
-                console.log(err)
-                nextWell(err);
-            })
-
-            //delete extracted curve files if import to db failed
-            // if(inputWell.datasetInfo && inputWell.datasetInfo.length > 0) {
-            //     asyncLoop(inputWell.datasetInfo, (dataset, nextDataset) => {
-            //         curveModel.deleteCurveFiles(dataset.curves);
-            //         nextDataset();
-            //     }, (err) => {
-            //         console.log('done deleting: ' + err);
-            //     })
-            // }
-    }, (err) => {
-        if(err){
-            console.log(err);
-            cb(err);
-        }
-        else {
-            cb(null, res);
+    const promises = inputWells.map(async inputWell => {
+        try {
+            inputWell.username = importData.userInfo.username;
+            let well = null;
+            if(inputWell.idWell){
+                well = await models.Well.findById(inputWell.idWell);
+            }else if (importData.override) {
+                well = await models.Well.findOne({
+                    where: {
+                        name: importData.wellname
+                    },
+                    raw: true
+                })
+            }
+            if(well){
+                const datasets = await importDatasets(inputWell.datasets, well, importData.override? true: false);
+                well.datasets = datasets;
+                return well;
+            } else {
+                return await importWell(inputWell);
+            }
+        } catch (err) {
+            console.log('===> '+err)
+            throw err;
         }
     })
-
+    Promise.all(promises)
+        .then(wells => {
+            console.log("=================> " + JSON.stringify(wells))
+            cb(null, wells)
+        })
+        .catch(err => cb(err))
 }
 
 module.exports = importToDB;

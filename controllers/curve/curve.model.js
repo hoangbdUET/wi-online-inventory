@@ -289,6 +289,19 @@ function curveInterpolation(originRevision, newRevision) {
     const fs = require('fs');
     const originPath = config.dataPath + '/' + originRevision.path;
     const path = config.dataPath + '/' + newRevision.path;
+    if(config.s3Path){
+        const tempPath =  fs.mkdtempSync(require('os').tmpdir());
+        let newKey = curve.path.substring(0, curve.path.lastIndexOf('/') + 1) + newUnit + '_' + curve.name + '.txt';
+        let pathOnDisk = tempPath + '/' + newUnit + '_' + curve.name + '.txt';
+        const writeStream = fs.createWriteStream(pathOnDisk);
+        const rl = readline.createInterface({
+            input: s3.getData(originRevision.path)
+        })
+        rl.on('line', line => {
+
+        })
+
+    }
     const curveContents = fs.readFileSync(originPath, 'utf8').trim().split('\n');
     let curveDatas = [];
     for (const line of curveContents){

@@ -18,7 +18,7 @@ function processFileUpload(file, importData, callback) {
                 callback(err, null);
             }
             else {
-                importToDB(result, importData.userInfo, function (err, result) {
+                importToDB(result, importData, function (err, result) {
                     if (err) {
                         callback(err, null);
                     }
@@ -39,6 +39,10 @@ function uploadLasFiles(req, cb) {
     let output = new Array();
     let importData = {};
     importData.userInfo = req.decoded;
+    if(req.body.override && req.body.override == "true"){
+        importData.override = true;
+        importData.wellname = req.body.wellname;
+    }
     Well.findById(req.body.idWell)
         .then(well => {
             importData.well = well;

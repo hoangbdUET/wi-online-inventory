@@ -11,7 +11,7 @@ function processFileUpload(file, importData, cb) {
         // console.log(JSON.stringify(result));
         if(err) cb(err);
         else {
-            importToDB(result, importData.userInfo, (err, result) => {
+            importToDB(result, importData, (err, result) => {
                 cb(err, result);
             })
         }
