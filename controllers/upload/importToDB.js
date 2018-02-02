@@ -43,7 +43,8 @@ async function importCurves(curves, dataset) {
             if(err.name == 'SequelizeUniqueConstraintError')
                 return await models.Curve.findOne({
                     where: {
-                        name: curveData.name
+                        name: curveData.name,
+                        idDataset: dataset.idDataset
                     }
                 })
             else {
@@ -114,6 +115,7 @@ async function importWell(wellData) {
 }
 
 async function importDatasets(datasets, well, override) {
+    console.log("---------------------->>>> " + JSON.stringify(well))
     if (!datasets || datasets.length <= 0) return ;
     try {
         const promises = datasets.map(async datasetData => {
@@ -129,7 +131,8 @@ async function importDatasets(datasets, well, override) {
             else if (override) {
                 dataset = await models.Dataset.findOne({
                     where: {
-                        name: datasetData.name
+                        name: datasetData.name,
+                        idWell: well.idWell
                     }
                 })
             }
