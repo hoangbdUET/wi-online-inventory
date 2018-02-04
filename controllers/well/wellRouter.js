@@ -38,7 +38,10 @@ router.post('/well/full-info', function (req, res) {
             {model: models.WellHeader},
             {
                 model: models.Dataset,
-                include: {model: models.Curve}
+                include: {
+                    model: models.Curve,
+                    include: {model: models.CurveRevision}
+                }
             }
         ]
     }).then(well => {
