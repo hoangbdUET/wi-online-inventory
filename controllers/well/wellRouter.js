@@ -34,7 +34,13 @@ router.post('/well/new', function (req, res) {
 
 router.post('/well/full-info', function (req, res) {
     Well.findById(req.body.idWell, {
-        include: {all: true, include: {all: true}}
+        include: [
+            {model: models.WellHeader},
+            {
+                model: models.Dataset,
+                include: {model: models.Curve}
+            }
+        ]
     }).then(well => {
         res.send(response(200, 'SUCCESSFULLY CREATE NEW WELL', well));
     }).catch(err => {
