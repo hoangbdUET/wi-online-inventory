@@ -6,6 +6,8 @@ const User = models.User;
 const Curve = models.Curve;
 const config = require('config');
 const hashDir = require('../../extractors/hash-dir');
+const s3 = require('../s3');
+const readline = require('readline');
 
 function createCurve(body, cb) {
     Curve.create(body).then(curve => {
@@ -287,37 +289,57 @@ async function editCurveStep(curve, newStep, cb) {
 
 function curveInterpolation(originRevision, newRevision) {
     const fs = require('fs');
-    const originPath = config.dataPath + '/' + originRevision.path;
-    const path = config.dataPath + '/' + newRevision.path;
+    let curveDatas = [];
+
     if(config.s3Path){
-        const tempPath =  fs.mkdtempSync(require('os').tmpdir());
-        let newKey = curve.path.substring(0, curve.path.lastIndexOf('/') + 1) + newUnit + '_' + curve.name + '.txt';
-        let pathOnDisk = tempPath + '/' + newUnit + '_' + curve.name + '.txt';
-        const writeStream = fs.createWriteStream(pathOnDisk);
+        const tempDir =  fs.mkdtempSync(require('path').join(require('os').tmpdir(), 'wi_inventory_'));
+        const tempPath = tempDir + '/' + Date.now() + '_' + originRevision.idRevision + '.txt';
+        // const writeStream = fs.createWriteStream(pathOnDisk);
         const rl = readline.createInterface({
             input: s3.getData(originRevision.path)
         })
         rl.on('line', line => {
-
+            curveDatas.push(Number(line.trim().split(' ')[1]));
         })
-
-    }
-    const curveContents = fs.readFileSync(originPath, 'utf8').trim().split('\n');
-    let curveDatas = [];
-    for (const line of curveContents){
-        curveDatas.push(Number(line.trim().split(' ')[1]));
-    }
-    const numberOfPoint = Math.floor((Number(newRevision.stopDepth) - Number(newRevision.startDepth))/Number(newRevision.step));
-    for(let i = 0; i < numberOfPoint; i++){
-        const originIndex = i * newRevision.step / originRevision.step;
-        if(Number.isInteger(originIndex)){
-            fs.appendFileSync(path, i + ' ' + curveDatas[originIndex] + '\n');
+        rl.on('close', () => {
+            console.log('=++++++++++++++++++++++++++=====>')
+            const numberOfPoint = Math.floor((Number(newRevision.stopDepth) - Number(newRevision.startDepth))/Number(newRevision.step));
+            for(let i = 0; i < numberOfPoint; i++){
+                const originIndex = i * newRevision.step / originRevision.step;
+                if(Number.isInteger(originIndex)){
+                    fs.appendFileSync(tempPath, i + ' ' + curveDatas[originIndex] + '\n');
+                }
+                else {
+                    const preIndex = Math.floor(originIndex);
+                    const postIndex = Math.ceil(originIndex);
+                    const value = (curveDatas[postIndex] - curveDatas[preIndex]) * (originIndex - preIndex) / (postIndex - preIndex) + curveDatas[preIndex];
+                    fs.appendFileSync(tempPath, i + ' ' + value + '\n');
+                }
+            }
+            s3.upload(tempPath, newRevision.path)
+                .then( ()=> {
+                    fs.unlink(tempPath);
+                });
+        })
+    } else {
+        const originPath = config.dataPath + '/' + originRevision.path;
+        const path = config.dataPath + '/' + newRevision.path;
+        const curveContents = fs.readFileSync(originPath, 'utf8').trim().split('\n');
+        for (const line of curveContents) {
+            curveDatas.push(Number(line.trim().split(' ')[1]));
         }
-        else {
-            const preIndex = Math.floor(originIndex);
-            const postIndex = Math.ceil(originIndex);
-            const value = (curveDatas[postIndex] - curveDatas[preIndex]) * (originIndex - preIndex) / (postIndex - preIndex) + curveDatas[preIndex];
-            fs.appendFileSync(path, i + ' ' + value + '\n');
+        const numberOfPoint = Math.floor((Number(newRevision.stopDepth) - Number(newRevision.startDepth)) / Number(newRevision.step));
+        for (let i = 0; i < numberOfPoint; i++) {
+            const originIndex = i * newRevision.step / originRevision.step;
+            if (Number.isInteger(originIndex)) {
+                fs.appendFileSync(path, i + ' ' + curveDatas[originIndex] + '\n');
+            }
+            else {
+                const preIndex = Math.floor(originIndex);
+                const postIndex = Math.ceil(originIndex);
+                const value = (curveDatas[postIndex] - curveDatas[preIndex]) * (originIndex - preIndex) / (postIndex - preIndex) + curveDatas[preIndex];
+                fs.appendFileSync(path, i + ' ' + value + '\n');
+            }
         }
     }
 }

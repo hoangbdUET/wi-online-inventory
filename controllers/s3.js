@@ -8,17 +8,14 @@ AWS.config.credentials = credentials;
 const s3 = new AWS.S3({apiVersion: '2006-03-01'});
 const bucket = 'wi-inventory';
 
-function upload(curve) {
-    const fileSystemPath = config.dataPath + '/' + curve.path;
-
-    let uploadParams = {Bucket: bucket, Key: '', Body: ''};
+function upload(path, key) {
+    const fileSystemPath = path;
 
     const fileStream = fs.createReadStream(fileSystemPath);
     fileStream.on('error', function (err) {
         console.log('File Error', err);
     });
-    uploadParams.Body = fileStream;
-    uploadParams.Key = curve.path;
+    const uploadParams = {Bucket: bucket, Key: key, Body: fileStream};
 
     return new Promise((resolve, reject)=> {
         s3.upload(uploadParams, function (err, data) {
@@ -31,7 +28,7 @@ function upload(curve) {
                 fs.unlink(fileSystemPath, (err) => {
                     if(err) console.log("failed to remove curve: " + err);
                 })
-                resolve();
+                resolve(data);
             }
         });
     })
