@@ -183,16 +183,17 @@ async function createRevision(curve, newUnit, newStep) {
         newRevision.path = filePath.replace(config.dataPath + '/', '');
         if(newStep)curveInterpolation(currentRevision, newRevision);
         else if(newUnit){
-            const fs = require('fs');
-            fs.createReadStream(oldPath).pipe(fs.createWriteStream(filePath));
+            if(config.s3Path){
+                s3.copyCurve(currentRevision.path, newRevision.path);
+            }
+            else {
+                const fs = require('fs');
+                fs.createReadStream(oldPath).pipe(fs.createWriteStream(filePath));
+            }
         }
         const updatedRevision = await models.CurveRevision.create(newRevision);
 
-        // const fs = require('fs');
-        // fs.createReadStream(oldPath).pipe(fs.createWriteStream(filePath));
         return updatedRevision;
-        // const desHashStr = newCurve.username + newCurve.wellname + newCurve.datasetname + newCurve.curvename + newCurve.unit + newCurve.step;
-        // const desPath = hash_dir.createPath(config.dataPath, desHashStr , newCurve.curvename + '.txt');
     }
     catch(err) {
         console.log('failed to create revision: ' + err)
