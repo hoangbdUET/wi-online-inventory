@@ -317,10 +317,7 @@ function curveInterpolation(originRevision, newRevision) {
                     fs.appendFileSync(tempPath, i + ' ' + value + '\n');
                 }
             }
-            s3.upload(tempPath, newRevision.path)
-                .then( ()=> {
-                    fs.unlink(tempPath);
-                });
+            s3.upload(tempPath, newRevision.path);
         })
     } else {
         const originPath = config.dataPath + '/' + originRevision.path;

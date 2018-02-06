@@ -2,6 +2,9 @@
 const asyncLoop = require('node-async-loop');
 const models = require('../../models');
 const WellHeader = require('../wellHeader');
+const hashDir = require('../../extractors/hash-dir');
+const s3 = require('../s3');
+const config = require('config');
 
 async function importCurves(curves, dataset) {
     if(!curves || curves.length <= 0) return;
@@ -14,7 +17,7 @@ async function importCurves(curves, dataset) {
             curveData.isCurrentRevision = true;
             const curveRevision = await models.CurveRevision.create(curveData);
 
-            if(curveData.wellname != dataset.wellname || curveData.datasetname != dataset.name){
+            if(!config.s3Path && (curveData.wellname != dataset.wellname || curveData.datasetname != dataset.name)){
                 const oldCurve = {
                     username: dataset.username,
                     wellname: curveData.wellname,
@@ -34,6 +37,18 @@ async function importCurves(curves, dataset) {
                 const changeSet = {};
                 changeSet.path = require('../fileManagement').moveCurveFile(oldCurve, newCurve);
                 Object.assign(curve, changeSet);
+                curve = await curve.save();
+            }
+            else {
+                const key = hashDir.getHashPath(dataset.username + dataset.wellname + dataset.name + curveData.name + curveData.unit + curveData.step) + curveData.name + '.txt';
+                s3.upload(config.dataPath + '/' + curveData.path, key)
+                    .then(data => {
+                        console.log(data.Location);
+                    })
+                    .catch(err => {
+                        console.log(err);
+                    });
+                curve.path = key;
                 curve = await curve.save();
             }
             return curve;
@@ -136,14 +151,12 @@ async function importDatasets(datasets, well, override) {
                     }
                 })
             }
-            console.log('1+++++++++++++ ' + JSON.stringify(dataset));
             try {
                 if (!dataset) dataset = await models.Dataset.create(datasetData);
             } catch (err) {
                 console.log('>>>>>>>' + err);
                 throw err;
             }
-            console.log('2++++++++++++++++ ' + JSON.stringify(dataset));
 
             dataset = dataset.toJSON();
             dataset.wellname = well.name;
