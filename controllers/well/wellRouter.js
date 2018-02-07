@@ -33,22 +33,43 @@ router.post('/well/new', function (req, res) {
 });
 
 router.post('/well/full-info', function (req, res) {
-    Well.findById(req.body.idWell, {
-        include: [
-            {model: models.WellHeader},
-            {
-                model: models.Dataset,
-                include: {
-                    model: models.Curve,
-                    include: {model: models.CurveRevision}
+    if (req.body.name) {
+        Well.findOne({
+            where: {idWell: req.body.idWell, name: req.body.name},
+            include: [
+                {model: models.WellHeader},
+                {
+                    model: models.Dataset,
+                    include: {
+                        model: models.Curve,
+                        include: {model: models.CurveRevision}
+                    }
                 }
-            }
-        ]
-    }).then(well => {
-        res.send(response(200, 'SUCCESSFULLY CREATE NEW WELL', well));
-    }).catch(err => {
-        res.send(response(512, 'ERROR', err.message));
-    })
+            ]
+        }).then(well => {
+            res.send(response(200, 'SUCCESSFULLY', well));
+        }).catch(err => {
+            res.send(response(512, 'ERROR', err.message));
+        });
+    } else {
+        Well.findById(req.body.idWell, {
+            include: [
+                {model: models.WellHeader},
+                {
+                    model: models.Dataset,
+                    include: {
+                        model: models.Curve,
+                        include: {model: models.CurveRevision}
+                    }
+                }
+            ]
+        }).then(well => {
+            res.send(response(200, 'SUCCESSFULLY', well));
+        }).catch(err => {
+            res.send(response(512, 'ERROR', err.message));
+        });
+    }
+
 });
 
 router.post('/well/info', function (req, res) {
@@ -214,6 +235,6 @@ router.post('/well/findbyname', function (req, res) {
         console.log(err);
         res.send(response(500, 'FAILED TO GET WELL', err));
     })
-})
+});
 
 module.exports = router;
