@@ -63,22 +63,22 @@ function getCurves(idWell, cb) {
     })
 }
 
-function deleteWell(idWell, username, callback) {
+async function deleteWell(idWell, username) {
     findWellById(idWell, username)
         .then((well) => {
             getCurves(well.idWell, (curves) => {
                 well.destroy()
                     .then((rs) => {
                         curveModel.deleteCurveFiles(curves);
-                        callback(null, rs);
+                        Promise.resolve(rs);
                     })
                     .catch(err => {
-                        callback(err, null);
+                        Promise.reject(err)
                     })
             })
         })
         .catch((err) => {
-            callback(err, null);
+            Promise.reject(err)
         })
 }
 

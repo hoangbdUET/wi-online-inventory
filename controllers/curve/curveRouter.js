@@ -71,11 +71,13 @@ router.post('/curve/edit', function (req, res) {
 
 });
 router.post('/curve/delete', function (req, res) {
-    curveModel.deleteCurve(req.body.idCurve, req.decoded.username, (err, result) => {
-        if(err) res.send(response(500, 'FAILED TO DELETE CURVE', err));
-        else res.send(response(200, 'SUCCESSFULLY DELETE CURVE', result));
-    })
-
+    curveModel.deleteCurve(req.body.idCurve, req.decoded.username)
+        .then( result => {
+            res.send(response(200, 'SUCCESSFULLY DELETE CURVE', result));
+        })
+        .catch( err => {
+            res.send(response(500, 'FAILED TO DELETE CURVE', err));
+        })
 });
 
 router.post('/curves', function (req, res) {

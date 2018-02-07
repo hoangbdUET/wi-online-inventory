@@ -87,13 +87,13 @@ router.post('/well/edit', function (req, res) {
 });
 
 router.post('/well/delete', function (req, res) {
-    wellModel.deleteWell(req.body.idWell, req.decoded.username, (err, rs) => {
-        if (!err) res.send(response(200, 'SUCCESSFULLY DELETE WELL', rs));
-        else {
-            console.log(err);
+    wellModel.deleteWell(req.body.idWell, req.decoded.username)
+        .then(result => {
+            res.send(response(200, 'SUCCESSFULLY DELETE WELL', result));
+        })
+        .catch(err => {
             res.send(response(200, 'FAILED TO DELETE WELL: ', err));
-        }
-    });
+        })
 });
 
 router.post('/well/addDatasets', upload.array('file'), function (req, res) {

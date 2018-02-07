@@ -34,30 +34,39 @@ function upload(path, key) {
     })
 }
 
-function deleteCurve(curve) {
-    const curveName = curve.path.slice(curve.path.lastIndexOf('/') + 1, curve.path.length);
-    const dir = curve.path.slice(0, curve.path.lastIndexOf('/') + 1);
+function deleteCurve(key) {
+    // const curveName = curve.path.slice(curve.path.lastIndexOf('/') + 1, curve.path.length);
+    // const dir = curve.path.slice(0, curve.path.lastIndexOf('/') + 1);
+    // const params = {
+    //     Bucket: bucket,
+    //     Delimiter: '/',
+    //     Prefix: dir
+    // }
+    // s3.listObjects(params, (err, data) => {
+    //     let deleteParams = {
+    //         Bucket: bucket,
+    //         Delete: {Objects:[]}
+    //     }
+    //     data.Contents.forEach((content) => {
+    //         if(content.Key.indexOf(curveName) != -1) {
+    //             console.log(content.Key + ' will be deleted.');
+    //             deleteParams.Delete.Objects.push({Key: content.Key});
+    //         }
+    //     })
+    //
+    //     s3.deleteObjects(deleteParams, (err)=>{
+    //         if(err) console.log("s3 delete object failed " + err);
+    //         else console.log("s3 delete object done");
+    //     })
+    // })
+    console.log('---> ' + key);
     const params = {
         Bucket: bucket,
-        Delimiter: '/',
-        Prefix: dir
+        Key: key
     }
-    s3.listObjects(params, (err, data) => {
-        let deleteParams = {
-            Bucket: bucket,
-            Delete: {Objects:[]}
-        }
-        data.Contents.forEach((content) => {
-            if(content.Key.indexOf(curveName) != -1) {
-                console.log(content.Key + ' will be deleted.');
-                deleteParams.Delete.Objects.push({Key: content.Key});
-            }
-        })
-
-        s3.deleteObjects(deleteParams, (err)=>{
-            if(err) console.log("s3 delete object failed " + err);
-            else console.log("s3 delete object done");
-        })
+    s3.deleteObject(params, (err, data) => {
+        if(err) console.log("s3 delete object failed " + err);
+        else console.log("s3 delete object done: " + data);
     })
 }
 

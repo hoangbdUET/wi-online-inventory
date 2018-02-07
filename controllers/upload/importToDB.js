@@ -35,9 +35,8 @@ async function importCurves(curves, dataset) {
                     step: curveData.step
                 };
                 const changeSet = {};
-                changeSet.path = require('../fileManagement').moveCurveFile(oldCurve, newCurve);
-                Object.assign(curve, changeSet);
-                curve = await curve.save();
+                curveRevision.path = require('../fileManagement').moveCurveFile(oldCurve, newCurve);
+                curveRevision.save();
             }
             else {
                 const key = hashDir.getHashPath(dataset.username + dataset.wellname + dataset.name + curveData.name + curveData.unit + curveData.step) + curveData.name + '.txt';
@@ -48,8 +47,8 @@ async function importCurves(curves, dataset) {
                     .catch(err => {
                         console.log(err);
                     });
-                curve.path = key;
-                curve = await curve.save();
+                curveRevision.path = key;
+                curveRevision.save();
             }
             return curve;
         } catch (err) {

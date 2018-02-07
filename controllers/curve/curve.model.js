@@ -49,37 +49,37 @@ function findCurveById(idCurve, username, attributes) {
 
 function deleteCurveFiles(curves) {
     //curves must be array
-    console.log('~~~deleteCurveFiles~~~');
+    console.log('~~~deleteCurveFiles~~~ ' + JSON.stringify(curves));
     if(!curves || curves.length <= 0) return;
     curves.forEach(curve => {
-        if(config.s3Path){
-            //be sure to delete all unit exported curve files
-            require('../s3').deleteCurve(curve);
-        }
-        else {
-            //be sure to delete all unit exported curve files
-            curve.curve_revisions.forEach(revision => {
+        console.log('===> ' + curve.name)
+        curve.curve_revisions.forEach(revision => {
+            if(config.s3Path){
+                s3.deleteCurve(revision.path);
+            }
+            else {
                 const path = config.dataPath + '/' + revision.path;
                 require('fs').unlink(path, (err) => {
                     if(err) console.log('delete curve file failed: ' + err);
                 });
-            })
-        }
+            }
+        })
     })
 }
 
-async function deleteCurve(idCurve, username, callback) {
+async function deleteCurve(idCurve, username) {
     const attributes = {
         revision: true
     }
     const curve = await findCurveById(idCurve, username, attributes);
+    console.log(JSON.stringify(curve));
     curve.destroy()
         .then((rs)=>{
             deleteCurveFiles([curve]);
-            callback(null, rs);
+            Promise.resolve(rs);
         })
         .catch((err) => {
-            callback(err, null);
+            Promise.reject(err)
         })
 
 }
