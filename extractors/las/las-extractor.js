@@ -285,10 +285,10 @@ module.exports = async function (inputFile, importData, callback) {
                 const uploadPromises = dataset.curves.map(async curve => {
                     fs.appendFileSync(curve.path, BUFFERS[curve.name].data);
                     curve.path = curve.path.replace(config.dataPath + '/', '');
-                    if (config.s3Path) {
-                        return s3.upload(curve);
-                        //delete curve file on disk
-                    }
+                    // if (config.s3Path) {
+                    //     return s3.upload(config.dataPath + '/' + curve.path, curve.path);
+                    //     //delete curve file on disk
+                    // }
                 })
                 if (config.s3Path) {
                     await Promise.all(uploadPromises);
