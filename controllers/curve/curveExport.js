@@ -5,22 +5,7 @@ const fs = require('fs');
 const AWS = require('aws-sdk');
 const config = require('config');
 const readline = require('readline');
-
-let credentials = new AWS.SharedIniFileCredentials({profile: 'wi_inventory'});
-AWS.config.credentials = credentials;
-let s3 = new AWS.S3({apiVersion: '2006-03-01'});
-
-
-function getCurveDataFromS3(path) {
-    console.log('~~~getCurveDataFromS3~~~');
-    let params = {
-        Bucket: "wi-inventory",
-        Key: path
-    }
-
-    let readStream = s3.getObject(params).createReadStream();
-    return readStream;
-}
+const s3 = require('../s3');
 
 function convertCurve(curve, newUnit, callback) {
     console.log('~~~convertCurve~~~');
@@ -32,7 +17,7 @@ function convertCurve(curve, newUnit, callback) {
         let pathOnDisk = tempPath + '/' + newUnit + '_' + curve.name + '.txt';
         const writeStream = fs.createWriteStream(pathOnDisk);
         const rl = readline.createInterface({
-            input: getCurveDataFromS3(curve.path)
+            input: s3.getData(curve.path)
         })
         rl.on('line', (line) => {
             writeStream.write(index + ' ' + unitConversion.convert(parseFloat(line.trim().split(' ')[1]), curve.unit, newUnit) + '\n');
@@ -44,15 +29,15 @@ function convertCurve(curve, newUnit, callback) {
                 Key: newKey,
                 Body: fs.createReadStream(pathOnDisk)
             };
-            s3.upload(uploadParams, (err, data)=> {
-                console.log('upload done!!!');
-                if(!err) {
+            s3.upload(pathOnDisk, newKey)
+                .then(data => {
                     callback(null, newKey);
                     fs.unlink(pathOnDisk, ()=>{
                         fs.rmdir(tempPath, ()=>{});
                     });
-                }
-            })
+                }).catch(err => {
+
+            });
         })
     }
     else {
@@ -77,7 +62,12 @@ module.exports = function (curve, unit, step, callback) {
 
     curve.curve_revisions.forEach(revision => {
         if(revision.isCurrentRevision){
-            callback(null, fs.createReadStream(config.dataPath + '/' + revision.path))
+            if(config.s3Path){
+                callback(null, s3.getData(revision.path))
+            }
+            else {
+                callback(null, fs.createReadStream(config.dataPath + '/' + revision.path))
+            }
         }
     })
 
