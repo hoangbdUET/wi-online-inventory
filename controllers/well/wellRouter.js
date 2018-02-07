@@ -34,7 +34,8 @@ router.post('/well/new', function (req, res) {
 
 router.post('/well/full-info', function (req, res) {
     if (req.body.name) {
-        Well.findOne({where: {idWell: req.body.idWell, name: req.body.name}}, {
+        Well.findOne({
+            where: {idWell: req.body.idWell, name: req.body.name},
             include: [
                 {model: models.WellHeader},
                 {
