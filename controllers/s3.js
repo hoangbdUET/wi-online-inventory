@@ -107,15 +107,18 @@ function moveCurve(srcKey, desKey) {
     });
 }
 
-function getData(key) {
+async function getData(key) {
     console.log('~~~getCurveDataFromS3~~~');
     let params = {
         Bucket: "wi-inventory",
         Key: key
     }
-
-    let readStream = s3.getObject(params).createReadStream();
-    return readStream;
+    return new Promise((resolve, reject) => {
+        s3.headObject(params, (err, data) => {
+            if(err) reject(err);
+            else resolve(s3.getObject(params).createReadStream());
+        })
+    })
 }
 
 module.exports = {

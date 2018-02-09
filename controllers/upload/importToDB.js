@@ -17,7 +17,19 @@ async function importCurves(curves, dataset) {
             curveData.isCurrentRevision = true;
             const curveRevision = await models.CurveRevision.create(curveData);
 
-            if(!config.s3Path && (curveData.wellname != dataset.wellname || curveData.datasetname != dataset.name)){
+            if(config.s3Path){
+                const key = hashDir.getHashPath(dataset.username + dataset.wellname + dataset.name + curveData.name + curveData.unit + curveData.step) + curveData.name + '.txt';
+                s3.upload(config.dataPath + '/' + curveData.path, key)
+                    .then(data => {
+                        console.log(data.Location);
+                    })
+                    .catch(err => {
+                        console.log(err);
+                    });
+                curveRevision.path = key;
+                curveRevision.save();
+            }
+            else if(curveData.wellname != dataset.wellname || curveData.datasetname != dataset.name){
                 const oldCurve = {
                     username: dataset.username,
                     wellname: curveData.wellname,
@@ -35,19 +47,7 @@ async function importCurves(curves, dataset) {
                     step: curveData.step
                 };
                 const changeSet = {};
-                curveRevision.path = require('../fileManagement').moveCurveFile(oldCurve, newCurve);
-                curveRevision.save();
-            }
-            else {
-                const key = hashDir.getHashPath(dataset.username + dataset.wellname + dataset.name + curveData.name + curveData.unit + curveData.step) + curveData.name + '.txt';
-                s3.upload(config.dataPath + '/' + curveData.path, key)
-                    .then(data => {
-                        console.log(data.Location);
-                    })
-                    .catch(err => {
-                        console.log(err);
-                    });
-                curveRevision.path = key;
+                curveRevision.path = await require('../fileManagement').moveCurveFile(oldCurve, newCurve);
                 curveRevision.save();
             }
             return curve;

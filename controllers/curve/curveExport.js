@@ -61,12 +61,22 @@ module.exports = function (curve, unit, step, callback) {
     console.log('config.s3Path: ' + config.s3Path);
 
     curve.curve_revisions.forEach(revision => {
-        if(revision.isCurrentRevision){
-            if(config.s3Path){
-                callback(null, s3.getData(revision.path))
+        if (revision.isCurrentRevision) {
+            if (config.s3Path) {
+                s3.getData(revision.path)
+                    .then( dataStream => {
+                        callback(null, dataStream);
+                    }).catch(err => {
+                        callback(err);
+                    })
             }
             else {
-                callback(null, fs.createReadStream(config.dataPath + '/' + revision.path))
+                if(fs.existsSync(config.dataPath + '/' + revision.path)){
+                    callback(null, fs.createReadStream(config.dataPath + '/' + revision.path));
+                }
+                else {
+                    callback('No such file or directory')
+                }
             }
         }
     })

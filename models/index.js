@@ -66,7 +66,8 @@ models.forEach(function (model) {
 
     m.Well.hasMany(m.WellHeader, {
         foreignKey: 'idWell',
-        sourceKey: 'idWell'
+        sourceKey: 'idWell',
+        onDelete: 'CASCADE'
     })
 
     m.Curve.hasMany(m.CurveRevision, {
@@ -76,6 +77,12 @@ models.forEach(function (model) {
 
     m.CurveRevision.belongsTo(m.Curve, {
         foreignKey: {name: 'idCurve', allowNull: false}
+    })
+
+    m.Dataset.hasMany(m.DatasetParams, {
+        foreignKey: 'idDataset',
+        sourceKey: 'idDataset',
+        onDelete: 'CASCADE'
     })
 
 })(module.exports);
