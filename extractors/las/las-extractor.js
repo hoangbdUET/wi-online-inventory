@@ -5,7 +5,7 @@ let fs = require('fs');
 const s3 = require('../../controllers/s3');
 let config = require('config');
 
-// const detectCharacterEncoding = require('detect-character-encoding');
+const detectCharacterEncoding = require('detect-character-encoding');
 
 function writeToCurveFile(buffer, curveFileName, index, value, defaultNull) {
     buffer.count += 1;
@@ -25,8 +25,8 @@ function writeToCurveFile(buffer, curveFileName, index, value, defaultNull) {
 
 module.exports = async function (inputFile, importData, callback) {
     const fileBuffer = fs.readFileSync(inputFile.path);
-    // const fileEncoding = detectCharacterEncoding(fileBuffer).encoding == 'ISO-8859-1' ? 'latin1' : 'utf8';
-    const fileEncoding = 'utf8';
+    const fileEncoding = detectCharacterEncoding(fileBuffer).encoding == 'ISO-8859-1' ? 'latin1' : 'utf8';
+    // const fileEncoding = 'utf8';
     let rl = new readline(inputFile.path, {encoding: fileEncoding, skipEmptyLines: true});
     let sectionName = "";
     let datasets = {};
