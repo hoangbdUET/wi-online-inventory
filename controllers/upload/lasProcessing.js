@@ -39,28 +39,41 @@ function uploadLasFiles(req, cb) {
     let output = new Array();
     let importData = {};
     importData.userInfo = req.decoded;
-    if(req.body.override && req.body.override == "true"){
+    if (req.body.override && req.body.override == "true") {
         importData.override = true;
-        importData.wellname = req.body.wellname;
+    } else {
+        importData.override = false;
     }
-    Well.findById(req.body.idWell)
-        .then(well => {
-            importData.well = well;
-            asyncLoop(req.files, (file, next) => {
-                if (!file) return next('NO FILE CHOSEN!!!');
-                processFileUpload(file, importData, (err, result) => {
-                    if (err) next(err)
-                    else {
-                        output.push(result);
-                        next();
-                    }
-                });
-            }, (err) => {
-                if (err) cb(err, null);
-                else cb(null, output);
-            })
-        })
-
+    asyncLoop(req.files, (file, next) => {
+        if (!file) return next('NO FILE CHOSEN!!!');
+        processFileUpload(file, importData, (err, result) => {
+            if (err) next(err)
+            else {
+                output.push(result);
+                next();
+            }
+        });
+    }, (err) => {
+        if (err) cb(err, null);
+        else cb(null, output);
+    });
+    // Well.findById(req.body.idWell)
+    //     .then(well => {
+    //         importData.well = well;
+    //         asyncLoop(req.files, (file, next) => {
+    //             if (!file) return next('NO FILE CHOSEN!!!');
+    //             processFileUpload(file, importData, (err, result) => {
+    //                 if (err) next(err)
+    //                 else {
+    //                     output.push(result);
+    //                     next();
+    //                 }
+    //             });
+    //         }, (err) => {
+    //             if (err) cb(err, null);
+    //             else cb(null, output);
+    //         })
+    //     })
 }
 
 module.exports = {
