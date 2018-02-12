@@ -172,10 +172,13 @@ router.post('/wells', function (req, res) {
 
 router.post('/well/editHeader', function (req, res) {
     console.log("============= " + req.body.idWell + ' ' + req.body.header);
+    let Op = require('sequelize').Op;
     models.WellHeader.findOrCreate({
         where: {
-            idWell: req.body.idWell,
-            header: req.body.header
+            [Op.and]: [
+                {header: {[Op.eq]: req.body.header}},
+                {idWell: req.body.idWell}
+            ]
         },
         defaults: {
             header: req.body.header,
@@ -216,9 +219,10 @@ router.post('/well/exportHeader', function (req, res) {
 });
 
 router.post('/well/findbyname', function (req, res) {
+    let Op = require('sequelize').Op;
     Well.findOne({
         where: {
-            name: req.body.wellname
+            name: {[Op.eq]: req.body.wellname}
         },
         include: [{
             model: models.WellHeader
