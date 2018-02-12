@@ -74,7 +74,7 @@ async function importCurves(curves, dataset) {
 }
 
 function _findOrCreate(models, tableName, queryOpts) {
-    let Model = tableName === 'well' ? models.Well : models.Dataset;
+    let Model = tableName === "well" ? models.Well : models.Dataset;
     let sqlize = models.sequelize;
     let selectStm = "SELECT * FROM " + tableName;
     let queryStm = "WHERE";
@@ -115,7 +115,7 @@ function importWithOverrideOption(wellData) {
             defaults: {name: wellData.name, username: wellData.username, filename: wellData.filename}
         }).then(well => {
             asyncEach(wellData.datasets, function (dataset, nextDataset) {
-                models.Dataset.findOrCreate({
+                _findOrCreate(models, "dataset", {
                     where: {idWell: well.idWell, name: dataset.name},
                     defaults: {
                         name: dataset.name,
@@ -124,13 +124,13 @@ function importWithOverrideOption(wellData) {
                         step: dataset.step,
                         idWell: well.idWell
                     }
-                }).then(_dataset => {
+                }).then(d => {
                     asyncEach(dataset.curves, function (curve, nextCurve) {
-                        _findOrCreate(models, "dataset", {
-                            where: {idDataset: _dataset[0].idDataset, name: curve.name},
+                        models.Curve.findOrCreate({
+                            where: {idDataset: d.idDataset, name: curve.name},
                             defaults: {
                                 name: curve.name,
-                                idDataset: _dataset[0].idDataset
+                                idDataset: d.idDataset
                             }
                         }).then(_curve => {
                             curve.idCurve = _curve[0].idCurve;
