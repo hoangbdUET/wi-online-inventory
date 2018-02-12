@@ -119,68 +119,18 @@ function _findOrCreate(models, tableName, queryOpts) {
 
 function importWithOverrideOption(wellData) {
     return new Promise(function (resolve, reject) {
-        _findOrCreate(models, "well", {
-            where: {name: wellData.name, username: wellData.username},
-            defaults: {name: wellData.name, username: wellData.username, filename: wellData.filename}
-        }).then(well => {
-            asyncEach(wellData.datasets, function (dataset, nextDataset) {
-                _findOrCreate(models, "dataset", {
-                    where: {idWell: well.idWell, name: dataset.name},
-                    defaults: {
-                        name: dataset.name,
-                        top: dataset.top,
-                        bottom: dataset.bottom,
-                        step: dataset.step,
-                        idWell: well.idWell
-                    }
-                }).then(d => {
-                    asyncEach(dataset.curves, function (curve, nextCurve) {
-                        _findOrCreate(models, "curve", {
-                            where: {idDataset: d.idDataset, name: curve.name},
-                            defaults: {
-                                name: curve.name,
-                                idDataset: d.idDataset
-                            }
-                        }).then(_curve => {
-                            curve.idCurve = _curve.idCurve;
-                            curve.isCurrentRevision = true;
-                            _findOrCreate(models, "curve_revision", {
-                                where: {idCurve: _curve.idCurve, path: curve.path},
-                                defaults: curve
-                            }).then(() => {
-                                nextCurve();
-                            }).catch(err => {
-                                console.log("curverevision", err);
-                                nextCurve();
-                            });
-                        }).catch(err => {
-                            console.log(err);
-                            nextCurve();
-                        });
-                    }, function () {
-                        nextDataset();
-                    });
-                }).catch(err => {
-                    console.log(err);
-                    nextDataset();
-                });
-            }, function () {
-                resolve(well);
-            });
-        }).catch(err => {
-            console.log(err);
-        });
-
-
-        // models.Well.findOrCreate({
-        //     where: {name: wellData.name, username: wellData.username, filename: wellData.filename},
-        //     defaults: {
-        //         name: wellData.name, username: wellData.username, filename: wellData.filename
-        //     }
-        // }).then(rs => {
-        //     let well = rs[0].toJSON();
+        const Op = require('sequelize').Op;
+        // models.Well.findOne({where: {name: {[Op.eq]: "PENNWEST ET AL FORT ST JOHN 3-29-83-18"}}}).then(well => {
+        //     console.log("====", well);
+        // }).catch(err => {
+        //     console.log(err);
+        // });
+        // _findOrCreate(models, "well", {
+        //     where: {name: wellData.name, username: wellData.username},
+        //     defaults: {name: wellData.name, username: wellData.username, filename: wellData.filename}
+        // }).then(well => {
         //     asyncEach(wellData.datasets, function (dataset, nextDataset) {
-        //         models.Dataset.findOrCreate({
+        //         _findOrCreate(models, "dataset", {
         //             where: {idWell: well.idWell, name: dataset.name},
         //             defaults: {
         //                 name: dataset.name,
@@ -189,18 +139,18 @@ function importWithOverrideOption(wellData) {
         //                 step: dataset.step,
         //                 idWell: well.idWell
         //             }
-        //         }).then(_dataset => {
+        //         }).then(d => {
         //             asyncEach(dataset.curves, function (curve, nextCurve) {
-        //                 models.Curve.findOrCreate({
-        //                     where: {idDataset: _dataset[0].idDataset, name: curve.name},
+        //                 _findOrCreate(models, "curve", {
+        //                     where: {idDataset: d.idDataset, name: curve.name},
         //                     defaults: {
         //                         name: curve.name,
-        //                         idDataset: _dataset[0].idDataset
+        //                         idDataset: d.idDataset
         //                     }
         //                 }).then(_curve => {
-        //                     curve.idCurve = _curve[0].idCurve;
+        //                     curve.idCurve = _curve.idCurve;
         //                     curve.isCurrentRevision = true;
-        //                     models.CurveRevision.findOrCreate({
+        //                     _findOrCreate(models, "curve_revision", {
         //                         where: {idCurve: _curve.idCurve, path: curve.path},
         //                         defaults: curve
         //                     }).then(() => {
@@ -223,13 +173,88 @@ function importWithOverrideOption(wellData) {
         //     }, function () {
         //         resolve(well);
         //     });
+        // }).catch(err => {
+        //     console.log(err);
         // });
+
+        models.Well.findOrCreate({
+            where: {
+                [Op.and]: [
+                    {name: {[Op.eq]: wellData.name}},
+                    {username: wellData.username},
+                ]
+            },
+            defaults: {
+                name: wellData.name, username: wellData.username, filename: wellData.filename
+            }
+        }).then(rs => {
+            let well = rs[0].toJSON();
+            asyncEach(wellData.datasets, function (dataset, nextDataset) {
+                models.Dataset.findOrCreate({
+                    where: {
+                        [Op.and]: [
+                            {idWell: well.idWell},
+                            {name: {[Op.eq]: dataset.name}}
+                        ]
+                    },
+                    defaults: {
+                        name: dataset.name,
+                        top: dataset.top,
+                        bottom: dataset.bottom,
+                        step: dataset.step,
+                        idWell: well.idWell
+                    }
+                }).then(_dataset => {
+                    asyncEach(dataset.curves, function (curve, nextCurve) {
+                        models.Curve.findOrCreate({
+                            where: {
+                                [Op.and]: [
+                                    {idDataset: _dataset[0].idDataset},
+                                    {name: {[Op.eq]: curve.name}}
+                                ]
+                            },
+                            defaults: {
+                                name: curve.name,
+                                idDataset: _dataset[0].idDataset
+                            }
+                        }).then(_curve => {
+                            curve.idCurve = _curve[0].idCurve;
+                            curve.isCurrentRevision = true;
+                            models.CurveRevision.findOrCreate({
+                                where: {
+                                    [Op.and]: [
+                                        {idCurve: curve.idCurve},
+                                        {path: {[Op.eq]: curve.path}}
+                                    ]
+                                },
+                                defaults: curve
+                            }).then(() => {
+                                nextCurve();
+                            }).catch(err => {
+                                console.log("curverevision", err);
+                                nextCurve();
+                            });
+                        }).catch(err => {
+                            console.log(err);
+                            nextCurve();
+                        });
+                    }, function () {
+                        nextDataset();
+                    });
+                }).catch(err => {
+                    console.log(err);
+                    nextDataset();
+                });
+            }, function () {
+                resolve(well);
+            });
+        });
     });
 }
 
 async function importWell(wellData, override) {
     try {
-        console.log("==wellData ", wellData, wellData.name, wellData.username);
+        // console.log("==wellData ", wellData, wellData.name, wellData.username);
         let well
         if (override) {
             try {
