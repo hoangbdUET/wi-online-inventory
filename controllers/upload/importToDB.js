@@ -74,7 +74,16 @@ async function importCurves(curves, dataset) {
 }
 
 function _findOrCreate(models, tableName, queryOpts) {
-    let Model = tableName === "well" ? models.Well : models.Dataset;
+    let Model;
+    if (tableName === 'well') {
+        Model = models.Well;
+    } else if (tableName === 'dataset') {
+        Model = models.Dataset;
+    } else if (tableName === 'curve') {
+        Model = models.Curve;
+    } else if (tableName === 'curve_revision') {
+        Model = models.CurveRevision;
+    }
     let sqlize = models.sequelize;
     let selectStm = "SELECT * FROM " + tableName;
     let queryStm = "WHERE";
@@ -126,16 +135,16 @@ function importWithOverrideOption(wellData) {
                     }
                 }).then(d => {
                     asyncEach(dataset.curves, function (curve, nextCurve) {
-                        models.Curve.findOrCreate({
+                        _findOrCreate(models, "curve", {
                             where: {idDataset: d.idDataset, name: curve.name},
                             defaults: {
                                 name: curve.name,
                                 idDataset: d.idDataset
                             }
                         }).then(_curve => {
-                            curve.idCurve = _curve[0].idCurve;
+                            curve.idCurve = _curve.idCurve;
                             curve.isCurrentRevision = true;
-                            models.CurveRevision.findOrCreate({
+                            _findOrCreate(models, "curve_revision", {
                                 where: {idCurve: _curve.idCurve, path: curve.path},
                                 defaults: curve
                             }).then(() => {
