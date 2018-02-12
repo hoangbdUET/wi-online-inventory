@@ -6,6 +6,7 @@ const hashDir = require('../../extractors/hash-dir');
 const s3 = require('../s3');
 const config = require('config');
 let asyncEach = require('async/each');
+let SqlString = require('sequelize/lib/sql-string');
 
 async function importCurves(curves, dataset) {
     if (!curves || curves.length <= 0) return;
@@ -72,15 +73,47 @@ async function importCurves(curves, dataset) {
     return Promise.all(promises);
 }
 
+function _findOrCreate(models, tableName, queryOpts) {
+    let Model = tableName === 'well' ? models.Well : models.Dataset;
+    let sqlize = models.sequelize;
+    let selectStm = "SELECT * FROM " + tableName;
+    let queryStm = "WHERE";
+    let isFirst = true;
+    for (let prop in queryOpts.where) {
+        let temp = prop + " = '" + queryOpts.where[prop] + "'";
+        if (isFirst)
+            queryStm = queryStm + " " + temp;
+        else {
+            queryStm = queryStm + " AND " + temp;
+        }
+        isFirst = false;
+    }
+    let query = selectStm + " " + queryStm;
+    return new Promise(function (resolve, reject) {
+        sqlize.query(query, {
+            type: sqlize.QueryTypes.SELECT
+        }).then(rs => {
+            if (rs && rs.length) resolve(rs[0]);
+            else {
+                Model.create(queryOpts.defaults).then(well => {
+                    resolve(well);
+                }).catch(err => {
+                    console.log(err);
+                    reject(err);
+                });
+            }
+        }).catch(err => {
+            reject(err);
+        });
+    });
+}
+
 function importWithOverrideOption(wellData) {
     return new Promise(function (resolve, reject) {
-        models.Well.findOrCreate({
-            where: {name: wellData.name, username: wellData.username, filename: wellData.filename},
-            defaults: {
-                name: wellData.name, username: wellData.username, filename: wellData.filename
-            }
-        }).then(rs => {
-            let well = rs[0].toJSON();
+        _findOrCreate(models, "well", {
+            where: {name: wellData.name, username: wellData.username},
+            defaults: {name: wellData.name, username: wellData.username, filename: wellData.filename}
+        }).then(well => {
             asyncEach(wellData.datasets, function (dataset, nextDataset) {
                 models.Dataset.findOrCreate({
                     where: {idWell: well.idWell, name: dataset.name},
@@ -93,7 +126,7 @@ function importWithOverrideOption(wellData) {
                     }
                 }).then(_dataset => {
                     asyncEach(dataset.curves, function (curve, nextCurve) {
-                        models.Curve.findOrCreate({
+                        _findOrCreate(models, "dataset", {
                             where: {idDataset: _dataset[0].idDataset, name: curve.name},
                             defaults: {
                                 name: curve.name,
@@ -125,7 +158,63 @@ function importWithOverrideOption(wellData) {
             }, function () {
                 resolve(well);
             });
+        }).catch(err => {
+            console.log(err);
         });
+
+
+        // models.Well.findOrCreate({
+        //     where: {name: wellData.name, username: wellData.username, filename: wellData.filename},
+        //     defaults: {
+        //         name: wellData.name, username: wellData.username, filename: wellData.filename
+        //     }
+        // }).then(rs => {
+        //     let well = rs[0].toJSON();
+        //     asyncEach(wellData.datasets, function (dataset, nextDataset) {
+        //         models.Dataset.findOrCreate({
+        //             where: {idWell: well.idWell, name: dataset.name},
+        //             defaults: {
+        //                 name: dataset.name,
+        //                 top: dataset.top,
+        //                 bottom: dataset.bottom,
+        //                 step: dataset.step,
+        //                 idWell: well.idWell
+        //             }
+        //         }).then(_dataset => {
+        //             asyncEach(dataset.curves, function (curve, nextCurve) {
+        //                 models.Curve.findOrCreate({
+        //                     where: {idDataset: _dataset[0].idDataset, name: curve.name},
+        //                     defaults: {
+        //                         name: curve.name,
+        //                         idDataset: _dataset[0].idDataset
+        //                     }
+        //                 }).then(_curve => {
+        //                     curve.idCurve = _curve[0].idCurve;
+        //                     curve.isCurrentRevision = true;
+        //                     models.CurveRevision.findOrCreate({
+        //                         where: {idCurve: _curve.idCurve, path: curve.path},
+        //                         defaults: curve
+        //                     }).then(() => {
+        //                         nextCurve();
+        //                     }).catch(err => {
+        //                         console.log("curverevision", err);
+        //                         nextCurve();
+        //                     });
+        //                 }).catch(err => {
+        //                     console.log(err);
+        //                     nextCurve();
+        //                 });
+        //             }, function () {
+        //                 nextDataset();
+        //             });
+        //         }).catch(err => {
+        //             console.log(err);
+        //             nextDataset();
+        //         });
+        //     }, function () {
+        //         resolve(well);
+        //     });
+        // });
     });
 }
 
@@ -134,8 +223,12 @@ async function importWell(wellData, override) {
         console.log("==wellData ", wellData, wellData.name, wellData.username);
         let well
         if (override) {
-            well = await importWithOverrideOption(wellData);
-            well.Override = true;
+            try {
+                well = await importWithOverrideOption(wellData);
+                well.Override = true;
+            } catch (err) {
+                console.log(err);
+            }
         } else {
             well = await models.Well.create(wellData);
             well.datasets = await importDatasets(wellData.datasets, well, false);
