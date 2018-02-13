@@ -33,9 +33,15 @@ router.post('/well/new', function (req, res) {
 });
 
 router.post('/well/full-info', function (req, res) {
+    let Op = require('sequelize').Op;
     if (req.body.name) {
         Well.findOne({
-            where: {idWell: req.body.idWell, name: req.body.name},
+            where: {
+                [Op.and]: [
+                    {name: {[Op.eq]: req.body.name}},
+                    {username: req.decoded.username}
+                ]
+            },
             include: [
                 {model: models.WellHeader},
                 {
