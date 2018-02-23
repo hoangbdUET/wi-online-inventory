@@ -30,7 +30,7 @@ function main() {
 
     let authentication = require('./controllers/authenticate');
     app.use('/', authentication.router);
-    app.use(authentication.authenticate());
+    // app.use(authentication.authenticate());
 
     let testRouter = require('./controllers/index');
     let curveRouter = require('./controllers/curve/curveRouter');
@@ -38,6 +38,7 @@ function main() {
     let uploadRouter = require('./controllers/upload/uploadRouter');
     let userRouter = require('./controllers/user/userRouter');
     let datasetRouter = require('./controllers/dataset/datasetRouter');
+    let exportRouter = require('./export/exportRouter');
 
 
     app.use('/', testRouter);
@@ -46,6 +47,7 @@ function main() {
     app.use('/user/well', datasetRouter);
     app.use('/user/well/dataset', curveRouter);
     app.use('/', uploadRouter);
+    app.use('/export', exportRouter);
     app.get('/', function (req, res) {
         res.status(200).send('WI Online Inventory');
     });

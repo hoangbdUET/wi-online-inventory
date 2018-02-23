@@ -42,6 +42,7 @@ function authenticate() {
                     }).then((user) => {
                         if (user) {
                             req.decoded = user.toJSON();
+                            console.log('SUCESS LOGIN', req.decoded);
                             next();
                         } else {
                             User.create({
@@ -49,6 +50,7 @@ function authenticate() {
                                 password: '========================================'
                             }).then(user => {
                                 req.decoded = user.toJSON();
+                                console.log('CREATE USER', req.decoded);
                                 next();
                             }).catch(err => {
                                 return res.status(401).send(response(401, 'Failed to authenticate'));

@@ -1,0 +1,15 @@
+{
+  "Database": {
+    "dialect": "mysql",
+    "host": "localhost",
+    "port": 3306,
+    "user": "root",
+    "password": "",
+    "logging": false,
+    "dbName": "wi_online_inventory"
+  },
+  "Application": {
+    "port": 9000
+  },
+  "dataPath": "/Users/OS/Desktop/racruoi/lases"
+}

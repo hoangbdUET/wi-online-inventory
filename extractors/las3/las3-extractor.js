@@ -5,7 +5,7 @@ let fs = require('fs');
 let __config = require('../common-config');
 const s3 = require('../../controllers/s3');
 let config = require('config');
-const detectCharacterEncoding = require('detect-character-encoding');
+// const detectCharacterEncoding = require('detect-character-encoding');
 
 function writeToCurveFile(buffer, curveFileName, index, value, defaultNull) {
     buffer.count += 1;
@@ -24,8 +24,11 @@ function writeToCurveFile(buffer, curveFileName, index, value, defaultNull) {
 
 
 function extractCurves(inputFile, importData, callback) {
+    console.log('---', importData);
+
     const fileBuffer = fs.readFileSync(inputFile.path);
-    const fileEncoding = detectCharacterEncoding(fileBuffer).encoding == 'ISO-8859-1' ? 'latin1' : 'utf8';
+    let fileEncoding = 'utf8';
+    // const fileEncoding = detectCharacterEncoding(fileBuffer).encoding == 'ISO-8859-1' ? 'latin1' : 'utf8';
 
     let rl = new readline(inputFile.path, { encoding: fileEncoding, skipEmptyLines : true });
     let sectionName = "";
@@ -185,7 +188,7 @@ function extractCurves(inputFile, importData, callback) {
                         count: 0,
                         data: ""
                     };
-                    filePaths[curve.name] = hashDir.createPath(__config.basePath,importData.userInfo.username + wellInfo.name + curve.datasetname + curve.name, curve.name + '.txt');
+                    filePaths[curve.name] = hashDir.createPath(__config.basePath,'admin' + wellInfo.name + curve.datasetname + curve.name, curve.name + '.txt');
                     fs.writeFileSync(filePaths[curve.name], "");
                     curve.path = filePaths[curve.name];
                 })

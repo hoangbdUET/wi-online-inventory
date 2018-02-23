@@ -110,7 +110,7 @@ function importToDB(inputWells, userInfor, cb) {
     if(!inputWells || inputWells.length <= 0) return cb('there is no well to import');
     let res = [];
     asyncLoop(inputWells, (inputWell, nextWell) => {
-        inputWell.username = userInfor.username;
+        inputWell.username = /*userInfor.username*/'admin';
         models.Well.findById(inputWell.idWell)
             .then(well => {
                 if(!well) {
