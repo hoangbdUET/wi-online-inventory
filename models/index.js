@@ -30,7 +30,9 @@ var models = [
     'Well',
     'User',
     'Dataset',
-    'WellHeader'
+    'WellHeader',
+    'DatasetParams',
+    'CurveRevision'
 ];
 models.forEach(function (model) {
     module.exports[model] = sequelize.import(__dirname + '/' + model);
@@ -64,9 +66,24 @@ models.forEach(function (model) {
 
     m.Well.hasMany(m.WellHeader, {
         foreignKey: 'idWell',
-        sourceKey: 'idWell'
+        sourceKey: 'idWell',
+        onDelete: 'CASCADE'
     })
 
+    m.Curve.hasMany(m.CurveRevision, {
+        foreignKey: {name: 'idCurve', allowNull: false},
+        onDelete: 'CASCADE'
+    })
+
+    m.CurveRevision.belongsTo(m.Curve, {
+        foreignKey: {name: 'idCurve', allowNull: false}
+    })
+
+    m.Dataset.hasMany(m.DatasetParams, {
+        foreignKey: 'idDataset',
+        sourceKey: 'idDataset',
+        onDelete: 'CASCADE'
+    })
 
 })(module.exports);
 module.exports.sequelize = sequelize;

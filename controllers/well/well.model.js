@@ -5,8 +5,7 @@ let User = models.User;
 let curveModel = require('../curve/curve.model');
 const datasetModel = require('../dataset/dataset.model');
 const asyncLoop = require('node-async-loop');
-const importModule = require('../../extractors');
-const hashDir = importModule.hashDir;
+const hashDir = require('../../extractors/hash-dir');
 const config = require('config');
 
 
@@ -26,6 +25,9 @@ function findWellById(idWell, username, attributes) {
             model: models.Curve,
             attributes: ['idCurve', 'name']
         }
+        if(attributes.revision) includeDatasets.include.include = {
+            model: models.CurveRevision
+        }
         include.push(includeDatasets);
     }
     return Well.findById(
@@ -44,7 +46,10 @@ function getCurves(idWell, cb) {
             idWell: idWell
         },
         include: [{
-            model: models.Curve
+            model: models.Curve,
+            include: {
+                model: models.CurveRevision
+            }
         }]
     }).then(datasets => {
         if (!datasets || datasets.length <= 0) return cb(curves);
@@ -58,22 +63,22 @@ function getCurves(idWell, cb) {
     })
 }
 
-function deleteWell(idWell, username, callback) {
+async function deleteWell(idWell, username) {
     findWellById(idWell, username)
         .then((well) => {
             getCurves(well.idWell, (curves) => {
                 well.destroy()
                     .then((rs) => {
                         curveModel.deleteCurveFiles(curves);
-                        callback(null, rs);
+                        Promise.resolve(rs);
                     })
                     .catch(err => {
-                        callback(err, null);
+                        Promise.reject(err)
                     })
             })
         })
         .catch((err) => {
-            callback(err, null);
+            Promise.reject(err)
         })
 }
 
@@ -150,7 +155,8 @@ function copyDatasets(req, cb) {
 function editWell(body, username, cb) {
     let attributes = {
         datasets: ['idDataset', 'name'],
-        curves: ['idCurve', 'name']
+        curves: ['idCurve', 'name'],
+        revision: true
     }
     findWellById(body.idWell, username, attributes)
         .then(well => {

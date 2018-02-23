@@ -32,6 +32,58 @@ router.post('/well/new', function (req, res) {
     });
 });
 
+router.post('/well/full-info', function (req, res) {
+    let Op = require('sequelize').Op;
+    let condition = {};
+    if (req.body.idWell) {
+        condition = {idWell: req.body.idWell}
+    } else {
+        condition = {
+            [Op.and]: [
+                {name: {[Op.eq]: req.body.name}},
+                {username: req.decoded.username}
+            ]
+        }
+    }
+    if (req.body.name) {
+        Well.findOne({
+            where: condition,
+            include: [
+                {model: models.WellHeader},
+                {
+                    model: models.Dataset,
+                    include: {
+                        model: models.Curve,
+                        include: {model: models.CurveRevision}
+                    }
+                }
+            ]
+        }).then(well => {
+            res.send(response(200, 'SUCCESSFULLY', well));
+        }).catch(err => {
+            res.send(response(512, 'ERROR', err.message));
+        });
+    } else {
+        Well.findById(req.body.idWell, {
+            include: [
+                {model: models.WellHeader},
+                {
+                    model: models.Dataset,
+                    include: {
+                        model: models.Curve,
+                        include: {model: models.CurveRevision}
+                    }
+                }
+            ]
+        }).then(well => {
+            res.send(response(200, 'SUCCESSFULLY', well));
+        }).catch(err => {
+            res.send(response(512, 'ERROR', err.message));
+        });
+    }
+
+});
+
 router.post('/well/info', function (req, res) {
     wellModel.findWellById(req.body.idWell, req.decoded.username)
         .then(well => {
@@ -68,13 +120,13 @@ router.post('/well/edit', function (req, res) {
 });
 
 router.post('/well/delete', function (req, res) {
-    wellModel.deleteWell(req.body.idWell, req.decoded.username, (err, rs) => {
-        if (!err) res.send(response(200, 'SUCCESSFULLY DELETE WELL', rs));
-        else {
-            console.log(err);
+    wellModel.deleteWell(req.body.idWell, req.decoded.username)
+        .then(result => {
+            res.send(response(200, 'SUCCESSFULLY DELETE WELL', result));
+        })
+        .catch(err => {
             res.send(response(200, 'FAILED TO DELETE WELL: ', err));
-        }
-    });
+        })
 });
 
 router.post('/well/addDatasets', upload.array('file'), function (req, res) {
@@ -121,7 +173,6 @@ router.post('/wells', function (req, res) {
             opts.order = [["idWell", 'DESC']]
         }
     }
-    console.log(opts);
     Well.findAll(opts)
         .then((wells) => {
             res.send(response(200, 'SUCCESSFULLY GET WELLS', wells));
@@ -132,21 +183,36 @@ router.post('/wells', function (req, res) {
 })
 
 router.post('/well/editHeader', function (req, res) {
-    models.WellHeader.findOne({
+    console.log("============= " + req.body.idWell + ' ' + req.body.header);
+    let Op = require('sequelize').Op;
+    models.WellHeader.findOrCreate({
         where: {
-            idWell: req.body.idWell,
-            header: req.body.header
+            [Op.and]: [
+                {header: {[Op.eq]: req.body.header}},
+                {idWell: req.body.idWell}
+            ]
+        },
+        defaults: {
+            header: req.body.header,
+            value: req.body.value,
+            idWell: req.body.idWell
         }
     })
-        .then(well_header => {
-            Object.assign(well_header, req.body);
-            well_header.save().then(c => {
-                res.send(response(200, 'SUCCESSFULLY EDIT WELL HEADER', c));
-            }).catch(e => {
-                res.send(response(500, 'FAILED TO EDIT WELL HEADER', e));
-            })
+        .then(rs => {
+            let well_header = rs[0];
+            if (!rs[1]) {
+                // console.log(JSON.stringify(well_header))
+                Object.assign(well_header, req.body);
+                well_header.save().then(c => {
+                    console.log("==========> saved")
+                    res.send(response(200, 'SUCCESSFULLY EDIT WELL HEADER', c));
+                }).catch(e => {
+                    res.send(response(500, 'FAILED TO EDIT WELL HEADER', e));
+                })
+            } else {
+                res.send(response(200, 'SUCCESSFULLY CREATE NEW HEADER', rs[0]));
+            }
         })
-
 });
 
 router.post('/well/exportHeader', function (req, res) {
@@ -162,6 +228,29 @@ router.post('/well/exportHeader', function (req, res) {
             });
         }
     });
+});
+
+router.post('/well/findbyname', function (req, res) {
+    let Op = require('sequelize').Op;
+    Well.findOne({
+        where: {
+            name: {[Op.eq]: req.body.wellname}
+        },
+        include: [{
+            model: models.WellHeader
+        }, {
+            model: models.User,
+            attributes: [],
+            where: {
+                username: req.decoded.username
+            }
+        }]
+    }).then(well => {
+        res.send(response(200, 'SUCCESSFULLY GET WELL', well));
+    }).catch(err => {
+        console.log(err);
+        res.send(response(500, 'FAILED TO GET WELL', err));
+    })
 });
 
 module.exports = router;

@@ -1,15 +1,17 @@
 module.exports = function (sequelize, DataTypes) {
-    return sequelize.define('curve', {
-        idCurve: {
+    return sequelize.define('dataset_params', {
+        idDataset: {
             type: DataTypes.INTEGER,
-            autoIncrement: true,
             primaryKey: true
         },
-        name: {
+        mnem: {
+            type: DataTypes.STRING,
+            primaryKey: true
+        },
+        value: {
             type: DataTypes.STRING,
             allowNull: false,
-            defaultValue: "",
-            unique: "iddataset_curvename"
+            defaultValue: ''
         },
         description: {
             type: DataTypes.STRING,

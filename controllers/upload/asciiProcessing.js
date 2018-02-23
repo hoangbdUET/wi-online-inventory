@@ -1,7 +1,7 @@
 'use strict';
 const asyncLoop = require('node-async-loop');
 const models = require('../../models');
-const asciiExtractor = require('../../extractors').extractAscii;
+const asciiExtractor = require('../../extractors/ascii/ascii-extractor');
 const importToDB = require('./importToDB');
 
 
@@ -11,7 +11,7 @@ function processFileUpload(file, importData, cb) {
         // console.log(JSON.stringify(result));
         if(err) cb(err);
         else {
-            importToDB(result, importData.userInfo, (err, result) => {
+            importToDB(result, importData, (err, result) => {
                 cb(err, result);
             })
         }
