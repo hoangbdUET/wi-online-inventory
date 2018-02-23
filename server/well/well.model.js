@@ -1,5 +1,6 @@
-'use strict'
-let models = require('../../models');
+'use strict';
+
+let models = require('../models');
 let Well = models.Well;
 let User = models.User;
 let curveModel = require('../curve/curve.model');
@@ -15,19 +16,19 @@ function findWellById(idWell, username, attributes) {
         attributes: [],
         where: {username: username},
         required: true
-    }]
+    }];
     if (attributes && attributes.datasets) {
         let includeDatasets = {
             model: models.Dataset,
             attributes: ['idDataset', 'name']
-        }
+        };
         if (attributes.curves) includeDatasets.include = {
             model: models.Curve,
             attributes: ['idCurve', 'name']
-        }
-        if(attributes.revision) includeDatasets.include.include = {
+        };
+        if (attributes.revision) includeDatasets.include.include = {
             model: models.CurveRevision
-        }
+        };
         include.push(includeDatasets);
     }
     return Well.findById(
@@ -157,24 +158,24 @@ function editWell(body, username, cb) {
         datasets: ['idDataset', 'name'],
         curves: ['idCurve', 'name'],
         revision: true
-    }
+    };
     findWellById(body.idWell, username, attributes)
         .then(well => {
             if (well) {
                 const oldWellName = well.name;
                 Object.assign(well, body);
                 well.save().then(c => {
-                    if(well.name != oldWellName){
+                    if (well.name !== oldWellName) {
                         let changeSet = {
                             username: username,
                             oldWellName: oldWellName,
                             newWellName: well.name,
                             datasets: well.datasets
-                        }
+                        };
                         let changedCurves = require('../fileManagement').moveWellFiles(changeSet);
                         changedCurves.forEach(changedCurve => {
                             models.Curve.findById(changedCurve.idCurve)
-                                .then(curve=> {
+                                .then(curve => {
                                     Object.assign(curve, changedCurve);
                                     curve.save().catch(err => {
                                         console.log(err);
@@ -207,7 +208,7 @@ function makeFileFromJSON(JSONdata, callback) {
         }
         callback(null, path);
     });
-};
+}
 
 function exportWellHeader(idWells, callback) {
     const asyncEach = require('async/each');
@@ -217,7 +218,7 @@ function exportWellHeader(idWells, callback) {
     if (!idWells) {
         callback("NO_WELL", null);
     } else {
-        if (idWells.length == 0) {
+        if (idWells.length === 0) {
             //all well
             console.log("ALL WELL");
             Well.findAll({include: models.WellHeader}).then(rs => {
@@ -273,4 +274,4 @@ module.exports = {
     copyDatasets: copyDatasets,
     editWell: editWell,
     exportWellHeader: exportWellHeader
-}
+};

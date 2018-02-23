@@ -1,5 +1,5 @@
 'use strict'
-const models = require('../../models');
+const models = require('../models');
 const Well = models.Well;
 const Dataset = models.Dataset;
 const User = models.User;

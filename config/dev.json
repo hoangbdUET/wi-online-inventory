@@ -9,7 +9,8 @@
     "dbName": "inventory"
   },
   "Application": {
-    "port": 3000
+    "port": 3000,
+    "jwtSecretKey": "secretKey"
   },
 
   //if s3Path is defined, curves's data will be stored on aws s3, otherwise they will be stored on disk

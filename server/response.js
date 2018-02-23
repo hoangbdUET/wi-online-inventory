@@ -1,9 +1,10 @@
 'use strict';
+
 /**
  * This file defines Response construtor
  */
 class Response {
-    constructor(code,reason,content) {
+    constructor(code, reason, content) {
         this.code = code;
         this.reason = reason;
         this.content = content;
@@ -18,9 +19,9 @@ class Response {
  * @param content
  * @returns {Response}
  */
-module.exports = function response(code,reason,content) {
+module.exports = function response(code, reason, content) {
     code = code || 200;
-    reason=reason || "";
+    reason = reason || "";
     content = content || {};
-    return new Response(code,reason,content);
+    return new Response(code, reason, content);
 };

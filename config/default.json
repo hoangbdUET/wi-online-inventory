@@ -9,7 +9,8 @@
     "dbName": "wi_online_inventory"
   },
   "Application": {
-    "port": 9000
+    "port": 9000,
+    "jwtSecretKey": "secretKey"
   },
   "dataPath": "/opt/wi-inventory-data"
 }

@@ -1,12 +1,11 @@
 'use strict'
-const asyncLoop = require('node-async-loop');
+
 const models = require('../../models');
 const WellHeader = require('../wellHeader');
-const hashDir = require('../../extractors/hash-dir');
-const s3 = require('../s3');
+const hashDir = require('../../../extractors/hash-dir');
+const s3 = require('../../s3');
 const config = require('config');
 let asyncEach = require('async/each');
-let SqlString = require('sequelize/lib/sql-string');
 
 async function importCurves(curves, dataset) {
     if (!curves || curves.length <= 0) return;
@@ -31,7 +30,7 @@ async function importCurves(curves, dataset) {
                 curveRevision.path = key;
                 curveRevision.save();
             }
-            else if (curveData.wellname != dataset.wellname || curveData.datasetname != dataset.name) {
+            else if (curveData.wellname !== dataset.wellname || curveData.datasetname !== dataset.name) {
                 const oldCurve = {
                     username: dataset.username,
                     wellname: curveData.wellname,
@@ -56,127 +55,27 @@ async function importCurves(curves, dataset) {
         } catch (err) {
             // console.log('-------->' + err);
             // throw err;
-            if (err.name == 'SequelizeUniqueConstraintError')
+            if (err.name === 'SequelizeUniqueConstraintError')
                 return await models.Curve.findOne({
                     where: {
                         name: curveData.name,
                         idDataset: dataset.idDataset
                     }
-                })
+                });
             else {
                 console.log('-------->' + err);
                 throw err;
             }
         }
 
-    })
+    });
     return Promise.all(promises);
 }
 
-function _findOrCreate(models, tableName, queryOpts) {
-    let Model;
-    if (tableName === 'well') {
-        Model = models.Well;
-    } else if (tableName === 'dataset') {
-        Model = models.Dataset;
-    } else if (tableName === 'curve') {
-        Model = models.Curve;
-    } else if (tableName === 'curve_revision') {
-        Model = models.CurveRevision;
-    }
-    let sqlize = models.sequelize;
-    let selectStm = "SELECT * FROM " + tableName;
-    let queryStm = "WHERE";
-    let isFirst = true;
-    for (let prop in queryOpts.where) {
-        let temp = prop + " = '" + queryOpts.where[prop] + "'";
-        if (isFirst)
-            queryStm = queryStm + " " + temp;
-        else {
-            queryStm = queryStm + " AND " + temp;
-        }
-        isFirst = false;
-    }
-    let query = selectStm + " " + queryStm;
-    return new Promise(function (resolve, reject) {
-        sqlize.query(query, {
-            type: sqlize.QueryTypes.SELECT
-        }).then(rs => {
-            if (rs && rs.length) resolve(rs[0]);
-            else {
-                Model.create(queryOpts.defaults).then(well => {
-                    resolve(well);
-                }).catch(err => {
-                    console.log(err);
-                    reject(err);
-                });
-            }
-        }).catch(err => {
-            reject(err);
-        });
-    });
-}
 
 function importWithOverrideOption(wellData) {
     return new Promise(function (resolve, reject) {
         const Op = require('sequelize').Op;
-        // models.Well.findOne({where: {name: {[Op.eq]: "PENNWEST ET AL FORT ST JOHN 3-29-83-18"}}}).then(well => {
-        //     console.log("====", well);
-        // }).catch(err => {
-        //     console.log(err);
-        // });
-        // _findOrCreate(models, "well", {
-        //     where: {name: wellData.name, username: wellData.username},
-        //     defaults: {name: wellData.name, username: wellData.username, filename: wellData.filename}
-        // }).then(well => {
-        //     asyncEach(wellData.datasets, function (dataset, nextDataset) {
-        //         _findOrCreate(models, "dataset", {
-        //             where: {idWell: well.idWell, name: dataset.name},
-        //             defaults: {
-        //                 name: dataset.name,
-        //                 top: dataset.top,
-        //                 bottom: dataset.bottom,
-        //                 step: dataset.step,
-        //                 idWell: well.idWell
-        //             }
-        //         }).then(d => {
-        //             asyncEach(dataset.curves, function (curve, nextCurve) {
-        //                 _findOrCreate(models, "curve", {
-        //                     where: {idDataset: d.idDataset, name: curve.name},
-        //                     defaults: {
-        //                         name: curve.name,
-        //                         idDataset: d.idDataset
-        //                     }
-        //                 }).then(_curve => {
-        //                     curve.idCurve = _curve.idCurve;
-        //                     curve.isCurrentRevision = true;
-        //                     _findOrCreate(models, "curve_revision", {
-        //                         where: {idCurve: _curve.idCurve, path: curve.path},
-        //                         defaults: curve
-        //                     }).then(() => {
-        //                         nextCurve();
-        //                     }).catch(err => {
-        //                         console.log("curverevision", err);
-        //                         nextCurve();
-        //                     });
-        //                 }).catch(err => {
-        //                     console.log(err);
-        //                     nextCurve();
-        //                 });
-        //             }, function () {
-        //                 nextDataset();
-        //             });
-        //         }).catch(err => {
-        //             console.log(err);
-        //             nextDataset();
-        //         });
-        //     }, function () {
-        //         resolve(well);
-        //     });
-        // }).catch(err => {
-        //     console.log(err);
-        // });
-
         models.Well.findOrCreate({
             where: {
                 [Op.and]: [
@@ -302,7 +201,7 @@ async function importWell(wellData, override) {
         (err) {
         console.log(err);
         console.log('===' + err + "===> It's ok, rename now")
-        if (err.name == 'SequelizeUniqueConstraintError') {
+        if (err.name === 'SequelizeUniqueConstraintError') {
             if (wellData.name.indexOf(' ( copy ') < 0) {
                 wellData.name = wellData.name + ' ( copy 1 )';
             }
@@ -322,7 +221,7 @@ async function importWell(wellData, override) {
 }
 
 async function importDatasets(datasets, well, override) {
-    console.log("---------------------->>>> " + JSON.stringify(well))
+    console.log("---------------------->>>> " + JSON.stringify(well));
     if (!datasets || datasets.length <= 0) return;
     try {
         const promises = datasets.map(async datasetData => {
@@ -359,12 +258,12 @@ async function importDatasets(datasets, well, override) {
                 models.DatasetParams.create(param)
                     .catch(err => {
                         console.log('import to well_parameter failed ===> ' + err);
-                    })
-            })
-            const curves = await importCurves(datasetData.curves, dataset)
+                    });
+            });
+            const curves = await importCurves(datasetData.curves, dataset);
             dataset.curves = curves;
             return dataset;
-        })
+        });
         return Promise.all(promises);
     } catch (err) {
         throw err;
@@ -375,38 +274,19 @@ async function importDatasets(datasets, well, override) {
 function importToDB(inputWells, importData, cb) {
     console.log('importToDB inputWell: ' + JSON.stringify(inputWells));
     if (!inputWells || inputWells.length <= 0) return cb('there is no well to import');
-    let res = [];
     const promises = inputWells.map(async inputWell => {
         try {
             inputWell.username = importData.userInfo.username;
-            // let well = null;
-            // if (inputWell.idWell) {
-            //     well = await models.Well.findById(inputWell.idWell);
-            // } else if (importData.override) {
-            //     well = await models.Well.findOne({
-            //         where: {
-            //             name: importData.wellname
-            //         },
-            //         raw: true
-            //     })
-            // }
-            // if (well) {
-            //     const datasets = await importDatasets(inputWell.datasets, well, importData.override ? true : false);
-            //     well.datasets = datasets;
-            //     return well;
-            // } else {
-            //     return await importWell(inputWell);
-            // }
             return await importWell(inputWell, importData.override);
         } catch (err) {
-            console.log('===> ' + err)
+            console.log('===> ' + err);
             throw err;
         }
-    })
+    });
     Promise.all(promises)
         .then(wells => {
-            console.log("=================> " + JSON.stringify(wells))
-            cb(null, wells)
+            console.log("=================> " + JSON.stringify(wells));
+            cb(null, wells);
         })
         .catch(err => cb(err))
 }

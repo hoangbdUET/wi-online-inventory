@@ -2,15 +2,13 @@
 
 const express = require('express');
 const router = express.Router();
-const models = require('../../models');
-const Dataset = models.Dataset;
 const datasetModel = require('./dataset.model');
 const response = require('../response');
 
 
 router.post('/dataset/new', function (req, res) {
-    datasetModel.createDataset(req.body, (err, dataset)=> {
-        if(err) {
+    datasetModel.createDataset(req.body, (err, dataset) => {
+        if (err) {
             res.send(response(500, 'FAILED TO CREATE NEW DATASET', err));
         }
         else {
@@ -35,28 +33,28 @@ router.post('/dataset/info', function (req, res) {
 });
 
 router.post('/dataset/delete', function (req, res) {
-    datasetModel.deleteDataset(req.body.idDataset, req.decoded.username, (err, rs)=>{
-        if(err) {
+    datasetModel.deleteDataset(req.body.idDataset, req.decoded.username, (err, rs) => {
+        if (err) {
             res.send(response(500, "FAILED TO DELETE DATASET"));
         }
         else {
             res.send(response(200, "DATASET DELETED", rs));
         }
     })
-})
+});
 
 router.post('/dataset/edit', function (req, res) {
-    datasetModel.editDataset(req.body, req.decoded.username, (err, result)=> {
-        if(err) res.send(response(500, "FAILED TO EDIT DATASET", err));
+    datasetModel.editDataset(req.body, req.decoded.username, (err, result) => {
+        if (err) res.send(response(500, "FAILED TO EDIT DATASET", err));
         else {
             res.send(response(200, "SUCCESSFULLY EDIT DATASET", result));
         }
     })
-})
+});
 
 router.post('dataset/addCurves', function (req, res) {
     //add curves to existing dataset
-})
+});
 
 router.post('/datasets', function (req, res) {
     datasetModel.getDatasets(req.body.idWell, req.decoded.username)
@@ -69,6 +67,6 @@ router.post('/datasets', function (req, res) {
         .catch(err => {
             res.send(response(500, "FAILED TO GET DATASETS", err));
         })
-})
+});
 
 module.exports = router;

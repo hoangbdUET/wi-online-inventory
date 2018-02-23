@@ -1,6 +1,6 @@
 'use strict'
 
-const coredataExtractor = require('../../extractors/core_data/core_data-extractor')
+const coredataExtractor = require('../../../extractors/core_data/core_data-extractor')
 const importToDB = require('./importToDB')
 const models = require('../../models')
 const asyncLoop = require('node-async-loop')

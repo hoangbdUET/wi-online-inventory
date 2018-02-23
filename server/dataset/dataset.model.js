@@ -1,6 +1,6 @@
 'use strict'
 
-const models = require('../../models');
+const models = require('../models');
 const Dataset = models.Dataset;
 const curveModel = require('../curve/curve.model');
 
@@ -8,14 +8,12 @@ const curveModel = require('../curve/curve.model');
 function createDataset(body, cb) {
     Dataset.create(body).then(dataset => {
         cb(null, dataset);
-
     }).catch(err => {
         cb(err, null);
     });
 }
 
 function findDatasetById(idDataset, username, attributes) {
-
     let include = [{
         model: models.Well,
         attributes: attributes && attributes.well ? attributes.well : [],
@@ -87,21 +85,21 @@ function editDataset(body, username, cb) {
     const attributes = {
         well: ['name'],
         curves: ['idCurve', 'name']
-    }
+    };
     findDatasetById(body.idDataset, username, attributes)
         .then(dataset=> {
             const oldDatasetName = dataset.name;
 
             Object.assign(dataset, body);
             dataset.save().then(dataset => {
-                if(dataset.name != oldDatasetName){
+                if(dataset.name !== oldDatasetName){
                     let changeSet = {
                         username: username,
                         wellname: dataset.well.name,
                         oldDatasetName: oldDatasetName,
                         newDatasetName: dataset.name,
                         curves: dataset.curves
-                    }
+                    };
                     let changedCurves = require('../fileManagement').moveDatasetFiles(changeSet);
                     changedCurves.forEach(changedCurve => {
                         models.Curve.findById(changedCurve.idCurve)
@@ -118,8 +116,8 @@ function editDataset(body, username, cb) {
                 cb(e);
             })
         }).catch(err => {
-            console.log(err);
-            cb('FAILED TO FIND DATASET')
+        console.log(err);
+        cb('FAILED TO FIND DATASET')
     })
 }
 
@@ -129,4 +127,4 @@ module.exports = {
     deleteDataset: deleteDataset,
     createDataset: createDataset,
     editDataset: editDataset
-}
+};

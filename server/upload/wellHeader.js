@@ -48,4 +48,4 @@ module.exports = {
     GEN4 : new WellHeader('Gen 04', 'GEN4', 'Gen4'),
     GEN5 : new WellHeader('Gen 05', 'GEN5', 'Gen5'),
     GEN6 : new WellHeader('Gen 06', 'GEN6', 'Gen6')
-}
+};

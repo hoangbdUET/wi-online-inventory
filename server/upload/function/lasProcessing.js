@@ -1,10 +1,7 @@
-'use strict'
+'use strict';
 
-const models = require('../../models');
-const Well = models.Well;
 const asyncLoop = require('node-async-loop');
-const config = require("config");
-const LASExtractor = require("../../extractors/las/las-extractor");
+const LASExtractor = require("../../../extractors/las/las-extractor");
 const importToDB = require('./importToDB');
 
 function processFileUpload(file, importData, callback) {
@@ -36,18 +33,14 @@ function processFileUpload(file, importData, callback) {
 
 function uploadLasFiles(req, cb) {
     if (!req.files) return cb('NO FILE CHOSEN!!!');
-    let output = new Array();
+    let output = [];
     let importData = {};
     importData.userInfo = req.decoded;
-    if (req.body.override && req.body.override == "true") {
-        importData.override = true;
-    } else {
-        importData.override = false;
-    }
+    importData.override = !!(req.body.override && req.body.override === "true");
     asyncLoop(req.files, (file, next) => {
         if (!file) return next('NO FILE CHOSEN!!!');
         processFileUpload(file, importData, (err, result) => {
-            if (err) next(err)
+            if (err) next(err);
             else {
                 output.push(result);
                 next();
@@ -57,25 +50,8 @@ function uploadLasFiles(req, cb) {
         if (err) cb(err, null);
         else cb(null, output);
     });
-    // Well.findById(req.body.idWell)
-    //     .then(well => {
-    //         importData.well = well;
-    //         asyncLoop(req.files, (file, next) => {
-    //             if (!file) return next('NO FILE CHOSEN!!!');
-    //             processFileUpload(file, importData, (err, result) => {
-    //                 if (err) next(err)
-    //                 else {
-    //                     output.push(result);
-    //                     next();
-    //                 }
-    //             });
-    //         }, (err) => {
-    //             if (err) cb(err, null);
-    //             else cb(null, output);
-    //         })
-    //     })
 }
 
 module.exports = {
     uploadLasFiles: uploadLasFiles
-}
+};
