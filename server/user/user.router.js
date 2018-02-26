@@ -5,6 +5,7 @@ let bodyParser = require('body-parser');
 let models = require('../models/index');
 let User = models.User;
 let response = require('../response');
+let asyncEach = require('async/each');
 
 router.use(bodyParser.json());
 
@@ -21,11 +22,21 @@ router.post('/user/info', function (req, res) {
 });
 
 router.post('/user/fullinfo', function (req, res) {
+    let finalResponse = {};
     User.findOne({
         where: {username: req.decoded.username},
-        include: {all: true, include: {all: true, include: {all: true}}}
+        include: {all: true}
     }).then(rs => {
-        res.send(response(200, 'Successful', rs));
+        finalResponse = rs.toJSON();
+        asyncEach(finalResponse.wells, function (well, nextWell) {
+            models.Dataset.findAll({where: {idWell: well.idWell}, include: {model: models.Curve}}).then(datasets => {
+                well.datasets = datasets;
+                nextWell();
+            });
+        }, function () {
+            res.send(response(200, 'Successful', finalResponse));
+        });
+
     });
 });
 
