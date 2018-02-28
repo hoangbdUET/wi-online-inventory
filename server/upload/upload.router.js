@@ -1,3 +1,4 @@
+'use strict'
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
@@ -17,10 +18,13 @@ let upload = multer({storage: storage});
 
 
 router.post('/upload/lases', upload.array('file'), function (req, res) {
-    uploadModel.uploadLasFiles(req, (err, result) => {
-        if (err) res.send(responseJSON(500, 'UPLOAD FILES FAILED', err));
-        else res.send(responseJSON(200, 'UPLOAD FILES SUCCESS', result));
-    });
+    uploadModel.uploadLasFiles(req)
+        .then(result => {
+            res.send(responseJSON(200, 'UPLOAD FILES SUCCESS', result));
+        })
+        .catch(err => {
+            res.send(responseJSON(500, 'UPLOAD FILES FAILED', err));
+        })
 });
 
 

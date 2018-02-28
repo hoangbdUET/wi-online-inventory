@@ -7,7 +7,7 @@ const config = require('config');
 const readline = require('readline');
 const s3 = require('../s3');
 
-function convertCurve(curve, newUnit, callback) {
+async function convertCurve(curve, newUnit, callback) {
     console.log('~~~convertCurve~~~');
     let index = 0;
 
@@ -17,7 +17,7 @@ function convertCurve(curve, newUnit, callback) {
         let pathOnDisk = tempPath + '/' + newUnit + '_' + curve.name + '.txt';
         const writeStream = fs.createWriteStream(pathOnDisk);
         const rl = readline.createInterface({
-            input: s3.getData(curve.path)
+            input: await s3.getData(curve.path)
         })
         rl.on('line', (line) => {
             writeStream.write(index + ' ' + unitConversion.convert(parseFloat(line.trim().split(' ')[1]), curve.unit, newUnit) + '\n');

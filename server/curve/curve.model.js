@@ -288,7 +288,7 @@ async function editCurveStep(curve, newStep, cb) {
     }
 }
 
-function curveInterpolation(originRevision, newRevision) {
+async function curveInterpolation(originRevision, newRevision) {
     const fs = require('fs');
     let curveDatas = [];
 
@@ -297,7 +297,7 @@ function curveInterpolation(originRevision, newRevision) {
         const tempPath = tempDir + '/' + Date.now() + '_' + originRevision.idRevision + '.txt';
         // const writeStream = fs.createWriteStream(pathOnDisk);
         const rl = readline.createInterface({
-            input: s3.getData(originRevision.path)
+            input: await s3.getData(originRevision.path)
         })
         rl.on('line', line => {
             curveDatas.push(Number(line.trim().split(' ')[1]));

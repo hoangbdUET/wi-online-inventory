@@ -4,52 +4,43 @@ const asyncLoop = require('node-async-loop');
 const LASExtractor = require("../../../extractors/las/las-extractor");
 const importToDB = require('./importToDB');
 
-function processFileUpload(file, importData, callback) {
+async function processFileUpload(file, importData) {
     console.log("______processFileUpload________");
     console.log(JSON.stringify(file));
-    let fileFormat = file.filename.substring(file.filename.lastIndexOf('.') + 1);
-    if (/LAS/.test(fileFormat.toUpperCase())) {
-        LASExtractor(file, importData, function (err, result) {
-            if (err) {
-                console.log("extract las file failed");
-                callback(err, null);
-            }
-            else {
-                importToDB(result, importData, function (err, result) {
-                    if (err) {
-                        callback(err, null);
-                    }
-                    else {
-                        callback(null, result);
-                    }
-                });
-            }
-        })
+    try{
+        let fileFormat = file.filename.substring(file.filename.lastIndexOf('.') + 1);
+        if (/LAS/.test(fileFormat.toUpperCase())) {
+            const result = await LASExtractor(file, importData)
+            return importToDB(result, importData);
+        }
+        else {
+            throw 'this is not las file';
+        }
     }
-    else {
-        callback('this is not las file', null);
+    catch(err) {
+        console.log(err);
+        Promise.reject(err);
     }
 }
 
-function uploadLasFiles(req, cb) {
-    if (!req.files) return cb('NO FILE CHOSEN!!!');
-    let output = [];
-    let importData = {};
-    importData.userInfo = req.decoded;
-    importData.override = !!(req.body.override && req.body.override === "true");
-    asyncLoop(req.files, (file, next) => {
-        if (!file) return next('NO FILE CHOSEN!!!');
-        processFileUpload(file, importData, (err, result) => {
-            if (err) next(err);
-            else {
-                output.push(result);
-                next();
-            }
-        });
-    }, (err) => {
-        if (err) cb(err, null);
-        else cb(null, output);
-    });
+async function uploadLasFiles(req) {
+    try {
+        if (!req.files) return cb('NO FILE CHOSEN!!!');
+        let output = [];
+        let importData = {};
+        importData.userInfo = req.decoded;
+        importData.override = !!(req.body.override && req.body.override === "true");
+
+        for (const file of req.files) {
+            const uploadResult = await processFileUpload(file, importData);
+            output.push(uploadResult);
+        }
+        return Promise.resolve(output);
+    }
+    catch (err){
+        console.log('upload las files failed: ' + err);
+        return Promise.reject(err);
+    }
 }
 
 module.exports = {
