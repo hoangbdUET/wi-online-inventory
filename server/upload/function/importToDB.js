@@ -116,9 +116,19 @@ function importWithOverrideOption(wellData) {
                                 name: curve.name,
                                 idDataset: _dataset[0].idDataset
                             }
-                        }).then(_curve => {
+                        }).then(async _curve => {
                             curve.idCurve = _curve[0].idCurve;
                             curve.isCurrentRevision = true;
+                            if (config.s3Path) {
+                                const key = hashDir.getHashPath(wellData.username + well.name + _dataset.name + _curve.name + curve.unit + curve.step) + _curve.name + '.txt';
+                                await s3.upload(config.dataPath + '/' + curve.path, key)
+                                    .then(data => {
+                                        console.log(data.Location);
+                                    })
+                                    .catch(err => {
+                                        console.log(err);
+                                    });
+                            }
                             models.CurveRevision.findOrCreate({
                                 where: {
                                     [Op.and]: [
