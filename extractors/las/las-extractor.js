@@ -322,8 +322,12 @@ function deleteFile(inputURL) {
     });
 }
 
-function reverseData(filePath) {
+async function reverseData(filePath) {
     let data = fs.readFileSync(filePath, 'utf8').trim().split('\n');
     data.reverse();
+    data = data.map(function (line, index) {
+        line = index.toString() + ' ' + line.trim().split(' ').pop();
+        return line;
+    })
     fs.writeFileSync(filePath, data.join('\n'));
 }
