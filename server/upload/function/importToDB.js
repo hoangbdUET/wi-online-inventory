@@ -20,7 +20,7 @@ async function importCurves(curves, dataset) {
 
             if (config.s3Path) {
                 const key = hashDir.getHashPath(dataset.username + dataset.wellname + dataset.name + curveData.name + curveData.unit + curveData.step) + curveData.name + '.txt';
-                s3.upload(config.dataPath + '/' + curveData.path, key)
+                await s3.upload(config.dataPath + '/' + curveData.path, key)
                     .then(data => {
                         console.log(data.Location);
                     })
@@ -48,7 +48,7 @@ async function importCurves(curves, dataset) {
                     step: curveData.step
                 };
                 const changeSet = {};
-                curveRevision.path = await require('../fileManagement').moveCurveFile(oldCurve, newCurve);
+                curveRevision.path = await require('../../fileManagement').moveCurveFile(oldCurve, newCurve);
                 curveRevision.save();
             }
             return curve;
@@ -116,9 +116,19 @@ function importWithOverrideOption(wellData) {
                                 name: curve.name,
                                 idDataset: _dataset[0].idDataset
                             }
-                        }).then(_curve => {
+                        }).then(async _curve => {
                             curve.idCurve = _curve[0].idCurve;
                             curve.isCurrentRevision = true;
+                            if (config.s3Path) {
+                                const key = hashDir.getHashPath(wellData.username + well.name + _dataset.name + _curve.name + curve.unit + curve.step) + _curve.name + '.txt';
+                                await s3.upload(config.dataPath + '/' + curve.path, key)
+                                    .then(data => {
+                                        console.log(data.Location);
+                                    })
+                                    .catch(err => {
+                                        console.log(err);
+                                    });
+                            }
                             models.CurveRevision.findOrCreate({
                                 where: {
                                     [Op.and]: [
@@ -197,9 +207,7 @@ async function importWell(wellData, override) {
                 })
         }
         return well;
-    } catch
-        (err) {
-        console.log(err);
+    } catch (err) {
         console.log('===' + err + "===> It's ok, rename now")
         if (err.name === 'SequelizeUniqueConstraintError') {
             if (wellData.name.indexOf(' ( copy ') < 0) {
@@ -271,7 +279,7 @@ async function importDatasets(datasets, well, override) {
 
 }
 
-function importToDB(inputWells, importData, cb) {
+async function importToDB(inputWells, importData) {
     console.log('importToDB inputWell: ' + JSON.stringify(inputWells));
     if (!inputWells || inputWells.length <= 0) return cb('there is no well to import');
     const promises = inputWells.map(async inputWell => {
@@ -289,12 +297,7 @@ function importToDB(inputWells, importData, cb) {
             throw err;
         }
     });
-    Promise.all(promises)
-        .then(wells => {
-            console.log("=================> " + JSON.stringify(wells));
-            cb(null, wells);
-        })
-        .catch(err => cb(err))
+    return Promise.all(promises);
 }
 
 module.exports = importToDB;
