@@ -280,7 +280,7 @@ module.exports = async function (inputFile, importData) {
                 let step = 0;
                 if(wellInfo.STEP && parseFloat(wellInfo.STEP.value) < 0){
                     step = parseFloat(wellInfo.STEP.value);
-                    wellInfo.STEP.value = -step;
+                    wellInfo.STEP.value = (-step).toString();
                 }
 
 
@@ -289,11 +289,11 @@ module.exports = async function (inputFile, importData) {
                 for (var datasetName in datasets) {
                     if (!datasets.hasOwnProperty(datasetName)) continue;
                     let dataset = datasets[datasetName];
-                    if(step < 0) dataset.step = - step;
+                    if(step < 0) dataset.step = (-step).toString();
                     wellInfo.datasets.push(dataset);
                     dataset.curves.forEach(curve => {
                         fs.appendFileSync(curve.path, BUFFERS[curve.name].data);
-                        if(step < 0) curve.step = - step;
+                        if(step < 0) curve.step = (-step).toString();
                         reverseData(curve.path);
                         curve.path = curve.path.replace(config.dataPath + '/', '');
                     })
