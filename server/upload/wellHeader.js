@@ -40,7 +40,7 @@ module.exports = {
     PROJ : new WellHeader('Project', 'PROJ', 'Project'),
     CODE : new WellHeader('Code', 'CODE', 'Code'),
     AREA : new WellHeader('Area', 'AREA', 'Area'),
-    TYPE : new WellHeader('Area', 'TYPE', 'Area'),
+    TYPE : new WellHeader('Type', 'TYPE', 'Type'),
     STATUS : new WellHeader('Status', 'STATUS', 'Status'),
     GEN1 : new WellHeader('Gen 01', 'GEN1', 'Gen1'),
     GEN2 : new WellHeader('Gen 02', 'GEN2', 'Gen2'),

@@ -181,9 +181,11 @@ async function importWell(wellData, override) {
             let well_header = {};
             if (wellData[WellHeader[property].LASMnemnics]) {
                 well_header = wellData[WellHeader[property].LASMnemnics];
+                delete wellData[WellHeader[property].LASMnemnics];
             }
             else if (wellData[WellHeader[property].CSVMnemnics]) {
                 well_header = wellData[WellHeader[property].CSVMnemnics];
+                delete wellData[WellHeader[property].CSVMnemnics];;
             }
             arr.push(property);
             well_header.idWell = well.idWell;
