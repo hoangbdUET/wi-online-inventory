@@ -277,10 +277,15 @@ module.exports = async function (inputFile, importData) {
                 deleteFile(inputFile.path);
                 if (lasFormatError && lasFormatError.length > 0) return reject(lasFormatError);
                 if (lasCheck != 2) return reject('THIS IS NOT LAS FILE, MISSING DATA SECTION');
+
+                //reverse if step is negative
                 let step = 0;
                 if(wellInfo.STEP && parseFloat(wellInfo.STEP.value) < 0){
                     step = parseFloat(wellInfo.STEP.value);
                     wellInfo.STEP.value = (-step).toString();
+                    const tmp = wellInfo.STRT.value;
+                    wellInfo.STRT.value = wellInfo.STOP.value;
+                    wellInfo.STOP.value = tmp;
                 }
 
 
@@ -289,11 +294,19 @@ module.exports = async function (inputFile, importData) {
                 for (var datasetName in datasets) {
                     if (!datasets.hasOwnProperty(datasetName)) continue;
                     let dataset = datasets[datasetName];
-                    if(step < 0) dataset.step = (-step).toString();
+                    if(step < 0){
+                        dataset.step = (-step).toString();
+                        dataset.top = wellInfo.STRT.value;
+                        dataset.bottom = wellInfo.STOP.value;
+                    }
                     wellInfo.datasets.push(dataset);
                     dataset.curves.forEach(curve => {
                         fs.appendFileSync(curve.path, BUFFERS[curve.name].data);
-                        if(step < 0) curve.step = (-step).toString();
+                        if(step < 0) {
+                            curve.step = (-step).toString();
+                            curve.startDepth = wellInfo.STRT.value;
+                            curve.stopDepth = wellInfo.STOP.value;
+                        }
                         reverseData(curve.path);
                         curve.path = curve.path.replace(config.dataPath + '/', '');
                     })
