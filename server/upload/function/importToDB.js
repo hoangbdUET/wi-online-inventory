@@ -277,6 +277,12 @@ function importToDB(inputWells, importData, cb) {
     const promises = inputWells.map(async inputWell => {
         try {
             inputWell.username = importData.userInfo.username;
+            if (inputWell.STRT && inputWell.STOP && inputWell.STEP && inputWell.NULL) {
+                inputWell.STRT.value = inputWell.STRT.value.replace(/,/g, "");
+                inputWell.STOP.value = inputWell.STOP.value.replace(/,/g, "");
+                inputWell.STEP.value = inputWell.STEP.value.replace(/,/g, "");
+                inputWell.NULL.value = inputWell.NULL.value.replace(/,/g, "");
+            }
             return await importWell(inputWell, importData.override);
         } catch (err) {
             console.log('===> ' + err);
