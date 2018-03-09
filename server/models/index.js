@@ -32,7 +32,8 @@ var models = [
     'Dataset',
     'WellHeader',
     'DatasetParams',
-    'CurveRevision'
+    'CurveRevision',
+    'UserWell'
 ];
 models.forEach(function (model) {
     module.exports[model] = sequelize.import(__dirname + '/' + model);
@@ -83,6 +84,20 @@ models.forEach(function (model) {
         foreignKey: 'idDataset',
         sourceKey: 'idDataset',
         onDelete: 'CASCADE'
+    })
+
+    m.User.belongsToMany(m.Well, {
+        through: {
+            model: m.UserWell
+        },
+        foreignKey: 'idUser'
+    })
+
+    m.Well.belongsToMany(m.User, {
+        through: {
+            model: m.UserWell
+        },
+        foreignKey: 'idWell'
     })
 
 })(module.exports);

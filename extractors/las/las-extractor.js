@@ -260,7 +260,7 @@ module.exports = async function (inputFile, importData) {
                     if (fields.length > datasets[datasetName].curves.length) {
                         if (datasets[datasetName].curves) {
                             datasets[datasetName].curves.forEach(function (curve, i) {
-                                writeToCurveFile(BUFFERS[curve.name], curve.path, count, fields[i + 1], wellInfo.NULL);
+                                writeToCurveFile(BUFFERS[curve.name], curve.path, count, fields[i + 1], wellInfo.NULL.value);
                             });
                             count++;
                         }
@@ -277,15 +277,24 @@ module.exports = async function (inputFile, importData) {
                 deleteFile(inputFile.path);
                 if (lasFormatError && lasFormatError.length > 0) return reject(lasFormatError);
                 if (lasCheck != 2) return reject('THIS IS NOT LAS FILE, MISSING DATA SECTION');
+                let step = 0;
+                if(wellInfo.STEP && parseFloat(wellInfo.STEP.value) < 0){
+                    step = parseFloat(wellInfo.STEP.value);
+                    wellInfo.STEP.value = -step;
+                }
+
 
                 let output = [];
                 wellInfo.datasets = [];
                 for (var datasetName in datasets) {
                     if (!datasets.hasOwnProperty(datasetName)) continue;
                     let dataset = datasets[datasetName];
+                    if(step < 0) dataset.step = - step;
                     wellInfo.datasets.push(dataset);
                     dataset.curves.forEach(curve => {
                         fs.appendFileSync(curve.path, BUFFERS[curve.name].data);
+                        if(step < 0) curve.step = - step;
+                        reverseData(curve.path);
                         curve.path = curve.path.replace(config.dataPath + '/', '');
                     })
                 }
@@ -311,4 +320,10 @@ function deleteFile(inputURL) {
     fs.unlink(inputURL, function (err) {
         if (err) return console.log(err);
     });
+}
+
+function reverseData(filePath) {
+    let data = fs.readFileSync(filePath, 'utf8').trim().split('\n');
+    data.reverse();
+    fs.writeFileSync(filePath, data.join('\n'));
 }
