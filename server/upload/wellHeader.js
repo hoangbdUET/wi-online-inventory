@@ -7,7 +7,7 @@ function WellHeader(name, LASMnemnics, CSVMnemnics) {
 }
 
 module.exports = {
-    STRT : new WellHeader('Top depth', 'STRT', 'Top Depth'),
+    TOP : new WellHeader('Top depth', 'STRT', 'Top Depth'),
     STOP : new WellHeader('Bottom depth', 'STOP', 'Bottom Depth'),
     STEP : new WellHeader('Step', 'STEP', 'Step'),
     NULL : new WellHeader('Null value', 'NULL', 'Null value'),
