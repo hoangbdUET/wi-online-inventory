@@ -19,7 +19,7 @@ async function processFileUpload(file, importData) {
     }
     catch(err) {
         console.log(err);
-        Promise.reject(err);
+        return Promise.reject(err);
     }
 }
 

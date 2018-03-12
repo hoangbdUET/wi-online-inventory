@@ -47,12 +47,14 @@ module.exports = async function (inputFile, importData) {
         let asciiTitle = 'ASCII';
         let parameterTitle = 'PARAMETER';
         let lasCheck = 0;
-        let currentDataset = '';
+        let currentDatasetName = '';
         let lasVersion = 3;
         let delimitingChar = ' ';
         let lasFormatError = '';
+        let logDataIndex = 0;
 
         rl.on('line', function (line) {
+            // console.log('---> ' + line);
             line = line.trim();
             line = line.replace(/\s+\s/g, " ");
             if (/^#/.test(line) || lasFormatError.length > 0) {
@@ -101,22 +103,33 @@ module.exports = async function (inputFile, importData) {
                     else lasCheck--;
                 }
 
-                if (sectionName == parameterTitle || sectionName == curveTitle) {
-                    if (datasets[wellInfo.name]) return;
+                if (sectionName == parameterTitle || (lasVersion == 2 && sectionName == curveTitle)) {
+                    if(sectionName == parameterTitle && lasVersion == 3) logDataIndex++;
+                    if (datasets[wellInfo.name + logDataIndex]) return;
                     isFirstCurve = true;
                     let dataset = {
-                        name: wellInfo.name,
+                        name: wellInfo.name + logDataIndex,
                         curves: [],
                         top: wellInfo.STRT.value,
                         bottom: wellInfo.STOP.value,
                         step: wellInfo.STEP.value,
                         params: []
                     }
-                    datasets[wellInfo.name] = dataset;
+                    datasets[wellInfo.name + logDataIndex] = dataset;
+                    // dataset[currentDatasetName].curves.forEach(curve=>{
+                    //     fs.appendFileSync(curve.path, BUFFERS[curve.name].data);
+                    // })
+                    currentDatasetName = wellInfo.name + logDataIndex;
                 }
                 else if (new RegExp(definitionTitle).test(sectionName) || new RegExp(parameterTitle).test(sectionName)) {
                     isFirstCurve = true;
-                    const datasetName = sectionName.substring(0, sectionName.lastIndexOf('_'));
+                    let datasetName = '';
+                    if(new RegExp(definitionTitle).test(sectionName)){
+                        datasetName = sectionName.replace(definitionTitle, '');
+                    }else {
+                        datasetName = sectionName.replace('_' + parameterTitle, '');
+                    }
+                    // const datasetName = sectionName.substring(0, sectionName.lastIndexOf('_'));
                     if (datasets[datasetName]) return;
                     let dataset = {
                         name: datasetName,
@@ -127,24 +140,40 @@ module.exports = async function (inputFile, importData) {
                         params: []
                     }
                     datasets[datasetName] = dataset;
+                    // dataset[currentDatasetName].curves.forEach(curve=>{
+                    //     fs.appendFileSync(curve.path, BUFFERS[curve.name].data);
+                    // })
+                    currentDatasetName = datasetName;
                 }
 
                 console.log('section name: ' + sectionName)
                 if (sectionName == asciiTitle || new RegExp(dataTitle).test(sectionName)) {
-                    const datasetName = sectionName == asciiTitle ? wellInfo.name : sectionName.substring(0, sectionName.indexOf(dataTitle));
-                    if (datasetName != currentDataset) {
-                        currentDataset = datasetName;
-                        datasets[currentDataset].curves.forEach(curve => {
-                            BUFFERS[curve.name] = {
-                                count: 0,
-                                data: ""
-                            };
-                            const hashstr = importData.userInfo.username + wellInfo.name + curve.datasetname + curve.name + curve.unit + curve.step;
-                            filePaths[curve.name] = hashDir.createPath(config.dataPath, hashstr, curve.name + '.txt');
-                            fs.writeFileSync(filePaths[curve.name], "");
-                            curve.path = filePaths[curve.name];
-                        })
-                    }
+                    // const datasetName = sectionName == asciiTitle ? wellInfo.name : sectionName.substring(0, sectionName.indexOf(dataTitle));
+                    // if (datasetName != currentDatasetName) {
+                    //     currentDatasetName = datasetName;
+                    //     datasets[currentDatasetName].curves.forEach(curve => {
+                    //         BUFFERS[curve.name] = {
+                    //             count: 0,
+                    //             data: ""
+                    //         };
+                    //         const hashstr = importData.userInfo.username + wellInfo.name + curve.datasetname + curve.name + curve.unit + curve.step;
+                    //         filePaths[curve.name] = hashDir.createPath(config.dataPath, hashstr, curve.name + '.txt');
+                    //         fs.writeFileSync(filePaths[curve.name], "");
+                    //         curve.path = filePaths[curve.name];
+                    //     })
+                    // }
+                    if(sectionName == asciiTitle) currentDatasetName = wellInfo.name + logDataIndex;
+                    console.log("==================> " + currentDatasetName);
+                    datasets[currentDatasetName].curves.forEach(curve => {
+                        BUFFERS[curve.name] = {
+                            count: 0,
+                            data: ""
+                        };
+                        const hashstr = importData.userInfo.username + wellInfo.name + curve.datasetname + curve.name + curve.unit + curve.step;
+                        filePaths[curve.name] = hashDir.createPath(config.dataPath, hashstr, curve.name + '.txt');
+                        fs.writeFileSync(filePaths[curve.name], "");
+                        curve.path = filePaths[curve.name];
+                    })
                 }
             }
             else {
@@ -202,7 +231,8 @@ module.exports = async function (inputFile, importData) {
                     const data = line.substring(line.indexOf(' '), line.lastIndexOf(':')).trim();
                     const description = line.substring(line.lastIndexOf(':') + 1).trim();
                     if (sectionName == parameterTitle) {
-                        datasets[wellInfo.name].params.push({
+                        if(mnem == 'SET') datasets[wellInfo.name + logDataIndex].name = data;
+                        datasets[wellInfo.name + logDataIndex].params.push({
                             mnem: mnem,
                             value: data,
                             description: description
@@ -221,12 +251,12 @@ module.exports = async function (inputFile, importData) {
                         return;
                     }
 
-                    const datasetName = sectionName == curveTitle ? wellInfo.name : sectionName.substring(0, sectionName.indexOf(definitionTitle));
+                    // const datasetName = sectionName == curveTitle ? wellInfo.name : sectionName.substring(0, sectionName.indexOf(definitionTitle));
                     let curveName = line.substring(0, line.indexOf('.')).trim();
                     curveName = curveName.replace('/', '_');
                     let suffix = 1;
                     while (true) {
-                        let rename = datasets[datasetName].curves.every(curve => {
+                        let rename = datasets[currentDatasetName].curves.every(curve => {
                             if (curveName.toLowerCase() == curve.name.toLowerCase()) {
                                 curveName = curveName.replace('_' + (suffix - 1), '') + '_' + suffix;
                                 suffix++;
@@ -245,21 +275,21 @@ module.exports = async function (inputFile, importData) {
                     let curve = {
                         name: curveName,
                         unit: unit,
-                        datasetname: datasetName,
+                        datasetname: currentDatasetName,
                         wellname: wellInfo.name,
-                        startDepth: datasets[datasetName].top,
-                        stopDepth: datasets[datasetName].bottom,
-                        step: datasets[datasetName].step,
+                        startDepth: datasets[currentDatasetName].top,
+                        stopDepth: datasets[currentDatasetName].bottom,
+                        step: datasets[currentDatasetName].step,
                         path: ''
                     }
-                    datasets[datasetName].curves.push(curve);
+                    datasets[currentDatasetName].curves.push(curve);
                 } else if (sectionName == asciiTitle || new RegExp(dataTitle).test(sectionName)) {
                     // let separator = sectionName == asciiTitle ? ' ' : ',';
-                    const datasetName = sectionName == asciiTitle ? wellInfo.name : sectionName.substring(0, sectionName.indexOf(dataTitle));
+                    // const datasetName = sectionName == asciiTitle ? wellInfo.name : sectionName.substring(0, sectionName.indexOf(dataTitle));
                     fields = fields.concat(line.trim().split(delimitingChar));
-                    if (fields.length > datasets[datasetName].curves.length) {
-                        if (datasets[datasetName].curves) {
-                            datasets[datasetName].curves.forEach(function (curve, i) {
+                    if (fields.length > datasets[currentDatasetName].curves.length) {
+                        if (datasets[currentDatasetName].curves) {
+                            datasets[currentDatasetName].curves.forEach(function (curve, i) {
                                 writeToCurveFile(BUFFERS[curve.name], curve.path, count, fields[i + 1], wellInfo.NULL.value);
                             });
                             count++;
@@ -291,6 +321,8 @@ module.exports = async function (inputFile, importData) {
 
                 let output = [];
                 wellInfo.datasets = [];
+                // console.log('................ ' + JSON.stringify(datasets))
+                console.log('===========>' + JSON.stringify(BUFFERS))
                 for (var datasetName in datasets) {
                     if (!datasets.hasOwnProperty(datasetName)) continue;
                     let dataset = datasets[datasetName];
