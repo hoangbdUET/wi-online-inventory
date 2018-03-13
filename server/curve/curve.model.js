@@ -8,6 +8,7 @@ const config = require('config');
 const hashDir = require('../../extractors/hash-dir');
 const s3 = require('../s3');
 const readline = require('readline');
+const asyncEach = require('async/each');
 
 function createCurve(body, cb) {
     Curve.create(body).then(curve => {
@@ -20,11 +21,11 @@ function createCurve(body, cb) {
 function findCurveById(idCurve, username, attributes) {
     let include = [{
         model: Dataset,
-        attributes : attributes && attributes.dataset ? attributes.dataset : [],
+        attributes: attributes && attributes.dataset ? attributes.dataset : [],
         required: true,
         include: {
             model: Well,
-            attributes: attributes && attributes.well? attributes.well : [],
+            attributes: attributes && attributes.well ? attributes.well : [],
             required: true,
             include: {
                 model: User,
@@ -36,13 +37,13 @@ function findCurveById(idCurve, username, attributes) {
             }
         }
     }]
-    if(attributes && attributes.revision){
+    if (attributes && attributes.revision) {
         include.push({
             model: models.CurveRevision
         })
     }
     return Curve.findById(idCurve, {
-        include : include
+        include: include
         //logging: console.log
     });
 }
@@ -50,17 +51,17 @@ function findCurveById(idCurve, username, attributes) {
 function deleteCurveFiles(curves) {
     //curves must be array
     console.log('~~~deleteCurveFiles~~~ ' + JSON.stringify(curves));
-    if(!curves || curves.length <= 0) return;
+    if (!curves || curves.length <= 0) return;
     curves.forEach(curve => {
         console.log('===> ' + curve.name)
         curve.curve_revisions.forEach(revision => {
-            if(config.s3Path){
+            if (config.s3Path) {
                 s3.deleteCurve(revision.path);
             }
             else {
                 const path = config.dataPath + '/' + revision.path;
                 require('fs').unlink(path, (err) => {
-                    if(err) console.log('delete curve file failed: ' + err);
+                    if (err) console.log('delete curve file failed: ' + err);
                 });
             }
         })
@@ -74,7 +75,7 @@ async function deleteCurve(idCurve, username) {
     const curve = await findCurveById(idCurve, username, attributes);
     console.log(JSON.stringify(curve));
     curve.destroy()
-        .then((rs)=>{
+        .then((rs) => {
             deleteCurveFiles([curve]);
             Promise.resolve(rs);
         })
@@ -90,9 +91,9 @@ async function getCurves(idDataset, username, cb) {
             where: {
                 idDataset: idDataset
             },
-            include : [{
+            include: [{
                 model: Dataset,
-                attributes : [],
+                attributes: [],
                 required: true,
                 include: {
                     model: Well,
@@ -116,23 +117,23 @@ async function getCurves(idDataset, username, cb) {
             raw: true
             // logging: console.log
         });
-        for(let curve of curves){
-            for(let property in curve){
-                if(property.indexOf('curve_revisions.') >= 0){
+        for (let curve of curves) {
+            for (let property in curve) {
+                if (property.indexOf('curve_revisions.') >= 0) {
                     curve[property.replace('curve_revisions.', '')] = curve[property];
                     delete curve[property];
                 }
             }
         }
         return cb(null, curves);
-    } catch (err){
+    } catch (err) {
         console.log(err);
         return cb(err)
     }
 
 }
 
-async function editCurve(body, username, cb){
+async function editCurve(body, username, cb) {
     try {
         let attributes = {
             well: ['name'],
@@ -141,20 +142,20 @@ async function editCurve(body, username, cb){
         }
         let curve = await findCurveById(body.idCurve, username, attributes);
         let currentRevision = {};
-        for(const revision of curve.curve_revisions){
-            if(revision.isCurrentRevision) currentRevision = revision;
+        for (const revision of curve.curve_revisions) {
+            if (revision.isCurrentRevision) currentRevision = revision;
         }
         curve.username = username;
         if (curve) {
             if (body.name && curve.name != body.name) editCurveName(curve, body.name, cb)
-            else if(body.unit && body.unit != currentRevision.unit) editCurveUnit(curve, body.unit, cb)
-            else if(body.step && body.step != currentRevision.step) editCurveStep(curve, body.step, cb)
+            else if (body.unit && body.unit != currentRevision.unit) editCurveUnit(curve, body.unit, cb)
+            else if (body.step && body.step != currentRevision.step) editCurveStep(curve, body.step, cb)
             else return cb();
         }
         else {
             return cb('No curve found to edit')
         }
-    } catch(err) {
+    } catch (err) {
         console.log('failed to edit curve: ' + err)
         cb(err);
     }
@@ -174,16 +175,16 @@ async function createRevision(curve, newUnit, newStep) {
         delete newRevision.createdAt;
         delete newRevision.updatedAt;
         delete newRevision.idRevision;
-        if(newStep) newRevision.step = newStep;
-        else if(newUnit) newRevision.unit = newUnit;
+        if (newStep) newRevision.step = newStep;
+        else if (newUnit) newRevision.unit = newUnit;
 
         const oldPath = config.dataPath + '/' + currentRevision.path;
         const dir = curve.username + curve.dataset.well.name + curve.dataset.name + curve.name + newRevision.unit + newRevision.step;
         const filePath = hashDir.createPath(config.dataPath, dir, curve.name + '.txt');
         newRevision.path = filePath.replace(config.dataPath + '/', '');
-        if(newStep)curveInterpolation(currentRevision, newRevision);
-        else if(newUnit){
-            if(config.s3Path){
+        if (newStep) curveInterpolation(currentRevision, newRevision);
+        else if (newUnit) {
+            if (config.s3Path) {
                 s3.copyCurve(currentRevision.path, newRevision.path);
             }
             else {
@@ -195,7 +196,7 @@ async function createRevision(curve, newUnit, newStep) {
 
         return updatedRevision;
     }
-    catch(err) {
+    catch (err) {
         console.log('failed to create revision: ' + err)
         return null;
     }
@@ -224,7 +225,7 @@ async function editCurveName(curve, newName, cb) {
             require('../fileManagement').moveCurveFile(oldCurve, newCurve);
         }
         return cb(null, updatedCurve)
-    }catch (err) {
+    } catch (err) {
         console.log(err);
         cb(err);
     }
@@ -246,12 +247,12 @@ async function editCurveUnit(curve, newUnit, cb) {
                 updatedCurve = await revision.save();
             }
         }
-        if(!isRevisionExisted){
+        if (!isRevisionExisted) {
             updatedCurve = await createRevision(curve, newUnit);
         }
         return cb(null, updatedCurve);
 
-    }catch (err){
+    } catch (err) {
         console.log(err);
         cb(err);
     }
@@ -278,11 +279,11 @@ async function editCurveStep(curve, newStep, cb) {
                 break;
             }
         }
-        if(!isRevisionExisted) {
+        if (!isRevisionExisted) {
             updatedCurve = await createRevision(curve, null, newStep);
         }
         cb(null, updatedCurve);
-    }catch (err){
+    } catch (err) {
         console.log(err);
         cb(err);
     }
@@ -292,8 +293,8 @@ async function curveInterpolation(originRevision, newRevision) {
     const fs = require('fs');
     let curveDatas = [];
 
-    if(config.s3Path){
-        const tempDir =  fs.mkdtempSync(require('path').join(require('os').tmpdir(), 'wi_inventory_'));
+    if (config.s3Path) {
+        const tempDir = fs.mkdtempSync(require('path').join(require('os').tmpdir(), 'wi_inventory_'));
         const tempPath = tempDir + '/' + Date.now() + '_' + originRevision.idRevision + '.txt';
         // const writeStream = fs.createWriteStream(pathOnDisk);
         const rl = readline.createInterface({
@@ -304,10 +305,10 @@ async function curveInterpolation(originRevision, newRevision) {
         })
         rl.on('close', () => {
             console.log('=++++++++++++++++++++++++++=====>')
-            const numberOfPoint = Math.floor((Number(newRevision.stopDepth) - Number(newRevision.startDepth))/Number(newRevision.step));
-            for(let i = 0; i < numberOfPoint; i++){
+            const numberOfPoint = Math.floor((Number(newRevision.stopDepth) - Number(newRevision.startDepth)) / Number(newRevision.step));
+            for (let i = 0; i < numberOfPoint; i++) {
                 const originIndex = i * newRevision.step / originRevision.step;
-                if(Number.isInteger(originIndex)){
+                if (Number.isInteger(originIndex)) {
                     fs.appendFileSync(tempPath, i + ' ' + curveDatas[originIndex] + '\n');
                 }
                 else {
@@ -342,11 +343,45 @@ async function curveInterpolation(originRevision, newRevision) {
     }
 }
 
+function findWellByCurveName(curveNames, callback) {
+    let maps = [];
+    asyncEach(curveNames, function (curveName, nextCurveName) {
+        let wells = [];
+        Curve.findAll({where: {name: curveName}}).then(curves => {
+            asyncEach(curves, function (curve, nextCurve) {
+                Dataset.findById(curve.idDataset).then(dataset => {
+                    wells.push(dataset.idWell);
+                    nextCurve();
+                });
+            }, function () {
+                maps.push(wells);
+                nextCurveName();
+            });
+        });
+    }, function (err) {
+        let wellArray = maps[0];
+        let response = [];
+        for (let i = 1; i < maps.length; i++) {
+            wellArray = wellArray.filter(idWell => maps[i].includes(idWell));
+        }
+        asyncEach(wellArray, function (idWell, next) {
+            Well.findById(idWell).then(well => {
+                response.push({name: well.name, idWell: well.idWell});
+                next();
+            });
+        }, function () {
+            callback(null, response);
+        })
+
+    });
+}
+
 module.exports = {
     findCurveById: findCurveById,
-    deleteCurve : deleteCurve,
+    deleteCurve: deleteCurve,
     getCurves: getCurves,
     deleteCurveFiles: deleteCurveFiles,
     createCurve: createCurve,
-    editCurve: editCurve
-}
+    editCurve: editCurve,
+    findWellByCurveName: findWellByCurveName
+};
