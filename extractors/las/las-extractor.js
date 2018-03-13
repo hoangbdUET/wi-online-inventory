@@ -34,7 +34,7 @@ module.exports = async function (inputFile, importData) {
         let count = 0;
         let wellInfo = importData.well ? importData.well : {
             filename: inputFile.originalname,
-            name: inputFile.originalname
+            name: inputFile.originalname.substring(0, inputFile.originalname.lastIndexOf('.'))
         };
         let filePaths = new Object();
         let BUFFERS = new Object();
@@ -54,7 +54,6 @@ module.exports = async function (inputFile, importData) {
         let logDataIndex = 0;
 
         rl.on('line', function (line) {
-            // console.log('---> ' + line);
             line = line.trim();
             line = line.replace(/\s+\s/g, " ");
             if (/^#/.test(line) || lasFormatError.length > 0) {
@@ -163,7 +162,6 @@ module.exports = async function (inputFile, importData) {
                     //     })
                     // }
                     if(sectionName == asciiTitle) currentDatasetName = wellInfo.name + logDataIndex;
-                    console.log("==================> " + currentDatasetName);
                     datasets[currentDatasetName].curves.forEach(curve => {
                         BUFFERS[curve.name] = {
                             count: 0,
@@ -321,8 +319,6 @@ module.exports = async function (inputFile, importData) {
 
                 let output = [];
                 wellInfo.datasets = [];
-                // console.log('................ ' + JSON.stringify(datasets))
-                console.log('===========>' + JSON.stringify(BUFFERS))
                 for (var datasetName in datasets) {
                     if (!datasets.hasOwnProperty(datasetName)) continue;
                     let dataset = datasets[datasetName];
