@@ -370,7 +370,7 @@ function findWellByCurveName(curveNames, callback, username) {
         }
         asyncEach(wellArray, function (idWell, next) {
             Well.findById(idWell).then(well => {
-                response.push({name: well.name, idWell: well.idWell});
+                response.push({wellName: well.name, idWell: well.idWell});
                 next();
             });
         }, function () {
