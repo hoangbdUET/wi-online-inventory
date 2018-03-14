@@ -343,15 +343,19 @@ async function curveInterpolation(originRevision, newRevision) {
     }
 }
 
-function findWellByCurveName(curveNames, callback) {
+function findWellByCurveName(curveNames, callback, username) {
     let maps = [];
     asyncEach(curveNames, function (curveName, nextCurveName) {
         let wells = [];
         Curve.findAll({where: {name: curveName}}).then(curves => {
             asyncEach(curves, function (curve, nextCurve) {
                 Dataset.findById(curve.idDataset).then(dataset => {
-                    wells.push(dataset.idWell);
-                    nextCurve();
+                    Well.findById(dataset.idWell).then(well => {
+                        if (well.username === username) {
+                            wells.push(dataset.idWell);
+                        }
+                        nextCurve();
+                    });
                 });
             }, function () {
                 maps.push(wells);
@@ -366,13 +370,12 @@ function findWellByCurveName(curveNames, callback) {
         }
         asyncEach(wellArray, function (idWell, next) {
             Well.findById(idWell).then(well => {
-                response.push({name: well.name, idWell: well.idWell});
+                response.push({wellName: well.name, idWell: well.idWell});
                 next();
             });
         }, function () {
             callback(null, response);
         })
-
     });
 }
 

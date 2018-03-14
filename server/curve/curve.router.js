@@ -85,7 +85,7 @@ router.post('/curve/find-well', function (req, res) {
     curveModel.findWellByCurveName(req.body.names, function (err, result) {
         if (err) res.send(response(500, err, err));
         else res.send(response(200, "Successfull list well", result));
-    });
+    }, req.decoded.username);
 });
 
 module.exports = router;
