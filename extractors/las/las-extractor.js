@@ -334,8 +334,8 @@ module.exports = async function (inputFile, importData) {
                             curve.step = (-step).toString();
                             curve.startDepth = wellInfo.STRT.value;
                             curve.stopDepth = wellInfo.STOP.value;
+                            reverseData(curve.path);
                         }
-                        reverseData(curve.path);
                         curve.path = curve.path.replace(config.dataPath + '/', '');
                     })
                 }
