@@ -2,6 +2,7 @@
 let models = require('./models/index');
 let User = models.User;
 let md5 = require('md5');
+let path = require('path');
 addUser();
 
 function addUser() {
@@ -27,10 +28,12 @@ function main() {
 
     let bodyParser = require('body-parser');
     app.use(bodyParser.json());
+    app.use('/exports', express.static(path.join(__dirname, 'exports')));
+    
 
     let authentication = require('./controllers/authenticate');
     app.use('/', authentication.router);
-    // app.use(authentication.authenticate());
+    app.use(authentication.authenticate());
 
     let testRouter = require('./controllers/index');
     let curveRouter = require('./controllers/curve/curveRouter');
@@ -39,7 +42,6 @@ function main() {
     let userRouter = require('./controllers/user/userRouter');
     let datasetRouter = require('./controllers/dataset/datasetRouter');
     let exportRouter = require('./export/exportRouter');
-
 
     app.use('/', testRouter);
     app.use('/', userRouter);
@@ -51,6 +53,7 @@ function main() {
     app.get('/', function (req, res) {
         res.status(200).send('WI Online Inventory');
     });
+
     app.use(function (req, res, next) {
         res.status(404).send("NOT FOUND ROUTER");
     });

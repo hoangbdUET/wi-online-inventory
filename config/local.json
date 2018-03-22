@@ -11,5 +11,7 @@
   "Application": {
     "port": 9000
   },
-  "dataPath": "/Users/OS/Desktop/racruoi/lases"
+  "dataPath": "/Users/OS/Desktop/racruoi/lases",
+  "exportPath": "/Users/OS/Desktop/workspace/wi-online-inventory/exports",
+  "exportWebPath": "/exports"
 }
