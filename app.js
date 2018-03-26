@@ -25,12 +25,14 @@ function main() {
     let datasetRouter = require('./server/dataset/dataset.router');
     let wellRouter = require('./server/well/well.router');
     let userRouter = require('./server/user/user.router');
+    let exportRouter = require('./export/exportRouter');
 
     app.use('/', uploadRouter);
     app.use('/user/well/dataset/', curveRouter);
     app.use('/user/well/', datasetRouter);
     app.use('/user/', wellRouter);
     app.use('/', userRouter);
+    app.use('/export', exportRouter);
 
     // let testRouter = require('./controllers/index');
     // let curveRouter = require('./controllers/curve/curveRouter');

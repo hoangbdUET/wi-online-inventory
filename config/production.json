@@ -12,5 +12,6 @@
     "port": 9000,
     "jwtSecretKey": "secretKey"
   },
-  "dataPath": "D:/tmp2"
+  "dataPath": "D:/tmp2",
+  "exportPath": "exports"
 }
