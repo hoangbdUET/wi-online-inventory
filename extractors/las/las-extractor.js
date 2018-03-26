@@ -250,7 +250,7 @@ module.exports = async function (inputFile, importData) {
                     }
 
                     // const datasetName = sectionName == curveTitle ? wellInfo.name : sectionName.substring(0, sectionName.indexOf(definitionTitle));
-                    let curveName = line.substring(0, line.indexOf('.')).trim();
+                    let curveName = line.substring(0, line.indexOf('.')).trim().toUpperCase();
                     curveName = curveName.replace('/', '_');
                     let suffix = 1;
                     while (true) {
