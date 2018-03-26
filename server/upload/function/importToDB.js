@@ -165,17 +165,37 @@ async function importWell(wellData, override) {
     try {
         // console.log("==wellData ", wellData, wellData.name, wellData.username);
         let well
-        if (override) {
-            try {
-                well = await importWithOverrideOption(wellData);
-                well.Override = true;
-            } catch (err) {
-                console.log(err);
-            }
+        const Op = require('sequelize').Op;
+
+        if(override){
+            const rs = await models.Well.findOrCreate({
+                where: {
+                    [Op.and]: [
+                        {name: {[Op.eq]: wellData.name}},
+                        {username: wellData.username},
+                    ]
+                },
+                defaults: {
+                    name: wellData.name, username: wellData.username, filename: wellData.filename
+                }
+            });
+            well = rs[0];
         } else {
             well = await models.Well.create(wellData);
-            well.datasets = await importDatasets(wellData.datasets, well, false);
         }
+        well.datasets = await importDatasets(wellData.datasets, well, false);
+
+        // if (override) {
+        //     try {
+        //         well = await importWithOverrideOption(wellData);
+        //         well.Override = true;
+        //     } catch (err) {
+        //         console.log(err);
+        //     }
+        // } else {
+        //     well = await models.Well.create(wellData);
+        //     well.datasets = await importDatasets(wellData.datasets, well, false);
+        // }
         let arr = ['username', 'datasets', 'name', 'params'];
         for (let property in WellHeader) {
             let well_header = {};
@@ -231,6 +251,7 @@ async function importWell(wellData, override) {
 }
 
 async function importDatasets(datasets, well, override) {
+    //override = true means that override dataset
     console.log("---------------------->>>> " + JSON.stringify(well));
     if (!datasets || datasets.length <= 0) return;
     try {
@@ -252,12 +273,32 @@ async function importDatasets(datasets, well, override) {
                     }
                 })
             }
-            try {
-                if (!dataset) dataset = await models.Dataset.create(datasetData);
-            } catch (err) {
-                console.log('>>>>>>>' + err);
-                throw err;
+
+            async function createDataset(datasetInfo) {
+                try {
+                    const dataset = await models.Dataset.create(datasetInfo);
+                    return dataset;
+                } catch (err){
+                    console.log('>>>>>>>' + err + "===> It's ok, rename dataset now")
+                    if (err.name === 'SequelizeUniqueConstraintError') {
+                        if (datasetData.name.indexOf(' ( copy ') < 0) {
+                            datasetData.name = datasetData.name + ' ( copy 1 )';
+                        }
+                        else {
+                            let copy = datasetData.name.substr(datasetData.name.lastIndexOf(' ( copy '), datasetData.name.length);
+                            let copyNumber = parseInt(copy.replace(' ( copy ', '').replace(' )', ''));
+                            copyNumber++;
+                            datasetData.name = datasetData.name.replace(copy, '') + ' ( copy ' + copyNumber + ' )';
+                        }
+                        return await createDataset(datasetData);
+                    }
+                    else {
+                        throw err;
+                    }
+                }
             }
+
+            if (!dataset) dataset = await createDataset(datasetData);
 
             dataset = dataset.toJSON();
             dataset.wellname = well.name;

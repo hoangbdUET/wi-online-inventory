@@ -287,10 +287,17 @@ module.exports = async function (inputFile, importData) {
                     fields = fields.concat(line.trim().split(delimitingChar));
                     if (fields.length > datasets[currentDatasetName].curves.length) {
                         if (datasets[currentDatasetName].curves) {
-                            datasets[currentDatasetName].curves.forEach(function (curve, i) {
-                                writeToCurveFile(BUFFERS[curve.name], curve.path, count, fields[i + 1], wellInfo.NULL.value);
-                            });
-                            count++;
+                            if((sectionName == asciiTitle || /LOG/.test(sectionName)) && parseFloat(wellInfo.STEP.value) != 0) {
+                                datasets[currentDatasetName].curves.forEach(function (curve, i) {
+                                    writeToCurveFile(BUFFERS[curve.name], curve.path, count, fields[i + 1], wellInfo.NULL.value);
+                                });
+                                count++;
+                            }else {
+                                datasets[currentDatasetName].curves.forEach(function (curve, i) {
+                                    writeToCurveFile(BUFFERS[curve.name], curve.path, fields[0], fields[i + 1], wellInfo.NULL.value);
+                                });
+                                count++;
+                            }
                         }
                         fields = [];
                     }
