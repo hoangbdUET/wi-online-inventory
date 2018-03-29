@@ -1,108 +1,90 @@
-var express = require('express');
-var router = express.Router();
-var fs = require('fs');
-var path = require('path');
+let express = require('express');
+let router = express.Router();
+let fs = require('fs');
+let path = require('path');
 let config = require('config');
-var byline = require('byline');
-var models = require('../server/models');
-var Well = models.Well;
-var Dataset = models.Dataset;
-var Curve = models.Curve;
-var async = require('async');
+let byline = require('byline');
+let request = require('request');
+let wiImport = require('wi-import');
+let hashDir = wiImport.hashDir;
+let models = require('../server/models');
+let Well = models.Well;
+let async = require('async');
 let response = require('../server/response');
 
-router.post('/wells', function (req, res) {
-    Well.findAll({
+router.post('/well', function (req, res) {
+    let token = req.body.token || req.query.token || req.headers['x-access-token'] || req.get('Authorization');
+    let responseArray = []; 
+    Well.findById(req.body.idObj.idWell, {
         include: [{
             model: models.WellHeader
         }, {
-            model: Dataset,
+            model: models.Dataset,
             include: {
-                model: Curve,
+                model: models.Curve,
                 include: {
                     model: models.CurveRevision
                 }
             }
         }]
-    }).then(wells => {
-        res.send(wells);
-    })
-})
-router.post('/well', function (req, res) {
-    let responsePath = [];  
-        Well.findById(req.body.idObj.idWell, { 
-            include: [{
-                model: models.WellHeader
-            }, {
-                model: Dataset,
-                include: {
-                    model: Curve,
-                    include: {
-                        model: models.CurveRevision
-                        }
-                }
-            }]
-        })
-        .then(well => {
-            if(well){
-                if(req.body.idObj.datasets.length==1){
-                    let idDataset = req.body.idObj.datasets[0].idDataset; 
-                    let idCurves = req.body.idObj.datasets[0].idCurves;  
-                    console.log('id dataset and curves ', idDataset, idCurves); 
-                    exportWell(req, res, well, idDataset, idCurves, responsePath); 
-                } else {
-                    async.each(req.body.idObj.datasets, function(datasetItem, callback){
-                        let idDataset = datasetItem.idDataset;
-                        let idCurves = datasetItem.idCurves;
-                        exportWell(req, res, well, idDataset, idCurves, responsePath, callback);
-                    }, function(err) {
-                        if(err){
-                            console.log('err', err);        
-                            res.send(response(404, 'SOMETHING WENT WRONG'));
-                        } else {
-                            console.log('callback called');
-                            res.send(response(200, 'SUCCESSFULLY', responsePath));
-                        }
-                    })
-                }
+    }).then(function(well){
+        if(well) {
+            console.log('req.body', req.body.idObj.datasets);
+            if(req.body.idObj.datasets.length===1){
+                console.log("req.body.idObj.datasets.length===1")
+                let idDataset = req.body.idObj.datasets[0].idDataset; 
+                let idCurves = req.body.idObj.datasets[0].idCurves;  
+                console.log('id dataset and curves ', idDataset, idCurves); 
+                exportWell(req, res, well, idDataset, idCurves, responseArray,  req.decoded.username, function(err){
+                    if(err){
+                        res.send(response(404, 'SOMETHING WENT WRONG'));
+                    } else {
+                        res.send(response(200, 'SUCCESSFULLY', responseArray));
+                    }
+                }); 
             } else {
-                res.send(response(404, 'WELL NOT FOUND')); 
+                console.log("req.body.idObj.datasets.length!==1")
+                async.each(req.body.idObj.datasets, function(datasetItem, callback){
+                    let idDataset = datasetItem.idDataset;
+                    let idCurves = datasetItem.idCurves;
+                    exportWell(req, res, well, idDataset, idCurves, responseArray,  req.decoded.username, callback);
+                }, function(err) {
+                    if(err) {
+                        console.log('err', err);        
+                        res.send(response(404, 'SOMETHING WENT WRONG'));
+                    } else {
+                        console.log('callback called');
+                        res.send(response(200, 'SUCCESSFULLY', responseArray));
+                    }
+                })
             }
-        })
-})
-function exportWell (req, res, well, idDataset, idCurves, responsePath, callback){    
-    if (well.username == req.decoded.username) {
-        let exportPath = config.exportPath;
-        if(!fs.existsSync(exportPath)){
-            fs.mkdirSync(exportPath);
-        }
-        let lasFilePath = path.join(exportPath, req.decoded.username);
-        if (!fs.existsSync(lasFilePath)){
-            fs.mkdirSync(lasFilePath);
-        }
-        let dataset = well.datasets.find(function(dataset){ return dataset.idDataset==idDataset;});
-        
-        if(dataset){
-            let fileName = dataset.name + "_" + well.name + "_" + Date.now() + '.las'
-            lasFilePath = path.join(lasFilePath, fileName );
-            writeVersion(lasFilePath);
-            writeWellHeader(lasFilePath, well.well_headers);
-            if(callback){
-                writeCurve(res, lasFilePath, well, dataset, idCurves, fileName, responsePath, callback);                   
-            } else {
-                writeCurve(res, lasFilePath, well, dataset, idCurves, fileName); 
-            }
-            let lasFileUrl = path.join(config.exportWebPath, req.decoded.username, well.name + '.las');
         } else {
-            if(callback){
-                res.send(response(404, 'DATASET NOT FOUND'));               
-            } else {
-                responsePath.push("err");    
-            }
+            res.send(response(404, 'WELL NOT FOUND'));
         }
-        
+    });
+})
+
+function exportWell (req, res, well, idDataset, idCurves, responseArray, username, callback){   
+    let exportPath = config.exportPath;
+    if(!fs.existsSync(exportPath)){
+        fs.mkdirSync(exportPath);
+    }
+    let lasFilePath = path.join(exportPath, req.decoded.username);
+    if (!fs.existsSync(lasFilePath)){
+        fs.mkdirSync(lasFilePath);
+    }
+    let dataset = well.datasets.find(function(dataset){ return dataset.idDataset==idDataset;});
+    
+    if(dataset){
+        let fileName = dataset.name + "_" + well.name + "_" + Date.now() + '.las'
+        lasFilePath = path.join(lasFilePath, fileName );
+        writeVersion(lasFilePath);
+        writeWellHeader(lasFilePath, well.well_headers);
+        writeCurve(res, lasFilePath, well, dataset, idCurves, fileName, responseArray, username, callback);                   
+        let lasFileUrl = path.join(config.exportPath, req.decoded.username, well.name + '.las');
     } else {
-        res.send(response(404, 'WELL NOT FOUND'));  
+            responseArray.push(null);   
+            callback(); 
     }
 }
 
@@ -149,7 +131,7 @@ function writeWellHeader(lasFilePath, wellHeaders) {
     }
 }
 
-function writeCurve(res, lasFilePath, well, dataset, idCurves, fileName, responsePath, callback) {  
+function writeCurve(res, lasFilePath, well, dataset, idCurves, fileName, responseArray, username, callback) {  
     fs.appendFileSync(lasFilePath, '~Curve\r\n');
     fs.appendFileSync(lasFilePath, '#MNEM.UNIT       API Code            Curve    Description\r\n');
     fs.appendFileSync(lasFilePath, '#--------        --------------      -----    -------------------\r\n');
@@ -161,23 +143,19 @@ function writeCurve(res, lasFilePath, well, dataset, idCurves, fileName, respons
     let curveColumns = '~A  DEPTH   ';
     for (idCurve of idCurves) {
         let curve = dataset.curves.find(function(curve){return curve.idCurve==idCurve});
-        if(curve){
+          if(curve){
+            let curvePath = path.join(config.dataPath, curve.curve_revisions[0].path);
             top.push(Number.parseFloat(dataset.top));
             bottom.push(Number.parseFloat(dataset.bottom));
             step.push(Number.parseFloat(dataset.step));
-            curve.path = '../../../../../../' + config.dataPath + '/' + curve.curve_revisions[0].path;
-            paths.push(curve.path);
-            fs.appendFileSync(lasFilePath, curve.name + '.' + curve.curve_revisions[0].unit + '  :\r\n');
+            paths.push(curvePath);
+            fs.appendFileSync(lasFilePath, curve.name + '.' + curve.unit + '  :\r\n');
             curveColumns += curve.name + '   ';
         }
     }
     if(paths.length===0){
-        if(callback){
-            res.send(response(404, 'CURVE NOT FOUND'));
-        } else {
-            responsePath.push('err');/*2*/
-            callback();
-        }
+        responseArray.push(null);
+        callback();
     } else {
         fs.appendFileSync(lasFilePath, '~Parameter\r\n');
         fs.appendFileSync(lasFilePath, '#MNEM.UNIT       Value                        Description\r\n');
@@ -186,7 +164,7 @@ function writeCurve(res, lasFilePath, well, dataset, idCurves, fileName, respons
 
         //append curve  ver2
         let readStreams = [];
-        var writeStream = fs.createWriteStream(lasFilePath, {flags: 'a'});
+        let writeStream = fs.createWriteStream(lasFilePath, {flags: 'a'});
 
         for (let path of paths) {
             let stream = fs.createReadStream(path);
@@ -225,11 +203,7 @@ function writeCurve(res, lasFilePath, well, dataset, idCurves, fileName, respons
                             readLine = 0;
                             writeLine = 0;
                             readStreams.numLine = "";
-                            if(callback){
-                                callback(); 
-                            } else {
-                                res.send(response(200, 'SUCCESSFULLY', path.join(config.exportWebPath, well.username, fileName)));
-                            }
+                            callback();
                         }
                     });
                     readStreams[i].pause();
@@ -241,9 +215,7 @@ function writeCurve(res, lasFilePath, well, dataset, idCurves, fileName, respons
             readStreams[i].on('end', function () {
                 if (i === readStreams.length - 1) {
                     readStreams.numLine = readLine;
-                    if(callback){
-                        responsePath.push(path.join(config.exportWebPath, well.username, fileName)); /*2*/
-                    }
+                    responseArray.push(path.join(config.exportPath, well.username, fileName)); 
                     console.log('END TIME', new Date(), readStreams.numLine);
                 } else {
                     readStreams[i+1].resume()

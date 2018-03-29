@@ -13,5 +13,5 @@
     "jwtSecretKey": "secretKey"
   },
   "dataPath": "D:/tmp2",
-  "exportPath": "exports"
+  "exportPath": "/exports"
 }
