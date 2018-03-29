@@ -5,7 +5,7 @@ let fs = require('fs');
 const s3 = require('../../server/s3');
 let config = require('config');
 
-// const detectCharacterEncoding = require('detect-character-encoding');
+const detectCharacterEncoding = require('detect-character-encoding');
 
 function writeToCurveFile(buffer, curveFileName, index, value, defaultNull) {
     buffer.count += 1;
