@@ -215,7 +215,11 @@ async function writeCurve(res, lasFilePath, well, dataset, idCurves, fileName, r
             readStreams[i].on('end', function () {
                 if (i === readStreams.length - 1) {
                     readStreams.numLine = readLine;
-                    responseArray.push(path.join(config.exportPath, well.username, fileName)); 
+                    responseArray.push({
+                        path:  path.join(config.exportPath, well.username, fileName),
+                        wellName: well.name,
+                        datasetName: dataset.name
+                    }); 
                     console.log('END TIME', new Date(), readStreams.numLine);
                 } else {
                     readStreams[i+1].resume()
