@@ -9,6 +9,7 @@ const bodyParser = require('body-parser');
 const responseJSON = require('./server/response');
 app.use(cors());
 app.use(bodyParser.json());
+app.use('/exports', express.static('exports'));
 
 main();
 

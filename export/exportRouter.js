@@ -9,6 +9,7 @@ let models = require('../server/models');
 let Well = models.Well;
 let async = require('async');
 let response = require('../server/response');
+const s3 = require('../server/s3');
 
 router.post('/well', function (req, res) {
     let token = req.body.token || req.query.token || req.headers['x-access-token'] || req.get('Authorization');
@@ -129,7 +130,7 @@ function writeWellHeader(lasFilePath, wellHeaders) {
     }
 }
 
-function writeCurve(res, lasFilePath, well, dataset, idCurves, fileName, responseArray, username, callback) {  
+async function writeCurve(res, lasFilePath, well, dataset, idCurves, fileName, responseArray, username, callback) {  
     fs.appendFileSync(lasFilePath, '~Curve\r\n');
     fs.appendFileSync(lasFilePath, '#MNEM.UNIT       API Code            Curve    Description\r\n');
     fs.appendFileSync(lasFilePath, '#--------        --------------      -----    -------------------\r\n');
@@ -142,7 +143,7 @@ function writeCurve(res, lasFilePath, well, dataset, idCurves, fileName, respons
     for (idCurve of idCurves) {
         let curve = dataset.curves.find(function(curve){return curve.idCurve==idCurve});
           if(curve){
-            let curvePath = path.join(config.dataPath, curve.curve_revisions[0].path);
+            let curvePath = curve.curve_revisions[0].path;
             top.push(Number.parseFloat(dataset.top));
             bottom.push(Number.parseFloat(dataset.bottom));
             step.push(Number.parseFloat(dataset.step));
@@ -165,7 +166,8 @@ function writeCurve(res, lasFilePath, well, dataset, idCurves, fileName, respons
         let writeStream = fs.createWriteStream(lasFilePath, {flags: 'a'});
 
         for (let path of paths) {
-            let stream = fs.createReadStream(path);
+            // let stream = fs.createReadStream(path);
+            let stream = await s3.getData(path);
             stream = byline.createStream(stream);
             readStreams.push(stream);
         }
