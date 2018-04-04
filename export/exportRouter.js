@@ -14,53 +14,64 @@ const s3 = require('../server/s3');
 router.post('/well', function (req, res) {
     let token = req.body.token || req.query.token || req.headers['x-access-token'] || req.get('Authorization');
     let responseArray = []; 
-    Well.findById(req.body.idObj.idWell, {
-        include: [{
-            model: models.WellHeader
-        }, {
-            model: models.Dataset,
-            include: {
-                model: models.Curve,
+    async.each(req.body.idObj, function(idObj, callback){ 
+        Well.findById(idObj.idWell, {
+            include: [{
+                model: models.WellHeader
+            }, {
+                model: models.Dataset,
                 include: {
-                    model: models.CurveRevision
+                    model: models.Curve,
+                    include: {
+                        model: models.CurveRevision
+                    }
                 }
-            }
-        }]
-    }).then(function(well){
-        if(well) {
-            console.log('req.body', req.body.idObj.datasets);
-            if(req.body.idObj.datasets.length===1){
-                console.log("req.body.idObj.datasets.length===1")
-                let idDataset = req.body.idObj.datasets[0].idDataset; 
-                let idCurves = req.body.idObj.datasets[0].idCurves;  
-                console.log('id dataset and curves ', idDataset, idCurves); 
-                exportWell(req, res, well, idDataset, idCurves, responseArray,  req.decoded.username, function(err){
-                    if(err){
-                        res.send(response(404, 'SOMETHING WENT WRONG'));
-                    } else {
-                        res.send(response(200, 'SUCCESSFULLY', responseArray));
-                    }
-                }); 
+            }]
+        }).then(function(well){
+            if(well) {
+                if(idObj.datasets.length===1){
+                    let idDataset = idObj.datasets[0].idDataset; 
+                    let idCurves = idObj.datasets[0].idCurves;  
+                    console.log('id dataset and curves ', idDataset, idCurves); 
+                    exportWell(req, res, well, idDataset, idCurves, responseArray,  req.decoded.username, function(err){
+                        if(err){
+                            // res.send(response(404, 'SOMETHING WENT WRONG'));
+                            callback(err);
+                        } else {
+                            // res.send(response(200, 'SUCCESSFULLY', responseArray));
+                            callback();
+                        }
+                    }); 
+                } else {
+                    async.each(idObj.datasets, function(datasetItem, callback){
+                        let idDataset = datasetItem.idDataset;
+                        let idCurves = datasetItem.idCurves;
+                        exportWell(req, res, well, idDataset, idCurves, responseArray,  req.decoded.username, callback);
+                    }, function(err) {
+                        if(err) {
+                            console.log('err', err);        
+                            // res.send(response(404, 'SOMETHING WENT WRONG'));
+                            callback(err);
+                        } else {
+                            console.log('callback called');
+                            // res.send(response(200, 'SUCCESSFULLY', responseArray));
+                            callback();
+                        }
+                    })
+                }
             } else {
-                console.log("req.body.idObj.datasets.length!==1")
-                async.each(req.body.idObj.datasets, function(datasetItem, callback){
-                    let idDataset = datasetItem.idDataset;
-                    let idCurves = datasetItem.idCurves;
-                    exportWell(req, res, well, idDataset, idCurves, responseArray,  req.decoded.username, callback);
-                }, function(err) {
-                    if(err) {
-                        console.log('err', err);        
-                        res.send(response(404, 'SOMETHING WENT WRONG'));
-                    } else {
-                        console.log('callback called');
-                        res.send(response(200, 'SUCCESSFULLY', responseArray));
-                    }
-                })
+                // res.send(response(404, 'WELL NOT FOUND'));
+                callback('notfound');
             }
+        });
+    }, function (err){
+        if(err){
+            res.send(response(404, 'SOMETHING WENT WRONG'));
         } else {
-            res.send(response(404, 'WELL NOT FOUND'));
+            console.log('callback called');
+            res.send(response(200, 'SUCCESSFULLY', responseArray));
         }
-    });
+    })
 })
 
 function exportWell (req, res, well, idDataset, idCurves, responseArray, username, callback){   
