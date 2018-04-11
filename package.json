@@ -44,6 +44,7 @@
     "request": "^2.83.0",
     "sequelize": "^4.32.1",
     "tempfile": "^2.0.0",
+    "wi-export-test": "^1.0.0",
     "wi-import": "^1.0.49"
   }
 }
