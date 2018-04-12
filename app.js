@@ -10,6 +10,12 @@ const responseJSON = require('./server/response');
 app.use(cors());
 app.use(bodyParser.json());
 app.use('/exports', express.static('exports'));
+app.use(function(req, res, next){
+	res.header('Access-Control-Allow-Origin', '*');
+	res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
+	res.header('Access-Control-Allow-Headers', 'Content-Type');
+	next();
+})
 
 main();
 
