@@ -9,13 +9,6 @@ const bodyParser = require('body-parser');
 const responseJSON = require('./server/response');
 app.use(cors());
 app.use(bodyParser.json());
-app.use('/exports', express.static('exports'));
-app.use(function(req, res, next){
-	res.header('Access-Control-Allow-Origin', '*');
-	res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
-	res.header('Access-Control-Allow-Headers', 'Content-Type');
-	next();
-})
 
 main();
 
@@ -26,7 +19,7 @@ function main() {
 
     let authenticate = require('./server/authenticate/authenticate');
     app.use(authenticate());
-
+    
     let uploadRouter = require('./server/upload/upload.router');
     let curveRouter = require('./server/curve/curve.router');
     let datasetRouter = require('./server/dataset/dataset.router');
@@ -39,6 +32,7 @@ function main() {
     app.use('/user/well/', datasetRouter);
     app.use('/user/', wellRouter);
     app.use('/', userRouter);
+    app.use('/exports', express.static('exports'));
     app.use('/export', exportRouter);
 
     // let testRouter = require('./controllers/index');
