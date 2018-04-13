@@ -6,6 +6,7 @@ const AWS = require('aws-sdk');
 const config = require('config');
 const readline = require('readline');
 const s3 = require('../s3');
+const curveModel = require('./curve.model');
 
 async function convertCurve(curve, newUnit, callback) {
     console.log('~~~convertCurve~~~');
@@ -60,10 +61,11 @@ module.exports = function (curve, unit, step, callback) {
     console.log('~~~curveExport~~~');
     console.log('config.s3Path: ' + config.s3Path);
 
-    curve.curve_revisions.forEach(revision => {
+    curve.curve_revisions.forEach(async revision => {
         if (revision.isCurrentRevision) {
+            const key = await curveModel.getCurveKey(revision);
             if (config.s3Path) {
-                s3.getData(revision.path)
+                s3.getData(key)
                     .then( dataStream => {
                         callback(null, dataStream);
                     }).catch(err => {
@@ -71,8 +73,8 @@ module.exports = function (curve, unit, step, callback) {
                     })
             }
             else {
-                if(fs.existsSync(config.dataPath + '/' + revision.path)){
-                    callback(null, fs.createReadStream(config.dataPath + '/' + revision.path));
+                if(fs.existsSync(config.dataPath + '/' + key)){
+                    callback(null, fs.createReadStream(config.dataPath + '/' + key));
                 }
                 else {
                     callback('No such file or directory')

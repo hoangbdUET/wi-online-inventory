@@ -5,11 +5,11 @@ module.exports = function (sequelize, DataTypes) {
             autoIncrement: true,
             primaryKey: true
         },
-        path: {
-            type: DataTypes.STRING,
-            allowNull: false,
-            defaultValue: ""
-        },
+        // path: {
+        //     type: DataTypes.STRING,
+        //     allowNull: false,
+        //     defaultValue: ""
+        // },
         unit: {
             type: DataTypes.STRING,
             allowNull: false
