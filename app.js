@@ -9,6 +9,7 @@ const bodyParser = require('body-parser');
 const responseJSON = require('./server/response');
 app.use(cors());
 app.use(bodyParser.json());
+app.use('/exports', express.static('exports'));
 
 main();
 
@@ -32,7 +33,6 @@ function main() {
     app.use('/user/well/', datasetRouter);
     app.use('/user/', wellRouter);
     app.use('/', userRouter);
-    app.use('/exports', express.static('exports'));
     app.use('/export', exportRouter);
 
     // let testRouter = require('./controllers/index');
