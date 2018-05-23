@@ -10,7 +10,7 @@ async function processFileUpload(file, importData) {
     try{
         let fileFormat = file.filename.substring(file.filename.lastIndexOf('.') + 1);
         if (/LAS/.test(fileFormat.toUpperCase())) {
-            const result = await LASExtractor(file, importData)
+            const result = await LASExtractor(file, importData);
             return importToDB(result, importData);
         }
         else {
