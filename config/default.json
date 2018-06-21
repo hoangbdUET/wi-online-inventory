@@ -14,5 +14,6 @@
   },
   "dataPath": "/opt/wi-inventory-data",
   "s3Path": "https://s3-ap-southeast-1.amazonaws.com/wi-inventory",
-  "exportPath": "exports"
+  "exportPath": "exports",
+  "exportUrl": "/exports/file"
 }
