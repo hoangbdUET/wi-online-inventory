@@ -27,9 +27,9 @@ class Options {
     }
 }
 function getWellFromProject(wellName, idProject, token) {
-    console.log('http://' + config.Service.project + '/project/well/full-info');
+    console.log('http://' + config.Service.project + '/project/well/info-by-name');
     return new Promise(function (resolve, reject) {
-        let options = new Options('/project/well/full-info', token, { name: wellName, idProject: idProject });
+        let options = new Options('/project/well/info-by-name', token, { name: wellName, idProject: idProject });
         request(options, function (error, response, body) {
             if (error) {
                 reject(error);
