@@ -84,6 +84,15 @@ router.post('/well/full-info', function (req, res) {
 
 });
 
+router.post('/well/info-by-name', function(req, res) {
+    wellModel.findWellByName(req.body.name, req.decoded.username, function(err, well){
+        if(err){
+            res.send(response((404, 'ERROR')));
+        } else {
+            res.send(response(200, 'SUCCESSFULLY', well));
+        }
+    })
+})
 router.post('/well/info', function (req, res) {
     wellModel.findWellById(req.body.idWell, req.decoded.username)
         .then(well => {

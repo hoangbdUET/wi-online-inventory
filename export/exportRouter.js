@@ -17,12 +17,14 @@ router.post('/las2', function (req, res) {
                 model: models.WellHeader
             }, {
                 model: models.Dataset,
-                include: {
+                include: [{
                     model: models.Curve,
                     include: {
                         model: models.CurveRevision
                     }
-                }
+                }, {
+                    model: models.DatasetParams
+                }]
             }]
         }).then(well =>{
             if(well && well.username == req.decoded.username){

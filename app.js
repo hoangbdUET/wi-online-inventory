@@ -27,6 +27,7 @@ function main() {
     let wellRouter = require('./server/well/well.router');
     let userRouter = require('./server/user/user.router');
     let exportRouter = require('./export/exportRouter');
+    let importFromProjectRouter = require('./server/import-from-project/import.router');
 
     app.use('/', uploadRouter);
     app.use('/user/well/dataset/', curveRouter);
@@ -34,6 +35,7 @@ function main() {
     app.use('/user/', wellRouter);
     app.use('/', userRouter);
     app.use('/export', exportRouter);
+    app.use('/import/project', importFromProjectRouter);
 
     // let testRouter = require('./controllers/index');
     // let curveRouter = require('./controllers/curve/curveRouter');

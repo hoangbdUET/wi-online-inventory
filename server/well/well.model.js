@@ -30,6 +30,11 @@ function findWellById(idWell, username, attributes) {
             model: models.CurveRevision
         };
         include.push(includeDatasets);
+    } else if(attributes && attributes.well_headers){
+        let includeWellHeader = {
+            model: models.WellHeader
+        }
+        include.push(includeWellHeader);
     }
     return Well.findById(
         idWell,
@@ -268,10 +273,32 @@ function exportWellHeader(idWells, callback) {
     }
 }
 
+function findWellByName (wellName, username, callback){
+    let Op = require('sequelize').Op;
+    models.Well.findOrCreate({
+        where: {
+            [Op.and]: [
+                {name: {[Op.eq]: wellName}},
+                {username: {[Op.eq]: username}}
+            ]
+        }, default: {
+            name: wellName, 
+            username: username,
+            filename: wellName
+        }
+    }).then(function(well) {
+        callback(null, well[0]);
+    }).catch(function(err){
+        console.log('err', err);
+        callback(err);
+    })
+}
+
 module.exports = {
     findWellById: findWellById,
     deleteWell: deleteWell,
     copyDatasets: copyDatasets,
     editWell: editWell,
-    exportWellHeader: exportWellHeader
+    exportWellHeader: exportWellHeader,
+    findWellByName: findWellByName
 };
