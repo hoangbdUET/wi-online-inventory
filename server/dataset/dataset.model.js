@@ -123,50 +123,10 @@ function editDataset(body, username, cb) {
     })
 }
 
-function findDatasetByName(wellName, datasetName, username, token, idProject, callback) {
-    let Op = require('sequelize').Op;
-    models.Well.findOrCreate({
-        where: {
-            name: {[Op.eq]: wellName},
-            username: {[Op.eq]: username}
-        }, default: {
-            name: wellName,
-            username: username,
-            filename: wellName
-        }
-    }).then(function(well) {
-        well = well[0];
-        getWellFromProject(wellName, idProject, token).then(function(_well) {
-            models.Dataset.findOrCreate({
-                where: {
-                    idWell: well.idWell,
-                    name: datasetName,
-                }, default: {
-                    name: datasetName,
-                    unit: "M",
-                    top: _well.topDepth,
-                    bottom: _well.bottomDepth,
-                    step: _well.step
-                }
-            }).then(function(dataset){
-                callback(null, dataset[0]);
-            }).catch(function(err) {
-                callback(err);
-                console.log('err 1', err);
-            })
-        }).catch(function(err){
-            callback(err);
-            console.log('err2', err);
-        })
-    }).catch(function(err){
-        callback(err);
-        console.log('err3',err);
-    })
-}
 function getWellFromProject(wellName, idProject, token) {
-    console.log('http://' + config.Service.project + '/project/well/full-info');
+    console.log('http://' + config.Service.project + '/project/well/info-by-name');
     return new Promise(function (resolve, reject) {
-        let options = new Options('/project/well/full-info', token, { name: wellName, idProject: idProject });
+        let options = new Options('/project/well/info-by-name', token, { name: wellName, idProject: idProject });
         request(options, function (error, response, body) {
             if (error) {
                 reject(error);
@@ -200,5 +160,5 @@ module.exports = {
     deleteDataset: deleteDataset,
     createDataset: createDataset,
     editDataset: editDataset,
-    findDatasetByName: findDatasetByName
+    // findDatasetByName: findDatasetByName
 };

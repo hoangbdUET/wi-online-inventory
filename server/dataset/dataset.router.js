@@ -32,17 +32,6 @@ router.post('/dataset/info', function (req, res) {
         })
 });
 
-router.post('/dataset/info-by-name', function(req, res) {
-    let Op = require('sequelize').Op;
-    let token = req.body.token || req.query.token || req.header['x-access-token'] || req.get('Authorization');
-    datasetModel.findDatasetByName(req.body.wellName, req.body.datasetName, req.decoded.username, token, req.body.idProject, function(err, rs) {
-        if(err){
-            res.send(response(404, "err"));
-        } else {
-            res.send(response(200, "SUCCESSFULLY", rs));
-        }
-    })
-})
 
 router.post('/dataset/delete', function (req, res) {
     datasetModel.deleteDataset(req.body.idDataset, req.decoded.username, (err, rs) => {
