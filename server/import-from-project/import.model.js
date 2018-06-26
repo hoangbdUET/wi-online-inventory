@@ -45,7 +45,7 @@ function getWellFromProject(wellName, idProject, token) {
 }
 function getWellFromProjectById(idWell, token) {
     return new Promise(function (resolve, reject) {
-        let options = new Options('/project/well/info', token, { idWell: idWell });
+        let options = new Options('/project/well/full-info', token, { idWell: idWell });
         request(options, function (error, response, body) {
             if (error) {
                 reject(error);
@@ -60,9 +60,41 @@ function getWellFromProjectById(idWell, token) {
     });
 }
 
+function getCurveFromProject(name, idDataset, token) {
+    return new Promise(function (resolve, reject) {
+        let options = new Options('/project/well/dataset/curve/info-by-name', token, { name: name, idDataset: idDataset });
+        request(options, function (error, response, body) {
+            if (error) {
+                reject(error);
+            } else {
+                if (body.content) {
+                    resolve(body.content);
+                } else {
+                    reject(body)
+                }
+            }
+        });
+    });
+}
 function getDatasetFromProjectById(idDataset, token) {
     return new Promise(function (resolve, reject) {
         let options = new Options('/project/well/dataset/info', token, { idDataset: idDataset });
+        request(options, function (error, response, body) {
+            if (error) {
+                reject(error);
+            } else {
+                if (body.content) {
+                    resolve(body.content);
+                } else {
+                    reject(body)
+                }
+            }
+        });
+    });
+}
+function getDatasetFromProjectByName(name, idWell, token) {
+    return new Promise(function (resolve, reject) {
+        let options = new Options('/project/well/dataset/info-by-name', token, { name: name, idWell: idWell });
         request(options, function (error, response, body) {
             if (error) {
                 reject(error);
@@ -84,7 +116,7 @@ async function importWell(well, token, callback, username) {
         let step = _well.well_headers.find(h => h.header === 'STEP').value;
         models.Well.findOrCreate({
             where: { name: _well.name, username: username },
-            default: {
+            defaults: {
                 name: _well.name,
                 filename: _well.name,
                 username: username
@@ -94,7 +126,7 @@ async function importWell(well, token, callback, username) {
             asyncEach(_well.datasets, function (dataset, eachCb) {
                 models.Dataset.findOrCreate({
                     where: { idWell: newWell.idWell, name: dataset.name },
-                    default: {
+                    defaults: {
                         idWell: newWell.idWell,
                         name: dataset.name,
                         unit: "M",
@@ -121,10 +153,11 @@ async function importWell(well, token, callback, username) {
                             idDataset: newDataset.idDataset
                         }).then(async function (c) {
                             let _curve = c;
+                            let projectCurve = await getCurveFromProject(curve.name, dataset.idDataset, token);
                             let revision = await models.CurveRevision.create({
                                 idCurve: _curve.idCurve,
                                 isCurrentRevision: 1,
-                                unit: "",
+                                unit: projectCurve.unit,
                                 startDepth: topDepth,
                                 stopDepth: bottomDepth,
                                 step: step
@@ -252,9 +285,10 @@ function importDataset(datasets, token, callback, username) {
                 console.log('idDesWell', dataset.idDesWell);
                 let _well = results[1];
                 let fullDataset = results[0]
-                let topDepth = _well.topDepth;
-                let bottomDepth = _well.bottomDepth;
-                let step = _well.step;
+                let topDepth = _well.well_headers.find(h => h.header === 'TOP').value;
+                let bottomDepth = _well.well_headers.find(h => h.header === 'STOP').value;
+                let step = _well.well_headers.find(h => h.header === 'STEP').value;
+                console.log('22222', topDepth, bottomDepth, step, _well);
                 let newDataset = {};
                 newDataset.name = fullDataset.name;
                 newDataset.idWell = dataset.idDesWell;
@@ -278,7 +312,7 @@ function importDataset(datasets, token, callback, username) {
                     asyncEach(fullDataset.curves, function (curve, nextCurve) {
                         setTimeout(function () {
                             curve.idDesDataset = _dataset.idDataset;
-                            importCurveDataFromProject(curve, token, function (err, result) {
+                            importCurveDataFromProject(curve, dataset.idDataset, token, function (err, result) {
                                 if (err) {
                                     // response.push(err);
                                     nextCurve();
@@ -315,22 +349,57 @@ async function importCurves(curves, token, callback, username) {
     let response = [];
     asyncEach(curves, function (curve, next) {
         setTimeout(function () {
-            importCurveDataFromProject(curve, token, function (err, result) {
-                if (err) {
-                    response.push(err);
-                } else {
-                    console.log('ok');
-                    response.push(result);
+            models.Well.findOrCreate({
+                where: {
+                    name: curve.wellName,
+                    username: username
+                }, defaults: {
+                    name: curve.wellName,
+                    filename: curve.wellName,
+                    username: username
                 }
-                next();
-            }, username);
+            }).then(async function(well) {
+                well = well[0];
+                let projectWell = await getWellFromProject(curve.wellName, curve.idProject, token);
+                models.Dataset.findOrCreate({
+                    where: {
+                        idWell: well.idWell,
+                        name: curve.datasetName
+                    }, defaults: {
+                        idWell: curve.idWell,
+                        name: curve.datasetName,
+                        top: projectWell.topDepth,
+                        bottom: projectWell.bottomDepth,
+                        step: projectWell.step,
+                        unit: "M"
+                    }
+                }).then(async function(dataset) {
+                    dataset = dataset[0];
+                    curve.idDesDataset = dataset.idDataset
+                    let projectDataset = await getDatasetFromProjectByName(curve.datasetName, projectWell.idWell, token)
+                    // ================================
+                    importCurveDataFromProject(curve, projectDataset.idDataset, token, function (err, result) {
+                        if (err) {
+                            response.push(err);
+                        } else {
+                            console.log('ok');
+                            response.push(result);
+                        }
+                        next();
+                    }, username);
+                }).catch(function(err) {
+                    response.push(err);
+                })
+            }).catch(function(err){
+                response.push(err);
+            })
         }, 100);
     }, function () {
         callback(null, response);
     });
 }
 
-async function importCurveDataFromProject(curveInfo, token, callback, username) {
+async function importCurveDataFromProject(curveInfo, idDataset, token, callback, username) {
     let options = {
         method: 'POST',
         url: 'http://' + config.Service.project + '/project/well/dataset/curve/getDataFile',
@@ -343,11 +412,7 @@ async function importCurveDataFromProject(curveInfo, token, callback, username) 
         json: true
     };
     let dataset = await datasetModel.findDatasetById(curveInfo.idDesDataset, username);
-    console.log
-    let well = await wellModel.findWellById(dataset.idWell, username, { well_headers: true });
-    let topDepth = well.topDepth;
-    let bottomDepth = well.bottomDepth;
-    let step = well.step;
+    let well = await wellModel.findWellById(dataset.idWell, username, { datasets:true, well_headers: true });
     let curve = {
         name: curveInfo.name,
         idDataset: curveInfo.idDesDataset
@@ -360,25 +425,27 @@ async function importCurveDataFromProject(curveInfo, token, callback, username) 
         }
     }).then(async function (c) {
         let _curve = c[0];
+        let projectCurve = await getCurveFromProject(curve.name, idDataset, token);
         let revision = await models.CurveRevision.findOrCreate({
             where: { idCurve: _curve.idCurve },
             defaults: {
                 idCurve: _curve.idCurve,
                 isCurrentRevision: 1,
-                unit: "M",
-                startDepth: topDepth,
-                stopDepth: bottomDepth,
-                step: step
+                unit: projectCurve.unit,
+                startDepth: well.datasets[0].top,
+                stopDepth: well.datasets[0].bottom,
+                step: well.datasets[0].step
             }
         })
         // const key = hashDir.getHashPath(username + _well.name + dataset.name + curve.name + curveData.unit + curveData.step) + curveData.name + '.txt';
-        // let curvePath = await curveModel.getCurveKey(revision);
+        revision = revision[0];
+        let curvePath = await curveModel.getCurveKey(revision);
 
         let filePath = hashDir.createPath(config.dataPath, username + well.name + dataset.name + _curve.name, _curve.name + '.txt');
         console.log('filePath', filePath);
         // fs.mkdirSync("./thuy");
         let writeStream = hashDir.createWriteStream(config.dataPath, username + well.name + dataset.name + _curve.name, _curve.name + '.txt');
-        // let stream = await s3.getData(curvePath);
+        let stream = await s3.getData(curvePath);
         try {
             let stream = request(options).pipe(writeStream);
             writeStream.on('close', async function () {

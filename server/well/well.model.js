@@ -19,8 +19,7 @@ function findWellById(idWell, username, attributes) {
     }];
     if (attributes && attributes.datasets) {
         let includeDatasets = {
-            model: models.Dataset,
-            attributes: ['idDataset', 'name']
+            model: models.Dataset
         };
         if (attributes.curves) includeDatasets.include = {
             model: models.Curve,
@@ -43,6 +42,7 @@ function findWellById(idWell, username, attributes) {
             // logging: console.log
         })
 }
+
 
 
 function getCurves(idWell, cb) {
@@ -275,13 +275,14 @@ function exportWellHeader(idWells, callback) {
 
 function findWellByName (wellName, username, callback){
     let Op = require('sequelize').Op;
+    console.log('username', username);
     models.Well.findOrCreate({
         where: {
             [Op.and]: [
                 {name: {[Op.eq]: wellName}},
-                {username: {[Op.eq]: username}}
+                {username: username}
             ]
-        }, default: {
+        }, defaults: {
             name: wellName, 
             username: username,
             filename: wellName

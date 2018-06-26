@@ -7,7 +7,8 @@ let models = require('../server/models');
 let response = require('../server/response');
 const s3 = require('../server/s3');
 // let exporter = require('./wi-export');
-let exporter = require('wi-export-test');
+// let exporter = require('wi-export-test');
+let exporter = require('C:/Users/OS/Desktop/workspace/wi-backend/server/export/wi-export-test');
 let curveModel = require('../server/curve/curve.model');
 
 router.post('/las2', function (req, res) {
