@@ -3,6 +3,8 @@
 const models = require('../models');
 const Dataset = models.Dataset;
 const curveModel = require('../curve/curve.model');
+let config = require('config');
+let request = require('request');
 
 
 function createDataset(body, cb) {
@@ -121,10 +123,82 @@ function editDataset(body, username, cb) {
     })
 }
 
+function findDatasetByName(wellName, datasetName, username, token, idProject, callback) {
+    let Op = require('sequelize').Op;
+    models.Well.findOrCreate({
+        where: {
+            name: {[Op.eq]: wellName},
+            username: {[Op.eq]: username}
+        }, default: {
+            name: wellName,
+            username: username,
+            filename: wellName
+        }
+    }).then(function(well) {
+        well = well[0];
+        getWellFromProject(wellName, idProject, token).then(function(_well) {
+            models.Dataset.findOrCreate({
+                where: {
+                    idWell: well.idWell,
+                    name: datasetName,
+                }, default: {
+                    name: datasetName,
+                    unit: "M",
+                    top: _well.topDepth,
+                    bottom: _well.bottomDepth,
+                    step: _well.step
+                }
+            }).then(function(dataset){
+                callback(null, dataset[0]);
+            }).catch(function(err) {
+                callback(err);
+                console.log('err 1', err);
+            })
+        }).catch(function(err){
+            callback(err);
+            console.log('err2', err);
+        })
+    }).catch(function(err){
+        callback(err);
+        console.log('err3',err);
+    })
+}
+function getWellFromProject(wellName, idProject, token) {
+    console.log('http://' + config.Service.project + '/project/well/full-info');
+    return new Promise(function (resolve, reject) {
+        let options = new Options('/project/well/full-info', token, { name: wellName, idProject: idProject });
+        request(options, function (error, response, body) {
+            if (error) {
+                reject(error);
+            } else {
+                if (body.content) {
+                    resolve(body.content);
+                } else {
+                    reject(body)
+                }
+            }
+        });
+    });
+}
+class Options {
+    constructor(path, token, payload) {
+        this.method = 'POST';
+        this.url = 'http://' + config.Service.project + path;
+        this.headers = {
+            'Cache-Control': 'no-cache',
+            Authorization: token,
+            'Content-Type': 'application/json'
+        };
+        this.body = payload;
+        this.json = true;
+    }
+}
+
 module.exports = {
     findDatasetById : findDatasetById,
     getDatasets: getDatasets,
     deleteDataset: deleteDataset,
     createDataset: createDataset,
-    editDataset: editDataset
+    editDataset: editDataset,
+    findDatasetByName: findDatasetByName
 };
