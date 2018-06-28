@@ -2,7 +2,7 @@
 
 const models = require('../../models');
 const WellHeader = require('../wellHeader');
-const hashDir = require('../../../extractors/hash-dir');
+const hashDir = require('wi-import').hashDir;
 const s3 = require('../../s3');
 const config = require('config');
 let asyncEach = require('async/each');

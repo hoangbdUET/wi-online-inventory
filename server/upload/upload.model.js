@@ -2,7 +2,10 @@ const responseJSON = require('../response');
 const lasProcessing = require('./function/lasProcessing');
 const asciiProcessing = require('./function/asciiProcessing');
 const coredataProcessing = require('./function/coredataProcessing');
+const config = require('config');
+const wiImport = require('wi-import');
 
+wiImport.setBasePath(config.dataPath);
 
 let uploadAsciiFiles = function (req, cb) {
     asciiProcessing.uploadAsciiFiles(req, cb);
