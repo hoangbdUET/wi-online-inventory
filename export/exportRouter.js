@@ -6,9 +6,7 @@ let config = require('config');
 let models = require('../server/models');
 let response = require('../server/response');
 const s3 = require('../server/s3');
-// let exporter = require('./wi-export');
-// let exporter = require('wi-export-test');
-let exporter = require('C:/Users/OS/Desktop/workspace/wi-backend/server/export/wi-export-test');
+let exporter = require('wi-export-test');
 let curveModel = require('../server/curve/curve.model');
 
 router.post('/las2', function (req, res) {
@@ -33,7 +31,64 @@ router.post('/las2', function (req, res) {
                     if (err) {
                         callback(err, null);
                     } else {
-                        console.log('---', result, '\n--', result.fileName);
+                        async.each(result, function(rs, next) {  
+                            rs.path = path.join(config.exportUrl, req.decoded.username, rs.fileName);
+                            next();
+                        }, function(err) {
+                            if(err){
+                                callback(err);
+                            } else {
+                                callback(null, result);
+                            }
+                        })
+                    }
+                })
+            }
+        })
+    }, function (err, results) {     
+        if (err) {
+            res.send(response(512, err));
+        } else {
+            let responseArr = [];
+            async.each(results, function(rs, next) {
+                async.each(rs, function(r, _next) {
+                    responseArr.push(r);
+                    _next();
+                }, function(err){
+                    next();
+                })
+            }, function(err){
+                if(err) {
+                    res.send(response(512, err));                    
+                } else {
+                    res.send(response(200, 'SUCCESSFULLY', responseArr));
+                }
+            })
+        }
+    });
+})
+router.post('/las3', function (req, res) {
+    async.map(req.body.idObjs, function (idObj, callback) {
+        models.Well.findById(idObj.idWell,{
+            include: [{
+                model: models.WellHeader
+            }, {
+                model: models.Dataset,
+                include: [{
+                    model: models.Curve,
+                    include: {
+                        model: models.CurveRevision
+                    }
+                }, {
+                    model: models.DatasetParams
+                }]
+            }]
+        }).then(well =>{
+            if(well && well.username == req.decoded.username){
+                exporter.exportLas3FromInventory(well, idObj.datasets, config.exportPath, s3, curveModel, req.decoded.username, function(err, result){
+                    if (err) {
+                        callback(err, null);
+                    } else {
                         result.path = path.join(config.exportUrl, req.decoded.username, result.fileName);
                         callback(null, result);
                     }

@@ -6,7 +6,7 @@ let User = models.User;
 let curveModel = require('../curve/curve.model');
 const datasetModel = require('../dataset/dataset.model');
 const asyncLoop = require('node-async-loop');
-const hashDir = require('../../extractors/hash-dir');
+const hashDir = require('wi-import').hashDir;
 const config = require('config');
 
 
@@ -79,11 +79,13 @@ async function deleteWell(idWell, username) {
                         Promise.resolve(rs);
                     })
                     .catch(err => {
+                        console.log('deleteWell destroy well failed');
                         Promise.reject(err)
                     })
             })
         })
         .catch((err) => {
+            console.log('deleteWell: ' + err);
             Promise.reject(err)
         })
 }

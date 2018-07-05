@@ -8,7 +8,7 @@ let datasetModel = require('../dataset/dataset.model');
 let wellModel = require('../well/well.model');
 let request = require('request');
 let models = require('../models');
-const hashDir = require('../../extractors/hash-dir');
+const hashDir = require('wi-import').hashDir;
 let config = require('config');
 let s3 = require('../s3');
 

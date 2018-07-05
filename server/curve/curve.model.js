@@ -5,7 +5,7 @@ const Dataset = models.Dataset;
 const User = models.User;
 const Curve = models.Curve;
 const config = require('config');
-const hashDir = require('../../extractors/hash-dir');
+const hashDir = require('wi-import').hashDir;
 const s3 = require('../s3');
 const readline = require('readline');
 const asyncEach = require('async/each');
@@ -384,6 +384,7 @@ function findWellByCurveName(curveNames, callback, username) {
 }
 
 async function getCurveKey(curveRevision){
+    console.log('===> curve revision: ' + curveRevision.idRevision)
     try {
         const revision = await  models.CurveRevision.findById(curveRevision.idRevision, {
             include: {
@@ -404,6 +405,7 @@ async function getCurveKey(curveRevision){
             }
 
         });
+        console.log("============> " + revision)
         const hashStr = revision.curve.dataset.well.user.username + revision.curve.dataset.well.name + revision.curve.dataset.name + revision.curve.name + revision.unit + revision.step;
         const key = hashDir.getHashPath(hashStr) + revision.curve.name + '.txt';
         return Promise.resolve(key);
