@@ -1,7 +1,7 @@
 'use strict';
 
 const asyncLoop = require('node-async-loop');
-const LASExtractor = require("../../../extractors/las/las-extractor");
+const LASExtractor = require("wi-import").LASExtractor;
 const importToDB = require('./importToDB');
 
 async function processFileUpload(file, importData) {

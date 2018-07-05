@@ -1,7 +1,7 @@
 'use strict'
 
 const fs = require('fs')
-const hash_dir = require('../extractors/hash-dir');
+const hash_dir = require('wi-import').hashDir;
 const config = require('config');
 const s3 = require('./s3');
 
