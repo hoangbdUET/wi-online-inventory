@@ -12,7 +12,6 @@ const hashDir = require('wi-import').hashDir;
 let config = require('config');
 let s3 = require('../s3');
 
-
 class Options {
     constructor(path, token, payload) {
         this.method = 'POST';
@@ -208,16 +207,16 @@ async function importWell(well, token, callback, username) {
                     };
                     dataset.curves.forEach(function (curve) {
                         queue.push(curve, function (err, success) {
-                            if(err) {
+                            if (err) {
                                 eachCb(err);
                             }
-                         });
+                        });
                     });
                 }).catch(function (err) {
                     eachCb(err);
                 })
             }, function (err) {
-                if(err) {
+                if (err) {
                     callback(err);
                 } else {
                     let wellHeaders = _well.well_headers;
@@ -231,7 +230,7 @@ async function importWell(well, token, callback, username) {
                             }
                         })
                     });
-                    callback(null, newWell);    
+                    callback(null, newWell);
                 }
             });
         }).catch(err => {
@@ -254,62 +253,24 @@ async function importWell(well, token, callback, username) {
 function importDataset(datasets, token, callback, username) {
     let response = [];
     asyncEach(datasets, function (dataset, next) {
-        async.parallel([
-            function (cb) {
-                getDatasetFromProjectById(dataset.idDataset, token).then(function (returnDataset) {
-                    if (returnDataset) {
-                        cb(null, returnDataset);
-                    } else {
-                        cb(" dataset not found");
-                    }
-                }).catch(function (err) {
-                    cb(err, null);
-                });
-            }, function (cb) {
-                getWellFromProjectById(dataset.idWell, token).then(function (returnWell) {
-                    if (returnWell) {
-                        console.log('return well', returnWell);
-                        cb(null, returnWell);
-                    } else {
-                        cb("well not found");
-                    }
-
-                }).catch(function (err) {
-                    cb(err, null);
-                });
-            }
-        ], function (error, results) {
-            if (error) {
-                callback(error);
-            } else if (results[0] && results[1]) {
+        getDatasetFromProjectById(dataset.idDataset, token).then(function (returnDataset) {
+            if (returnDataset) {
                 console.log('idDesWell', dataset.idDesWell);
-                let _well = results[1];
-                let fullDataset = results[0]
-                let topDepth = _well.well_headers.find(h => h.header === 'TOP').value;
-                let bottomDepth = _well.well_headers.find(h => h.header === 'STOP').value;
-                let step = _well.well_headers.find(h => h.header === 'STEP').value;
-                console.log('22222', topDepth, bottomDepth, step, _well);
-                let newDataset = {};
-                newDataset.name = fullDataset.name;
-                newDataset.idWell = dataset.idDesWell;
-                newDataset.top = topDepth;
-                newDataset.bottom = bottomDepth;
-                newDataset.step = step;
 
                 models.Dataset.findOrCreate({
-                    where: { name: newDataset.name, idWell: newDataset.idWell },
+                    where: { name: returnDataset.name, idWell: dataset.idDesWell },
                     defaults: {
-                        name: newDataset.name,
-                        idWell: newDataset.idWell,
-                        unit: "M",
-                        top: topDepth,
-                        bottom: bottomDepth,
-                        step: step,
+                        name: returnDataset.name,
+                        idWell: dataset.idDesWell,
+                        unit: returnDataset.unit,
+                        top: returnDataset.top,
+                        bottom: returnDataset.bottom,
+                        step: returnDataset.step,
                     }
                 }).then(rs => {
                     let _dataset = rs[0];
                     _dataset.curves = [];
-                    asyncEach(fullDataset.curves, function (curve, nextCurve) {
+                    asyncEach(returnDataset.curves, function (curve, nextCurve) {
                         setTimeout(function () {
                             curve.idDesDataset = _dataset.idDataset;
                             importCurveDataFromProject(curve, dataset.idDataset, token, function (err, result) {
@@ -332,9 +293,10 @@ function importDataset(datasets, token, callback, username) {
                     next();
                 });
             } else {
-                response.push({ reason: "not found" });
-                next();
+                cb(" dataset not found");
             }
+        }).catch(function (err) {
+            cb(err, null);
         });
     }, function (error) {
         if (error) {
@@ -358,7 +320,7 @@ async function importCurves(curves, token, callback, username) {
                     filename: curve.wellName,
                     username: username
                 }
-            }).then(async function(well) {
+            }).then(async function (well) {
                 well = well[0];
                 let projectWell = await getWellFromProject(curve.wellName, curve.idProject, token);
                 models.Dataset.findOrCreate({
@@ -373,11 +335,12 @@ async function importCurves(curves, token, callback, username) {
                         step: projectWell.step,
                         unit: "M"
                     }
-                }).then(async function(dataset) {
+                }).then(async function (dataset) {
                     dataset = dataset[0];
                     curve.idDesDataset = dataset.idDataset
                     let projectDataset = await getDatasetFromProjectByName(curve.datasetName, projectWell.idWell, token)
                     // ================================
+                    console.log('projectDataset', curve.datasetName, projectWell.idWell);
                     importCurveDataFromProject(curve, projectDataset.idDataset, token, function (err, result) {
                         if (err) {
                             response.push(err);
@@ -387,10 +350,10 @@ async function importCurves(curves, token, callback, username) {
                         }
                         next();
                     }, username);
-                }).catch(function(err) {
+                }).catch(function (err) {
                     response.push(err);
                 })
-            }).catch(function(err){
+            }).catch(function (err) {
                 response.push(err);
             })
         }, 100);
@@ -412,7 +375,7 @@ async function importCurveDataFromProject(curveInfo, idDataset, token, callback,
         json: true
     };
     let dataset = await datasetModel.findDatasetById(curveInfo.idDesDataset, username);
-    let well = await wellModel.findWellById(dataset.idWell, username, { datasets:true, well_headers: true });
+    let well = await wellModel.findWellById(dataset.idWell, username, { datasets: true, well_headers: true });
     let curve = {
         name: curveInfo.name,
         idDataset: curveInfo.idDesDataset
