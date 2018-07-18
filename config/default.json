@@ -6,7 +6,7 @@
     "user": "root",
     "password": "qwertyui",
     "logging": false,
-    "dbName": "wi_online_inventory"
+    "dbName": "inventory"
   },
   "Application": {
     "port": 9000,
@@ -15,7 +15,8 @@
   "Service": {
     "project": "127.0.0.1:3000"
   },
-  "dataPath": "/opt/wi-inventory-data",
   "exportPath": "exports",
-  "exportUrl": "/exports/file"
+  "s3Path": "https://s3-ap-southeast-1.amazonaws.com/wi-inventory",
+  "exportUrl": "/exports/file",
+  "dataPath": "/home/ubuntu/wi-inventory-data"
 }
