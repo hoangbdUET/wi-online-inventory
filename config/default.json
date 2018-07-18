@@ -3,13 +3,8 @@
     "dialect": "mysql",
     "host": "localhost",
     "port": 3306,
-/*<<<<<<< Updated upstream
     "user": "root",
     "password": "qwertyui",
-=======*/
-    "user": "wi",
-    "password": "@Abc123456",
-//>>>>>>> Stashed changes
     "logging": false,
     "dbName": "wi_online_inventory"
   },
@@ -20,11 +15,7 @@
   "Service": {
     "project": "127.0.0.1:3000"
   },
-/*<<<<<<< Updated upstream
   "dataPath": "/opt/wi-inventory-data",
-=======*/
-  "dataPath": "../wi-inventory-data",
-//>>>>>>> Stashed changes
   "exportPath": "exports",
   "exportUrl": "/exports/file"
 }
