@@ -13,11 +13,9 @@
     "jwtSecretKey": "secretKey"
   },
   "Service": {
-    "project": "dev.sflow.me"
+    "project": "127.0.0.1:3000"
   },
   "dataPath": "/opt/wi-inventory-data",
-//  "dataPath": "C:/Users/OS/Desktop/racruoi/lases",
-  "s3Path": "https://s3-ap-southeast-1.amazonaws.com/wi-inventory",
   "exportPath": "exports",
   "exportUrl": "/exports/file"
 }
