@@ -183,7 +183,7 @@ async function importWell(wellData, override) {
         } else {
             well = await models.Well.create(wellData);
         }
-        well.datasets = await importDatasets(wellData.datasets, well, false);
+        well.datasets = await importDatasets(wellData.datasets, well, true);
 
         // if (override) {
         //     try {

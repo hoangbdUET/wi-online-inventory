@@ -14,7 +14,7 @@ let storage = multer.diskStorage({
     }
 });
 
-let upload = multer({storage: storage});
+let upload = multer({ storage: storage });
 
 
 router.post('/upload/lases', upload.array('file'), function (req, res) {
@@ -26,7 +26,6 @@ router.post('/upload/lases', upload.array('file'), function (req, res) {
             res.send(responseJSON(500, 'UPLOAD FILES FAILED', err));
         })
 });
-
 
 router.post('/upload/ascii', upload.array('file'), function (req, res) {
     uploadModel.uploadAsciiFiles(req, (err, result) => {
@@ -42,5 +41,14 @@ router.post('/upload/coredata', upload.array('file'), function (req, res) {
     });
 });
 
+router.post('/upload/csv', upload.array('file'), function (req, res) {
+    uploadModel.uploadCSVFile(req)
+        .then(result => {
+            res.send(responseJSON(200, 'UPLOAD FILES SUCCESS', result));
+        })
+        .catch(err => {
+            res.send(responseJSON(500, 'UPLOAD FILES FAILED', err));
+        })
+});
 
 module.exports = router;

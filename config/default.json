@@ -3,8 +3,13 @@
     "dialect": "mysql",
     "host": "localhost",
     "port": 3306,
+/*<<<<<<< Updated upstream
     "user": "root",
     "password": "qwertyui",
+=======*/
+    "user": "wi",
+    "password": "@Abc123456",
+//>>>>>>> Stashed changes
     "logging": false,
     "dbName": "wi_online_inventory"
   },
@@ -13,11 +18,13 @@
     "jwtSecretKey": "secretKey"
   },
   "Service": {
-    "project": "dev.sflow.me"
+    "project": "127.0.0.1:3000"
   },
+/*<<<<<<< Updated upstream
   "dataPath": "/opt/wi-inventory-data",
-//  "dataPath": "C:/Users/OS/Desktop/racruoi/lases",
-  "s3Path": "https://s3-ap-southeast-1.amazonaws.com/wi-inventory",
+=======*/
+  "dataPath": "../wi-inventory-data",
+//>>>>>>> Stashed changes
   "exportPath": "exports",
   "exportUrl": "/exports/file"
 }

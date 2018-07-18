@@ -36,6 +36,9 @@ function main() {
     app.use('/', userRouter);
     app.use('/export', exportRouter);
     app.use('/import/project', importFromProjectRouter);
+    
+    // let uploadCSV = require('./server/upload/csvUpload/csvRouter');
+    // app.use('/', uploadCSV);
 
     // let testRouter = require('./controllers/index');
     // let curveRouter = require('./controllers/curve/curveRouter');
