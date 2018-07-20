@@ -15,7 +15,7 @@
   "Service": {
     "project": "127.0.0.1:3000"
   },
-  "exportPath": "exports",
+  "exportPath": "server/export/exported-files",
   "s3Path": "https://s3-ap-southeast-1.amazonaws.com/wi-inventory",
   "dataPath": "/home/ubuntu/wi-inventory-data"
 }
