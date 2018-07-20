@@ -26,7 +26,7 @@ function main() {
     let datasetRouter = require('./server/dataset/dataset.router');
     let wellRouter = require('./server/well/well.router');
     let userRouter = require('./server/user/user.router');
-    let exportRouter = require('./export/exportRouter');
+    let exportRouter = require('./server/export/export.router');
     let importFromProjectRouter = require('./server/import-from-project/import.router');
 
     app.use('/', uploadRouter);
