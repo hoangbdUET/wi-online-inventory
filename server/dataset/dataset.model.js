@@ -3,6 +3,8 @@
 const models = require('../models');
 const Dataset = models.Dataset;
 const curveModel = require('../curve/curve.model');
+let config = require('config');
+let request = require('request');
 
 
 function createDataset(body, cb) {
@@ -121,10 +123,42 @@ function editDataset(body, username, cb) {
     })
 }
 
+function getWellFromProject(wellName, idProject, token) {
+    console.log('http://' + config.Service.project + '/project/well/info-by-name');
+    return new Promise(function (resolve, reject) {
+        let options = new Options('/project/well/info-by-name', token, { name: wellName, idProject: idProject });
+        request(options, function (error, response, body) {
+            if (error) {
+                reject(error);
+            } else {
+                if (body.content) {
+                    resolve(body.content);
+                } else {
+                    reject(body)
+                }
+            }
+        });
+    });
+}
+class Options {
+    constructor(path, token, payload) {
+        this.method = 'POST';
+        this.url = 'http://' + config.Service.project + path;
+        this.headers = {
+            'Cache-Control': 'no-cache',
+            Authorization: token,
+            'Content-Type': 'application/json'
+        };
+        this.body = payload;
+        this.json = true;
+    }
+}
+
 module.exports = {
     findDatasetById : findDatasetById,
     getDatasets: getDatasets,
     deleteDataset: deleteDataset,
     createDataset: createDataset,
-    editDataset: editDataset
+    editDataset: editDataset,
+    // findDatasetByName: findDatasetByName
 };

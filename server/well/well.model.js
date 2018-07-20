@@ -6,21 +6,20 @@ let User = models.User;
 let curveModel = require('../curve/curve.model');
 const datasetModel = require('../dataset/dataset.model');
 const asyncLoop = require('node-async-loop');
-const hashDir = require('../../extractors/hash-dir');
+const hashDir = require('wi-import').hashDir;
 const config = require('config');
-
+let request = require('request');
 
 function findWellById(idWell, username, attributes) {
     let include = [{
         model: User,
         attributes: [],
-        where: {username: username},
+        where: { username: username },
         required: true
     }];
     if (attributes && attributes.datasets) {
         let includeDatasets = {
-            model: models.Dataset,
-            attributes: ['idDataset', 'name']
+            model: models.Dataset
         };
         if (attributes.curves) includeDatasets.include = {
             model: models.Curve,
@@ -30,6 +29,11 @@ function findWellById(idWell, username, attributes) {
             model: models.CurveRevision
         };
         include.push(includeDatasets);
+    } else if (attributes && attributes.well_headers) {
+        let includeWellHeader = {
+            model: models.WellHeader
+        }
+        include.push(includeWellHeader);
     }
     return Well.findById(
         idWell,
@@ -38,7 +42,6 @@ function findWellById(idWell, username, attributes) {
             // logging: console.log
         })
 }
-
 
 function getCurves(idWell, cb) {
     let curves = [];
@@ -74,11 +77,13 @@ async function deleteWell(idWell, username) {
                         Promise.resolve(rs);
                     })
                     .catch(err => {
+                        console.log('deleteWell destroy well failed');
                         Promise.reject(err)
                     })
             })
         })
         .catch((err) => {
+            console.log('deleteWell: ' + err);
             Promise.reject(err)
         })
 }
@@ -191,8 +196,8 @@ function editWell(body, username, cb) {
                 cb('NO WELL FOUND TO EDIT');
             }
         }).catch(err => {
-        cb(err);
-    });
+            cb(err);
+        });
 }
 
 function makeFileFromJSON(JSONdata, callback) {
@@ -201,7 +206,7 @@ function makeFileFromJSON(JSONdata, callback) {
     const json2csv = require('json2csv');
     let path = tempfile('.csv');
     let fields = JSONdata.fields;
-    let csv = json2csv({data: JSONdata.data, fields: fields});
+    let csv = json2csv({ data: JSONdata.data, fields: fields });
     fs.writeFile(path, csv, function (err) {
         if (err) {
             callback(err, null);
@@ -221,7 +226,7 @@ function exportWellHeader(idWells, callback) {
         if (idWells.length === 0) {
             //all well
             console.log("ALL WELL");
-            Well.findAll({include: models.WellHeader}).then(rs => {
+            Well.findAll({ include: models.WellHeader }).then(rs => {
                 asyncEach(rs, function (well, nextWell) {
                     let data = {};
                     asyncLoop(well.well_headers, function (header, nextHeader) {
@@ -244,7 +249,7 @@ function exportWellHeader(idWells, callback) {
             });
         } else {
             asyncEach(idWells, function (idWell, nextWell) {
-                Well.findById(idWell, {include: models.WellHeader}).then(well => {
+                Well.findById(idWell, { include: models.WellHeader }).then(well => {
                     let data = {};
                     asyncEach(well.well_headers, function (header, nextHeader) {
                         data.WELL_NAME = well.name;
@@ -268,10 +273,84 @@ function exportWellHeader(idWells, callback) {
     }
 }
 
+function findOrCreateWellByName(wellName, username, idProjectWell, token, callback) {
+    let Op = require('sequelize').Op;
+    models.Well.findOne({
+        where: {
+            [Op.and]: [
+                { name: { [Op.eq]: wellName } },
+                { username: username }
+            ]
+        }
+    }).then(function (well) {
+        if (well) {
+            callback(null, well);
+        } else {
+            models.Well.create({
+                filename: wellName,
+                name: wellName,
+                username: username
+            }).then(function (well) {
+                console.log('well', well);
+                getWellFromProjectById(idProjectWell, token).then(function(projectWell){
+                    if(projectWell) {
+                        callback(null, well);
+                        for(let h of projectWell.well_headers) {
+                            models.WellHeader.create({
+                                idWell: well.idWell,
+                                header: h.header,
+                                value: h.value,
+                                description: h.description 
+                            })
+                            .catch(function(err){
+                                console.log('err', err);
+                                callback(err);
+                            })
+                        }
+                    } else {
+                        callback('well not found');
+                    }
+                })
+            }).catch(function (err) { callback(err); })
+        }
+    }).catch(function (err) {
+        console.log('err', err);
+        callback(err);
+    })
+}
+
+function getWellFromProjectById(idWell, token) {
+    return new Promise(function (resolve, reject) {
+        let options = {
+            method: 'POST',
+            url: 'http://' + config.Service.project + '/project/well/full-info',
+            headers:
+                {
+                    Authorization: token,
+                    'Content-Type': 'application/json'
+                },
+            body: { idWell: idWell },
+            json: true
+        };
+        request(options, function (error, response, body) {
+            if (error) {
+                reject(error);
+            } else {
+                if (body.content) {
+                    resolve(body.content);
+                } else {
+                    reject(body)
+                }
+            }
+        });
+    });
+}
+
 module.exports = {
     findWellById: findWellById,
     deleteWell: deleteWell,
     copyDatasets: copyDatasets,
     editWell: editWell,
-    exportWellHeader: exportWellHeader
+    exportWellHeader: exportWellHeader,
+    findOrCreateWellByName: findOrCreateWellByName
 };

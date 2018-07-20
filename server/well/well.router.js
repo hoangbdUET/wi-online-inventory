@@ -84,6 +84,16 @@ router.post('/well/full-info', function (req, res) {
 
 });
 
+router.post('/well/find-or-create-by-name', function (req, res) {
+    let token = req.body.token || req.query.token || req.header['x-access-token'] || req.get('Authorization');    
+    wellModel.findOrCreateWellByName(req.body.name, req.decoded.username, req.body.idProjectWell, token, function (err, well) {
+        if (err) {
+            res.send(response((500, 'ERROR')));
+        } else {
+            res.send(response(200, 'SUCCESSFULLY', well));
+        }
+    })
+})
 router.post('/well/info', function (req, res) {
     wellModel.findWellById(req.body.idWell, req.decoded.username)
         .then(well => {
@@ -107,8 +117,8 @@ router.post('/well/info', function (req, res) {
                 res.send(response(200, 'NO WELL FOUND BY ID'));
             }
         }).catch(err => {
-        res.send(response(500, 'FAILED TO FIND WELL', err));
-    });
+            res.send(response(500, 'FAILED TO FIND WELL', err));
+        });
 });
 
 router.post('/well/edit', function (req, res) {

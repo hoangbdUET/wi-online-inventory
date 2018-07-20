@@ -2,7 +2,7 @@
 
 const models = require('../../models');
 const WellHeader = require('../wellHeader');
-const hashDir = require('../../../extractors/hash-dir');
+const hashDir = require('wi-import').hashDir;
 const s3 = require('../../s3');
 const config = require('config');
 const asyncEach = require('async/each');
@@ -104,11 +104,7 @@ async function importWell(wellData, override) {
             well = await models.Well.create(wellData);
         }
 
-        // console.log("======> " + JSON.stringify(well));
-        // console.log("------> " + JSON.stringify(wellData));
-
-
-        well.datasets = await importDatasets(wellData.datasets, well, false);
+        well.datasets = await importDatasets(wellData.datasets, well, true);
 
         let arr = ['username', 'datasets', 'name', 'params'];
         for (let property in WellHeader) {
