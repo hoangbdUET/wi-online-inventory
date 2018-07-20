@@ -2,16 +2,17 @@ let express = require('express');
 let router = express.Router();
 let async = require('async');
 let path = require('path');
+let fs = require('fs');
 let config = require('config');
-let models = require('../server/models');
-let response = require('../server/response');
-const s3 = require('../server/s3');
+let models = require('../models');
+let response = require('../response');
+const s3 = require('../s3');
 let exporter = require('wi-export-test');
-let curveModel = require('../server/curve/curve.model');
+let curveModel = require('../curve/curve.model');
 
 router.post('/las2', function (req, res) {
     async.map(req.body.idObjs, function (idObj, callback) {
-        models.Well.findById(idObj.idWell,{
+        models.Well.findById(idObj.idWell, {
             include: [{
                 model: models.WellHeader
             }, {
@@ -25,9 +26,9 @@ router.post('/las2', function (req, res) {
                     model: models.DatasetParams
                 }]
             }]
-        }).then(well =>{
-            if(well && well.username == req.decoded.username){
-                exporter.exportLas2FromInventory(well, idObj.datasets, config.exportPath, s3, curveModel, req.decoded.username, function(err, result){
+        }).then(well => {
+            if (well && well.username == req.decoded.username) {
+                exporter.exportLas2FromInventory(well, idObj.datasets, config.exportPath, s3, curveModel, req.decoded.username, function (err, result) {
                     if (err) {
                         callback(err, null);
                     } else {
@@ -36,22 +37,21 @@ router.post('/las2', function (req, res) {
                 })
             }
         })
-    }, function (err, results) {     
+    }, function (err, results) {
         if (err) {
             res.send(response(512, err));
         } else {
-            let responseArr = [];
-            async.each(results, function(rs, next) {
-                async.each(rs, function(r, _next) {
-                    r.path = path.join(config.exportUrl, req.decoded.username, r.fileName);
+            let responseArr = [];            
+            async.each(results, function (rs, next) {
+                async.each(rs, function (r, _next) {
                     responseArr.push(r);
                     _next();
-                }, function(err){
+                }, function (err) {
                     next();
                 })
-            }, function(err){
-                if(err) {
-                    res.send(response(512, err));                    
+            }, function (err) {
+                if (err) {
+                    res.send(response(512, err));
                 } else {
                     res.send(response(200, 'SUCCESSFULLY', responseArr));
                 }
@@ -61,7 +61,7 @@ router.post('/las2', function (req, res) {
 })
 router.post('/las3', function (req, res) {
     async.map(req.body.idObjs, function (idObj, callback) {
-        models.Well.findById(idObj.idWell,{
+        models.Well.findById(idObj.idWell, {
             include: [{
                 model: models.WellHeader
             }, {
@@ -75,13 +75,12 @@ router.post('/las3', function (req, res) {
                     model: models.DatasetParams
                 }]
             }]
-        }).then(well =>{
-            if(well && well.username == req.decoded.username){
-                exporter.exportLas3FromInventory(well, idObj.datasets, config.exportPath, s3, curveModel, req.decoded.username, function(err, result){
+        }).then(well => {
+            if (well && well.username == req.decoded.username) {
+                exporter.exportLas3FromInventory(well, idObj.datasets, config.exportPath, s3, curveModel, req.decoded.username, function (err, result) {
                     if (err) {
                         callback(err, null);
                     } else {
-                        result.path = path.join(config.exportUrl, req.decoded.username, result.fileName);
                         callback(null, result);
                     }
                 })
@@ -98,7 +97,7 @@ router.post('/las3', function (req, res) {
 
 router.post('/csv', function (req, res) {
     async.map(req.body.idObjs, function (idObj, callback) {
-        models.Well.findById(idObj.idWell,{
+        models.Well.findById(idObj.idWell, {
             include: [{
                 model: models.WellHeader
             }, {
@@ -112,9 +111,9 @@ router.post('/csv', function (req, res) {
                     model: models.DatasetParams
                 }]
             }]
-        }).then(well =>{
-            if(well && well.username == req.decoded.username){
-                exporter.exportCsvFromInventory(well, idObj.datasets, config.exportPath, s3, curveModel, req.decoded.username, function(err, result){
+        }).then(well => {
+            if (well && well.username == req.decoded.username) {
+                exporter.exportCsvFromInventory(well, idObj.datasets, config.exportPath, s3, curveModel, req.decoded.username, function (err, result) {
                     if (err) {
                         callback(err, null);
                     } else {
@@ -123,26 +122,42 @@ router.post('/csv', function (req, res) {
                 })
             }
         })
-    }, function (err, results) {     
+    }, function (err, results) {
         if (err) {
             res.send(response(512, err));
         } else {
             let responseArr = [];
-            async.each(results, function(rs, next) {
-                async.each(rs, function(r, _next) {
-                    r.path = path.join(config.exportUrl, req.decoded.username, r.fileName);
+            async.each(results, function (rs, next) {
+                async.each(rs, function (r, _next) {
                     responseArr.push(r);
                     _next();
-                }, function(err){
+                }, function (err) {
                     next();
                 })
-            }, function(err){
-                if(err) {
-                    res.send(response(512, err));                    
+            }, function (err) {
+                if (err) {
+                    res.send(response(512, err));
                 } else {
                     res.send(response(200, 'SUCCESSFULLY', responseArr));
                 }
             })
+        }
+    });
+})
+
+router.post('/files', function (req, res) {
+    let filePath = path.join(config.exportPath, req.decoded.username, req.body.fileName);
+    fs.exists(filePath, function (exists) {
+        if (exists) {
+            // res.writeHead(200, {
+            //     "Content-Type": "application/octet-stream",
+            //     "Content-Disposition": "attachment; filename=" + req.body.fileName
+            // });
+            // fs.createReadStream(filePath).pipe(res);
+
+            res.sendFile(path.join(__dirname, '../../', filePath));
+        } else {
+            res.send(response(404, "ERROR File does not exist"));
         }
     });
 })
