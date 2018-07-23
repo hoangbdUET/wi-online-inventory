@@ -173,15 +173,19 @@ async function importWell(well, token, callback, username) {
                                 let stream = request(options).pipe(writeStream);
                                 writeStream.on('close', async function () {
                                     console.log('stream end');
-                                    const key = hashDir.getHashPath(username + newWell.name + newDataset.name + curve.name + revision.unit + revision.step) + curve.name + '.txt';
-                                    await s3.upload(filePath, key)
-                                        .then(data => {
-                                            console.log(data.Location);
-                                            cb(null, _curve);
-                                        }).catch(err => {
-                                            cb(err);
-                                            console.log(err);
-                                        });
+                                    if(config.s3Path) {
+                                        const key = hashDir.getHashPath(username + newWell.name + newDataset.name + curve.name + revision.unit + revision.step) + curve.name + '.txt';
+                                        await s3.upload(filePath, key)
+                                            .then(data => {
+                                                console.log(data.Location);
+                                                cb(null, _curve);
+                                            }).catch(err => {
+                                                cb(err);
+                                                console.log(err);
+                                            });
+                                    } else {
+                                        cb(null, _curve);                                        
+                                    }  
                                 });
                                 stream.on('error', function (err) {
                                     cb(err);
@@ -217,6 +221,7 @@ async function importWell(well, token, callback, username) {
                 })
             }, function (err) {
                 if (err) {
+                    console.log('err1', err);
                     callback(err);
                 } else {
                     let wellHeaders = _well.well_headers;
@@ -243,10 +248,12 @@ async function importWell(well, token, callback, username) {
                     callback(null, existedWell);
                 });
             } else {
+                console.log('err2', err);
                 callback(err);
             }
         })
     } catch (e) {
+        console.log('err3', err);
         callback(e);
     }
 }
@@ -408,20 +415,24 @@ async function importCurveDataFromProject(curveInfo, idDataset, token, callback,
         console.log('filePath', filePath);
         // fs.mkdirSync("./thuy");
         let writeStream = hashDir.createWriteStream(config.dataPath, username + well.name + dataset.name + _curve.name, _curve.name + '.txt');
-        let stream = await s3.getData(curvePath);
+        // let stream = await s3.getData(curvePath);
         try {
             let stream = request(options).pipe(writeStream);
             writeStream.on('close', async function () {
                 console.log('stream end');
-                const key = hashDir.getHashPath(username + well.name + dataset.name + _curve.name + revision.unit + revision.step) + _curve.name + '.txt';
-                await s3.upload(filePath, key)
-                    .then(data => {
-                        callback(null, _curve);
-                        console.log('_curve', curve);
-                    })
-                    .catch(err => {
-                        console.log(err);
-                    });
+                if(config.s3Path) {
+                    const key = hashDir.getHashPath(username + well.name + dataset.name + _curve.name + revision.unit + revision.step) + _curve.name + '.txt';
+                    await s3.upload(filePath, key)
+                        .then(data => {
+                            callback(null, _curve);
+                            console.log('_curve', curve);
+                        })
+                        .catch(err => {
+                            console.log('upload err', err);
+                        });
+                } else {
+                    callback(null, _curve);
+                }
             });
             stream.on('error', function (err) {
                 callback(err, null);
