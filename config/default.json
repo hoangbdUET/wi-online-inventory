@@ -16,6 +16,5 @@
     "project": "127.0.0.1:3000"
   },
   "dataPath": "/opt/wi-inventory-data",
-  "exportPath": "exports",
-  "exportUrl": "/exports/file"
+  "exportPath": "server/export/exported-files"
 }
