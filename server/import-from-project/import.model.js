@@ -135,87 +135,91 @@ async function importWell(well, token, callback, username) {
                     }
                 }).then(function (newDataset) {
                     newDataset = newDataset[0];
-                    let queue = asyncQueue(function (curve, cb) {
-                        let options = {
-                            method: 'POST',
-                            url: 'http://' + config.Service.project + '/project/well/dataset/curve/getDataFile',
-                            headers:
-                                {
-                                    Authorization: token,
-                                    'Content-Type': 'application/json'
-                                },
-                            body: { idCurve: curve.idCurve },
-                            json: true
-                        };
-                        models.Curve.create({
-                            name: curve.name,
-                            idDataset: newDataset.idDataset
-                        }).then(async function (c) {
-                            let _curve = c;
-                            let projectCurve = await getCurveFromProject(curve.name, dataset.idDataset, token);
-                            let revision = await models.CurveRevision.create({
-                                idCurve: _curve.idCurve,
-                                isCurrentRevision: 1,
-                                unit: projectCurve.unit,
-                                startDepth: topDepth,
-                                stopDepth: bottomDepth,
-                                step: step
-                            })
-                            // const key = hashDir.getHashPath(username + _well.name + dataset.name + curve.name + curveData.unit + curveData.step) + curveData.name + '.txt';
-                            // let curvePath = await curveModel.getCurveKey(revision);
-
-                            let filePath = hashDir.createPath(config.dataPath, username + newWell.name + newDataset.name + curve.name, curve.name + '.txt');
-                            console.log('filePath', filePath);
-                            // fs.mkdirSync("./thuy");
-                            let writeStream = hashDir.createWriteStream(config.dataPath, username + newWell.name + newDataset.name + curve.name, curve.name + '.txt');
-                            // let stream = await s3.getData(curvePath);
-                            try {
-                                let stream = request(options).pipe(writeStream);
-                                writeStream.on('close', async function () {
-                                    console.log('stream end');
-                                    if(config.s3Path) {
-                                        const key = hashDir.getHashPath(username + newWell.name + newDataset.name + curve.name + revision.unit + revision.step) + curve.name + '.txt';
-                                        await s3.upload(filePath, key)
-                                            .then(data => {
-                                                console.log(data.Location);
-                                                cb(null, _curve);
-                                            }).catch(err => {
-                                                cb(err);
-                                                console.log(err);
-                                            });
-                                    } else {
-                                        cb(null, _curve);                                        
-                                    }  
-                                });
-                                stream.on('error', function (err) {
-                                    cb(err);
-                                });
-                            } catch (err) {
-                                cb(err);
-                            }
-                        }).catch(err => {
-                            models.Curve.findOne({
-                                where: {
-                                    name: curve.name,
-                                    idDataset: newDataset.idDataset
-                                }
-                            }).then(function (foundCurve) {
-                                cb(null, foundCurve);
-                            }).catch(function (e) {
-                                cb(e, null);
-                            })
-                        })
-                    }, 2);
-                    queue.drain = function () {
+                    if (!dataset.curves || !dataset.curve.length == 0) {
                         eachCb();
-                    };
-                    dataset.curves.forEach(function (curve) {
-                        queue.push(curve, function (err, success) {
-                            if (err) {
-                                eachCb(err);
-                            }
+                    } else {
+                        let queue = asyncQueue(function (curve, cb) {
+                            let options = {
+                                method: 'POST',
+                                url: 'http://' + config.Service.project + '/project/well/dataset/curve/getDataFile',
+                                headers:
+                                    {
+                                        Authorization: token,
+                                        'Content-Type': 'application/json'
+                                    },
+                                body: { idCurve: curve.idCurve },
+                                json: true
+                            };
+                            models.Curve.create({
+                                name: curve.name,
+                                idDataset: newDataset.idDataset
+                            }).then(async function (c) {
+                                let _curve = c;
+                                let projectCurve = await getCurveFromProject(curve.name, dataset.idDataset, token);
+                                let revision = await models.CurveRevision.create({
+                                    idCurve: _curve.idCurve,
+                                    isCurrentRevision: 1,
+                                    unit: projectCurve.unit,
+                                    startDepth: topDepth,
+                                    stopDepth: bottomDepth,
+                                    step: step
+                                })
+                                // const key = hashDir.getHashPath(username + _well.name + dataset.name + curve.name + curveData.unit + curveData.step) + curveData.name + '.txt';
+                                // let curvePath = await curveModel.getCurveKey(revision);
+
+                                let filePath = hashDir.createPath(config.dataPath, username + newWell.name + newDataset.name + curve.name, curve.name + '.txt');
+                                console.log('filePath', filePath);
+                                // fs.mkdirSync("./thuy");
+                                let writeStream = hashDir.createWriteStream(config.dataPath, username + newWell.name + newDataset.name + curve.name, curve.name + '.txt');
+                                // let stream = await s3.getData(curvePath);
+                                try {
+                                    let stream = request(options).pipe(writeStream);
+                                    writeStream.on('close', async function () {
+                                        console.log('stream end');
+                                        if (config.s3Path) {
+                                            const key = hashDir.getHashPath(username + newWell.name + newDataset.name + curve.name + revision.unit + revision.step) + curve.name + '.txt';
+                                            await s3.upload(filePath, key)
+                                                .then(data => {
+                                                    console.log(data.Location);
+                                                    cb(null, _curve);
+                                                }).catch(err => {
+                                                    cb(err);
+                                                    console.log(err);
+                                                });
+                                        } else {
+                                            cb(null, _curve);
+                                        }
+                                    });
+                                    stream.on('error', function (err) {
+                                        cb(err);
+                                    });
+                                } catch (err) {
+                                    cb(err);
+                                }
+                            }).catch(err => {
+                                models.Curve.findOne({
+                                    where: {
+                                        name: curve.name,
+                                        idDataset: newDataset.idDataset
+                                    }
+                                }).then(function (foundCurve) {
+                                    cb(null, foundCurve);
+                                }).catch(function (e) {
+                                    cb(e, null);
+                                })
+                            })
+                        }, 2);
+                        queue.drain = function () {
+                            eachCb();
+                        };
+                        dataset.curves.forEach(function (curve) {
+                            queue.push(curve, function (err, success) {
+                                if (err) {
+                                    eachCb(err);
+                                }
+                            });
                         });
-                    });
+                    }
                 }).catch(function (err) {
                     eachCb(err);
                 })
@@ -420,7 +424,7 @@ async function importCurveDataFromProject(curveInfo, idDataset, token, callback,
             let stream = request(options).pipe(writeStream);
             writeStream.on('close', async function () {
                 console.log('stream end');
-                if(config.s3Path) {
+                if (config.s3Path) {
                     const key = hashDir.getHashPath(username + well.name + dataset.name + _curve.name + revision.unit + revision.step) + _curve.name + '.txt';
                     await s3.upload(filePath, key)
                         .then(data => {
