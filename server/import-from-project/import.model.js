@@ -135,7 +135,7 @@ async function importWell(well, token, callback, username) {
                     }
                 }).then(function (newDataset) {
                     newDataset = newDataset[0];
-                    if (!dataset.curves || !dataset.curves.length == 0) {
+                    if (!dataset.curves || dataset.curves.length == 0) {
                         eachCb();
                     } else {
                         let queue = asyncQueue(function (curve, cb) {
