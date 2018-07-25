@@ -47,6 +47,6 @@
     "tempfile": "^2.0.0",
     "through2": "^2.0.3",
     "wi-export-test": "^1.0.8",
-    "wi-import": "^1.1.6"
+    "wi-import": "^1.1.10"
   }
 }
