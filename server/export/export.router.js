@@ -163,7 +163,7 @@ router.post('/csv/wdrv', function (req, res) {
             }]
         }).then(well => {
             if (well && well.username == req.decoded.username) {
-                exporter.exportWDRVFromInventory(well, idObj.datasets, config.exportPath, s3, curveModel, req.decoded.username, function (err, result) {
+                exporter.exportCsvWDRVFromInventory(well, idObj.datasets, config.exportPath, s3, curveModel, req.decoded.username, function (err, result) {
                     if (err) {
                         callback(err, null);
                     } else {
