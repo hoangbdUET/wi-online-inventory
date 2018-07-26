@@ -95,7 +95,7 @@ router.post('/las3', function (req, res) {
     });
 })
 
-router.post('/csv', function (req, res) {
+router.post('/csv/rv', function (req, res) {
     async.map(req.body.idObjs, function (idObj, callback) {
         models.Well.findById(idObj.idWell, {
             include: [{
@@ -113,7 +113,7 @@ router.post('/csv', function (req, res) {
             }]
         }).then(well => {
             if (well && well.username == req.decoded.username) {
-                exporter.exportCsvFromInventory(well, idObj.datasets, config.exportPath, s3, curveModel, req.decoded.username, function (err, result) {
+                exporter.exportCsvRVFromInventory(well, idObj.datasets, config.exportPath, s3, curveModel, req.decoded.username, function (err, result) {
                     if (err) {
                         callback(err, null);
                     } else {
@@ -141,6 +141,42 @@ router.post('/csv', function (req, res) {
                     res.send(response(200, 'SUCCESSFULLY', responseArr));
                 }
             })
+        }
+    });
+})
+
+router.post('/csv/wdrv', function (req, res) {
+    async.map(req.body.idObjs, function (idObj, callback) {
+        models.Well.findById(idObj.idWell, {
+            include: [{
+                model: models.WellHeader
+            }, {
+                model: models.Dataset,
+                include: [{
+                    model: models.Curve,
+                    include: {
+                        model: models.CurveRevision
+                    }
+                }, {
+                    model: models.DatasetParams
+                }]
+            }]
+        }).then(well => {
+            if (well && well.username == req.decoded.username) {
+                exporter.exportWDRVFromInventory(well, idObj.datasets, config.exportPath, s3, curveModel, req.decoded.username, function (err, result) {
+                    if (err) {
+                        callback(err, null);
+                    } else {
+                        callback(null, result);
+                    }
+                })
+            }
+        })
+    }, function (err, result) {
+        if (err) {
+            res.send(response(404, err));
+        } else {
+            res.send(response(200, 'SUCCESSFULLY', result));
         }
     });
 })
