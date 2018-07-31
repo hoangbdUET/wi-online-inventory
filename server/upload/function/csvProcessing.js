@@ -15,12 +15,10 @@ function uploadCSVFile(req) {
             let curveChosen = [];
             let count = 0;
             let output = [];
-
+            let separator = req.body.delimiter;
             let CHECKHEADERLINE = req.body.checkHeaderLine;
             let INDEXSETTING = req.body.selectedFields;
             let TITLE = req.body.titleOfFields;
-            let delimiter =
-                req.body.delimiter != '' ? req.body.delimiter : /\s|\t/g;
             var importData = {};
             importData.userInfo = req.decoded;
             importData.override = !!(
@@ -49,7 +47,7 @@ function uploadCSVFile(req) {
             fs.createReadStream(inputURL)
                 .pipe(
                     csv2({
-                        separator: req.body.separator,
+                        separator: separator,
                     }),
                 )
                 .pipe(
@@ -59,6 +57,10 @@ function uploadCSVFile(req) {
                         callback,
                     ) {
                         let data = [];
+                        if (separator == '') {
+                            chunk = chunk[0].split(/\t|\s/g);
+                            console.log(chunk);
+                        }
                         configWellHeader(chunk, count);
                         importData.well.STOP.value = chunk[req.body.depthIndex];
                         for (let i = 0; i < INDEXSETTING.length; i++) {
@@ -114,6 +116,7 @@ function uploadCSVFile(req) {
 
         function configWellHeader(chunk, count) {
             if (count == parseInt(req.body.headerLineIndex) + 2) {
+                console.log(chunk);
                 importData.well.STRT = {};
                 // importData.well.name = chunk[0];
                 importData.well.STRT.value = chunk[req.body.depthIndex];
