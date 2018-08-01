@@ -6,8 +6,8 @@ const importToDB = require('./importToDB');
 
 async function processFileUpload(file, importData) {
     console.log("______processFileUpload________");
-    console.log(importData);
-    console.log(JSON.stringify(file));
+    // console.log(importData);
+    // console.log(JSON.stringify(file));
     try {
         let fileFormat = file.filename.substring(file.filename.lastIndexOf('.') + 1);
         if (/LAS/.test(fileFormat.toUpperCase())) {
@@ -27,7 +27,7 @@ async function processFileUpload(file, importData) {
 async function uploadLasFiles(req) {
     try {
         if (!req.files) return cb('NO FILE CHOSEN!!!');
-        console.log(req);
+        // console.log(req);
         let output = [];
         let importData = {};
         importData.userInfo = req.decoded;
