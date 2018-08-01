@@ -6,15 +6,17 @@
     "user": "root",
     "password": "qwertyui",
     "logging": false,
-    "dbName": "wi_online_inventory"
+    "dbName": "inventory"
   },
   "Application": {
     "port": 9000,
     "jwtSecretKey": "secretKey"
   },
   "Service": {
-    "project": "127.0.0.1:3000"
+    //"project": "127.0.0.1:3000"
+    "project": "dev.i2g.cloud"
   },
-  "dataPath": "/opt/wi-inventory-data",
-  "exportPath": "server/export/exported-files"
+  "exportPath": "server/export/exported-files",
+  "s3Path": "https://s3-ap-southeast-1.amazonaws.com/wi-inventory",
+  "dataPath": "/home/ubuntu/wi-inventory-data"
 }
