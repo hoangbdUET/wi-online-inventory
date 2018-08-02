@@ -165,7 +165,7 @@ router.post('/wells', function (req, res) {
         },
         include: {
             model: models.WellHeader,
-            attributes: ['header', 'value']
+            attributes: ['header', 'value', 'unit', 'description']
         },
         order: ['idWell']
     };
