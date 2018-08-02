@@ -75,17 +75,6 @@ async function importCurves(curves, dataset) {
     return Promise.all(promises);
 }
 
-function updateWellStartStop(well, wellData) {
-    console.log("==========================UPDATED...");
-    const STRT = well.well_headers.find((header) => {
-        if (header.header === "TOP") return header;
-    });
-    const STOP = well.well_headers.find((header) => {
-        if (header.header === "STOP") return header;
-    });
-    console.log("updateWellSTRT: From Data " + wellData.STRT.value + ' on Well data ' + STRT.value);
-    console.log("updateWellSTOP: From Data " + wellData.STOP.value + ' on Well data ' + STOP.value);
-}
 
 async function importWell(wellData, override) {
     try {
@@ -150,6 +139,7 @@ async function importWell(wellData, override) {
                     header: header,
                     value: wellData[header].value,
                     description: wellData[header].description,
+                    unit: wellData[header].unit,
                     standard: false
                 }).catch(err => {
                     console.log(err)
