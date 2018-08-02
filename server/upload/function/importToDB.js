@@ -81,7 +81,7 @@ async function importWell(wellData, override) {
     try {
         // console.log("==wellData ", wellData, wellData.name, wellData.username);
         // console.log(wellData);
-        let well, wellTop, wellStop;
+        let well, wellTop, wellStop, wellStep;
         const Op = require('sequelize').Op;
 
         if (override) {
@@ -106,6 +106,7 @@ async function importWell(wellData, override) {
         if (well.well_headers) {
             wellTop = well.well_headers.find(h => h.header === "STRT");
             wellStop = well.well_headers.find(h => h.header === "STOP");
+            wellStep = well.well_headers.find(h => h.header === "STEP");
         }
         let arr = ['username', 'datasets', 'name', 'params'];
         for (let property in WellHeader) {
@@ -121,10 +122,15 @@ async function importWell(wellData, override) {
             arr.push(property);
             well_header.idWell = well.idWell;
             well_header.header = property;
+            if (well_header.header === "STEP" && wellStep) {
+                well_header.unit = wellStep.unit;
+                well_header.value = wellStep.value;
+            }
             if (well_header.header === "STRT" && wellTop) {
                 // console.log(well_header, wellTop.toJSON());
                 if (well_header.unit !== wellTop.unit) {
                     well_header.value = convert.convertDistance(well_header.value, well_header.unit, wellTop.unit);
+                    well_header.unit = wellTop.unit;
                 }
                 // console.log("START =============", well_header.value);
                 well_header.value = well_header.value >= wellTop.value ? wellTop.value : well_header.value;
@@ -134,6 +140,7 @@ async function importWell(wellData, override) {
                 // console.log(well_header, wellStop.toJSON());
                 if (well_header.unit !== wellStop.unit) {
                     well_header.value = convert.convertDistance(well_header.value, well_header.unit, wellStop.unit);
+                    well_header.unit = wellStop.unit;
                 }
                 // console.log("STOP =============", well_header.value);
                 well_header.value = well_header.value <= wellStop.value ? wellStop.value : well_header.value;
