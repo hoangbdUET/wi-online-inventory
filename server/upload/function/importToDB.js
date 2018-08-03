@@ -15,6 +15,7 @@ async function importCurves(curves, dataset) {
     if (!curves || curves.length <= 0) return;
     const promises = curves.map(async curveData => {
         try {
+            // console.log(curveData);
             curveData.idDataset = dataset.idDataset;
             let curve = await models.Curve.create(curveData);
 
@@ -41,15 +42,17 @@ async function importCurves(curves, dataset) {
                     datasetname: curveData.datasetname,
                     curvename: curveData.name,
                     unit: curveData.unit,
-                    step: curveData.step
-                }
+                    step: curveData.step,
+                    description: curveData.description
+                };
                 const newCurve = {
                     username: dataset.username,
                     wellname: dataset.wellname,
                     datasetname: dataset.name,
                     curvename: curveData.name,
                     unit: curveData.unit,
-                    step: curveData.step
+                    step: curveData.step,
+                    description: curveData.description
                 };
                 const changeSet = {};
                 curveRevision.path = await require('../../fileManagement').moveCurveFile(oldCurve, newCurve);
