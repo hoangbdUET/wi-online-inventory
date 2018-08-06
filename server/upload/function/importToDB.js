@@ -192,6 +192,7 @@ async function importWell(wellData, override) {
 async function importDatasets(datasets, well, override) {
     //override = true means that override dataset
     // console.log("---------------------->>>> " + JSON.stringify(well));
+    // console.log("=========", datasets);
     if (!datasets || datasets.length <= 0) return;
     try {
         const promises = datasets.map(async datasetData => {
