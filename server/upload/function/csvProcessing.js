@@ -40,10 +40,6 @@ function uploadCSVFile(req) {
                 },
             };
 
-            if (!req.body.depthIndex) {
-                reject('No depth column');
-            }
-
             fs.createReadStream(inputURL)
                 .pipe(
                     csv2({
@@ -58,7 +54,7 @@ function uploadCSVFile(req) {
                     ) {
                         let data = [];
                         if (separator == '') {
-                            chunk = chunk[0].split(/\t|\s/g);
+                            chunk = chunk[0].split(/[ \t]/);
                             console.log(chunk);
                         }
                         configWellHeader(chunk, count);
@@ -73,7 +69,11 @@ function uploadCSVFile(req) {
                     }),
                 )
                 .on('data', function(data) {
-                    if (count >= req.body.headerLineIndex) {
+                    if (
+                        count == req.body.headerLineIndex ||
+                        count == req.body.unitLineIndex ||
+                        count >= req.body.dataLineIndex
+                    ) {
                         if (CHECKHEADERLINE == 'false') {
                             let myObj = {};
                             for (let i = 0; i < data.length; i++) {
@@ -115,14 +115,14 @@ function uploadCSVFile(req) {
         }
 
         function configWellHeader(chunk, count) {
-            if (count == parseInt(req.body.headerLineIndex) + 2) {
+            if (count == parseInt(req.body.dataLineIndex)) {
                 console.log(chunk);
                 importData.well.STRT = {};
                 // importData.well.name = chunk[0];
                 importData.well.STRT.value = chunk[req.body.depthIndex];
                 importData.well.STRT.description = '';
             }
-            if (count == parseInt(req.body.headerLineIndex) + 3) {
+            if (count == parseInt(req.body.dataLineIndex) + 1) {
                 importData.well.STEP = {};
                 importData.well.STEP.value = (
                     chunk[req.body.depthIndex] - importData.well.STRT.value
