@@ -48,13 +48,13 @@ function findCurveById(idCurve, username, attributes) {
     });
 }
 
-function deleteCurveFiles(curves) {
+async function deleteCurveFiles(curves) {
     //curves must be array
     console.log('~~~deleteCurveFiles~~~ ' + JSON.stringify(curves));
     if (!curves || curves.length <= 0) return;
-    curves.forEach(curve => {
+    for(let curve of curves){
         console.log('===> ' + curve.name)
-        curve.curve_revisions.forEach(async revision => {
+        for(let revision of curve.curve_revisions){
             if (config.s3Path) {
                 s3.deleteCurve(await getCurveKey(revision));
             }
@@ -64,8 +64,8 @@ function deleteCurveFiles(curves) {
                     if (err) console.log('delete curve file failed: ' + err);
                 });
             }
-        })
-    })
+        }
+    }
 }
 
 async function deleteCurve(idCurve, username) {
@@ -410,6 +410,7 @@ async function getCurveKey(curveRevision){
         const key = hashDir.getHashPath(hashStr) + revision.curve.name + '.txt';
         return Promise.resolve(key);
     } catch(err){
+        console.log("getCurveKey() : "+ err)
         return Promise.reject(err);
     }
 }
