@@ -16,7 +16,7 @@ module.exports = function (sequelize, DataTypes) {
             defaultValue: 0
         },
         unit: {
-            type: DataTypes.STRING(5),
+            type: DataTypes.STRING(30),
             allowNull: false,
             defaultValue: 'M'
         },

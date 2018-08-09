@@ -13,6 +13,11 @@ module.exports = function (sequelize, DataTypes) {
             allowNull: false,
             defaultValue: ''
         },
+        unit: {
+            type: DataTypes.STRING,
+            allowNull: true,
+            defaultValue:''
+        },
         description: {
             type: DataTypes.STRING,
             defaultValue: ''

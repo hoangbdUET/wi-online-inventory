@@ -3,8 +3,8 @@
 const AWS = require('aws-sdk');
 const config = require('config');
 const fs = require('fs');
-const credentials = new AWS.SharedIniFileCredentials({profile: 'wi_inventory'});
-AWS.config.credentials = credentials;
+//const credentials = new AWS.SharedIniFileCredentials({profile: 'wi_inventory'});
+//AWS.config.credentials = credentials;
 const s3 = new AWS.S3({apiVersion: '2006-03-01'});
 const bucket = 'wi-inventory';
 

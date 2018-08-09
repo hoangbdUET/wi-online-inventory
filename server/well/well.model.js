@@ -70,10 +70,10 @@ function getCurves(idWell, cb) {
 async function deleteWell(idWell, username) {
     findWellById(idWell, username)
         .then((well) => {
-            getCurves(well.idWell, (curves) => {
+            getCurves(well.idWell, async (curves) => {
+                await curveModel.deleteCurveFiles(curves);
                 well.destroy()
                     .then((rs) => {
-                        curveModel.deleteCurveFiles(curves);
                         Promise.resolve(rs);
                     })
                     .catch(err => {
