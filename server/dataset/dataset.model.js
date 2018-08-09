@@ -62,15 +62,16 @@ async function deleteDataset(idDataset, username) {
     findDatasetById(idDataset, username)
         .then(dataset => {
             getCurves(dataset.idDataset, function (curves) {
-                dataset.destroy()
-                .then((rs) => {
-                    curveModel.deleteCurveFiles(curves);
-                    Promise.resolve(rs);
-                })
-                .catch(err => {
-                    console.log('deleteDataset destroy well failed');
-                    Promise.reject(err);
-                })
+                curveModel.deleteCurveFiles(curves, function (){
+                    dataset.destroy()
+                    .then((rs) => {
+                        Promise.resolve(rs);
+                    })
+                    .catch(err => {
+                        console.log('deleteDataset destroy well failed');
+                        Promise.reject(err);
+                    })
+                });
             })
         })
         .catch(err => {
