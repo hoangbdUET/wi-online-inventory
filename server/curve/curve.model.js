@@ -65,8 +65,9 @@ async function deleteCurveFiles(curves, callback) {
                 });
             }
         }
-        if(callback) callback();
     }
+    if(callback) callback();
+
 }
 
 async function deleteCurve(idCurve, username) {
