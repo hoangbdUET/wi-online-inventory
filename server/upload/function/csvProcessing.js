@@ -10,6 +10,15 @@ function uploadCSVFile(req) {
     return new Promise(function(resolve, reject) {
         try {
             // console.log(req.body);
+            let selectedFields = [];
+            let titleOfFields = [];
+            let units = [];
+            if (typeof req.body.titleOfFields == 'string') {
+                selectedFields.push(req.body.selectedFields);
+                titleOfFields.push(req.body.titleOfFields);
+                units.push(req.body.units);
+            }
+
             let inputFile = req.files[0];
             let inputURL = inputFile.path;
             let curveChosen = [];
@@ -17,15 +26,15 @@ function uploadCSVFile(req) {
             let output = [];
             let separator = req.body.delimiter;
             let CHECKHEADERLINE = req.body.checkHeaderLine;
-            let INDEXSETTING = req.body.selectedFields;
-            let TITLE = req.body.titleOfFields;
+            let INDEXSETTING = selectedFields;
+            let TITLE = titleOfFields;
             var importData = {};
             importData.userInfo = req.decoded;
             importData.override = !!(
                 req.body.override && req.body.override === 'true'
             );
-            importData.titleFields = req.body.titleOfFields;
-            importData.units = req.body.units;
+            importData.titleFields = titleOfFields;
+            importData.units = units;
             importData.well = {
                 filename: inputFile.originalname,
                 name: req.body.wellName,
