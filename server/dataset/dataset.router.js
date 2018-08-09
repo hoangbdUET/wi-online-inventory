@@ -34,14 +34,12 @@ router.post('/dataset/info', function (req, res) {
 
 
 router.post('/dataset/delete', function (req, res) {
-    datasetModel.deleteDataset(req.body.idDataset, req.decoded.username, (err, rs) => {
-        if (err) {
-            res.send(response(500, "FAILED TO DELETE DATASET"));
-        }
-        else {
+    datasetModel.deleteDataset(req.body.idDataset, req.decoded.username)
+        .then(rs => {
             res.send(response(200, "DATASET DELETED", rs));
-        }
-    })
+        }).catch(err => {
+            res.send(response(500, "FAILED TO DELETE DATASET", err));
+        })
 });
 
 router.post('/dataset/edit', function (req, res) {

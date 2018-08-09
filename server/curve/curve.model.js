@@ -48,7 +48,7 @@ function findCurveById(idCurve, username, attributes) {
     });
 }
 
-async function deleteCurveFiles(curves) {
+async function deleteCurveFiles(curves, callback) {
     //curves must be array
     console.log('~~~deleteCurveFiles~~~ ' + JSON.stringify(curves));
     if (!curves || curves.length <= 0) return;
@@ -66,6 +66,8 @@ async function deleteCurveFiles(curves) {
             }
         }
     }
+    if(callback) callback();
+
 }
 
 async function deleteCurve(idCurve, username) {
@@ -74,15 +76,15 @@ async function deleteCurve(idCurve, username) {
     }
     const curve = await findCurveById(idCurve, username, attributes);
     console.log(JSON.stringify(curve));
-    curve.destroy()
+    deleteCurveFiles([curve], function () {
+        curve.destroy()
         .then((rs) => {
-            deleteCurveFiles([curve]);
             Promise.resolve(rs);
         })
         .catch((err) => {
             Promise.reject(err)
         })
-
+    });
 }
 
 async function getCurves(idDataset, username, cb) {

@@ -58,29 +58,38 @@ function getDatasets(idWell, username) {
     })
 }
 
-function deleteDataset(idDataset, username, callback) {
+async function deleteDataset(idDataset, username) {
     findDatasetById(idDataset, username)
         .then(dataset => {
-            curveModel.getCurves(dataset.idDataset, username)
-                .then(curves => {
+            getCurves(dataset.idDataset, function (curves) {
+                curveModel.deleteCurveFiles(curves, function (){
                     dataset.destroy()
-                        .then((rs) => {
-                            curveModel.deleteCurveFiles(curves);
-                            callback(null, rs);
-                        })
-                        .catch(err => {
-                            throw new Error('dataset destroy failed: ' + err.message);
-                            // callback(err, null);
-                        })
-                })
-                .catch(err => {
-                    throw new Error('failed to get curve: ' + err.message);
-                    // callback(err, null);
-                })
+                    .then((rs) => {
+                        Promise.resolve(rs);
+                    })
+                    .catch(err => {
+                        console.log('deleteDataset destroy well failed');
+                        Promise.reject(err);
+                    })
+                });
+            })
         })
         .catch(err => {
-            callback(err, null);
+            Promise.reject(err);
         })
+}
+
+function getCurves(idDataset, cb) {
+    models.Curve.findAll({
+        where: {
+            idDataset: idDataset
+        },
+        include: [{
+            model: models.CurveRevision
+        }]
+    }).then(curves => {
+       cb(curves);
+    })
 }
 
 function editDataset(body, username, cb) {
