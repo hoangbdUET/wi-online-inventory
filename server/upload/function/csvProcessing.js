@@ -17,6 +17,10 @@ function uploadCSVFile(req) {
                 selectedFields.push(req.body.selectedFields);
                 titleOfFields.push(req.body.titleOfFields);
                 units.push(req.body.units);
+            } else {
+                selectedFields = req.body.selectedFields;
+                titleOfFields = req.body.titleOfFields;
+                units = req.body.units;
             }
 
             let inputFile = req.files[0];
