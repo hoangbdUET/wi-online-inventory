@@ -29,7 +29,7 @@ function uploadCSVFile(req) {
             let count = 0;
             let output = [];
             let separator = req.body.delimiter;
-            let CHECKHEADERLINE = req.body.checkHeaderLine;
+            // let CHECKHEADERLINE = req.body.checkHeaderLine;
             let INDEXSETTING = selectedFields;
             let TITLE = titleOfFields;
             var importData = {};
@@ -67,7 +67,7 @@ function uploadCSVFile(req) {
                     ) {
                         let data = [];
                         if (separator == '') {
-                            chunk = chunk[0].split(/[ \t]/);
+                            chunk = chunk[0].split(/[ \t\,\;]/);
                             console.log(chunk);
                         }
                         configWellHeader(chunk, count);
@@ -87,15 +87,15 @@ function uploadCSVFile(req) {
                         count == req.body.unitLineIndex ||
                         count >= req.body.dataLineIndex
                     ) {
-                        if (CHECKHEADERLINE == 'false') {
-                            let myObj = {};
-                            for (let i = 0; i < data.length; i++) {
-                                myObj[TITLE[i]] = data[i];
-                            }
-                            curveChosen.push(myObj);
-                        } else {
-                            CHECKHEADERLINE = 'false';
+                        // if (CHECKHEADERLINE == 'false') {
+                        let myObj = {};
+                        for (let i = 0; i < data.length; i++) {
+                            myObj[TITLE[i]] = data[i];
                         }
+                        curveChosen.push(myObj);
+                        // } else {
+                        //     CHECKHEADERLINE = 'false';
+                        // }
                     }
                     count++;
                 })
