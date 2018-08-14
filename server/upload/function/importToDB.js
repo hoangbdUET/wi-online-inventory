@@ -264,8 +264,8 @@ async function importDatasets(datasets, well, override) {
 
 async function importToDB(inputWells, importData) {
     // console.log('importToDB inputWell: ' + JSON.stringify(inputWells));
-    if (!inputWells || inputWells.length <= 0) return Promise.reject('there is no well to import');
-    const promises = inputWells.map(inputWell => {
+    if (!inputWells || inputWells.length <= 0) return cb('there is no well to import');
+    const promises = inputWells.map(async inputWell => {
         try {
             inputWell.username = importData.userInfo.username;
             if (inputWell.STRT && inputWell.STOP && inputWell.STEP && inputWell.NULL) {
@@ -274,7 +274,7 @@ async function importToDB(inputWells, importData) {
                 inputWell.STEP.value = inputWell.STEP.value.replace(/,/g, "");
                 inputWell.NULL.value = inputWell.NULL.value.replace(/,/g, "");
             }
-            return importWell(inputWell, importData.override);
+            return await importWell(inputWell, importData.override);
         } catch (err) {
             console.log('===> ' + err);
             throw err;
