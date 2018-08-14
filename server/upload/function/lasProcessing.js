@@ -32,13 +32,23 @@ async function uploadLasFiles(req) {
         let importData = {};
         importData.userInfo = req.decoded;
         importData.override = !!(req.body.override && req.body.override === "true");
-
+        
+        let uploadPromises = [];
+        req.files.forEach(file => {
+            uploadPromises.push(processFileUpload(file, importData));
+        })
+        Promise.all(uploadPromises).then(results => {
+            console.log("==> uploadLasFiles complete!!!")
+            return Promise.resolve(results);
+        })        
+        /*
         for (const file of req.files) {
             console.log(importData);
             const uploadResult = await processFileUpload(file, importData);
             output.push(uploadResult);
         }
         return Promise.resolve(output);
+        */
     }
     catch (err) {
         console.log('upload las files failed: ' + err);
