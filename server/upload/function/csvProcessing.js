@@ -104,16 +104,16 @@ function uploadCSVFile(req) {
                             },
                         )
                         .on('finish', async function() {
-                            // let result = await CSVExtractor(
-                            //     inputURL,
-                            //     importData,
-                            // );
-                            // let uploadResult = await importToDB(
-                            //     result,
-                            //     importData,
-                            // );
-                            // output.push(uploadResult);
-                            // resolve(output);
+                            let result = await CSVExtractor(
+                                inputURL,
+                                importData,
+                            );
+                            let uploadResult = await importToDB(
+                                result,
+                                importData,
+                            );
+                            output.push(uploadResult);
+                            resolve(output);
                             resolve('success');
                         });
                 });
