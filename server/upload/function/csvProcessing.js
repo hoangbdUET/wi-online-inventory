@@ -54,11 +54,7 @@ function uploadCSVFile(req) {
             };
 
             fs.createReadStream(inputURL)
-                .pipe(
-                    csv2({
-                        separator: separator,
-                    }),
-                )
+                .pipe(csv2())
                 .pipe(
                     through2({objectMode: true}, function(
                         chunk,
@@ -66,8 +62,8 @@ function uploadCSVFile(req) {
                         callback,
                     ) {
                         let data = [];
-                        if (separator == '') {
-                            chunk = chunk[0].split(/[ \t\,\;]/);
+                        if (separator == '' && chunk.length == 1) {
+                            chunk = chunk[0].split(/[ \t\;]/g);
                         }
                         configWellHeader(chunk, count);
                         importData.well.STOP.value = chunk[req.body.depthIndex];
@@ -108,16 +104,17 @@ function uploadCSVFile(req) {
                             },
                         )
                         .on('finish', async function() {
-                            let result = await CSVExtractor(
-                                inputURL,
-                                importData,
-                            );
-                            let uploadResult = await importToDB(
-                                result,
-                                importData,
-                            );
-                            output.push(uploadResult);
-                            resolve(output);
+                            // let result = await CSVExtractor(
+                            //     inputURL,
+                            //     importData,
+                            // );
+                            // let uploadResult = await importToDB(
+                            //     result,
+                            //     importData,
+                            // );
+                            // output.push(uploadResult);
+                            // resolve(output);
+                            resolve('success');
                         });
                 });
         } catch (err) {
