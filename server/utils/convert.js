@@ -88,6 +88,13 @@ function convertDistance(inputValue, inputUnit, outputUnit) {
     return inputValue * (outputScale / inputScale);
 }
 
-module.exports = {
-    convertDistance: convertDistance
+function getDistanceRate(inputUnit, outputUnit) {
+    let inputScale = length[inputUnit];
+    let outputScale = length[outputUnit];
+    return outputScale / inputScale;
 }
+
+module.exports = {
+    convertDistance: convertDistance,
+    getDistanceRate: getDistanceRate
+};
