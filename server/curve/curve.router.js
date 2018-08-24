@@ -4,6 +4,7 @@ let router = express.Router();
 let curveExport = require('./curveExport');
 let response = require('../response');
 let curveModel = require('./curve.model');
+let datasetModel = require('../models').Dataset;
 
 router.post('/curve/new', function (req, res) {
     curveModel.createCurve(req.body, (err, curve) => {
@@ -29,19 +30,35 @@ router.post('/curve/info', function (req, res) {
 });
 
 router.post('/curve/data', function (req, res) {
+    const {Transform} = require('stream');
+    const byline = require('byline');
+    const convert = require('../utils/convert');
+    let rate = 1;
+    const convertTransform = new Transform({
+        writableObjectMode: true,
+        transform(chunk, encoding, callback) {
+            let tokens = chunk.toString().split(/\s+/);
+            this.push(tokens[0] * rate + " " + tokens[1] + "\n");
+            callback();
+        }
+    });
     const attributes = {
         revision: true
     };
     curveModel.findCurveById(req.body.idCurve, req.decoded.username, attributes)
         .then((curve) => {
             if (curve) {
-                curveExport(curve, req.body.unit, req.body.step, (err, readStream) => {
-                    if (!err) {
-                        readStream.pipe(res);
-                    }
-                    else {
-                        res.send(response(500, 'CURVE CONVERSION FAILED', err));
-                    }
+                datasetModel.findById(curve.idDataset).then(dataset => {
+                    if (parseFloat(dataset.step) === 0) rate = convert.getDistanceRate(dataset.unit, "meter");
+                    curveExport(curve, req.body.unit, req.body.step, (err, readStream) => {
+                        if (!err) {
+                            byline.createStream(readStream).pipe(convertTransform).pipe(res);
+                        }
+                        else {
+                            console.log(err);
+                            res.send(response(500, 'CURVE CONVERSION FAILED', err));
+                        }
+                    });
                 });
             } else {
                 res.send(response(200, 'NO CURVE FOUND BY ID'));
