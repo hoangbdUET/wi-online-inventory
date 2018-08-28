@@ -114,7 +114,6 @@ function uploadCSVFile(req) {
                             );
                             output.push(uploadResult);
                             resolve(output);
-                            resolve('success');
                         });
                 });
         } catch (err) {
