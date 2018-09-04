@@ -105,7 +105,7 @@ async function importWell(wellData, override) {
         } else {
             well = await models.Well.create(wellData);
         }
-        well.datasets = await importDatasets(wellData.datasets, well, true);
+        well.datasets = await importDatasets(wellData.datasets, well, false);
         if (well.well_headers) {
             wellTop = well.well_headers.find(h => h.header === "STRT");
             wellStop = well.well_headers.find(h => h.header === "STOP");
