@@ -17,11 +17,11 @@ async function importCurves(curves, dataset) {
         try {
             // console.log(curveData);
             curveData.idDataset = dataset.idDataset;
-            let curve = await models.Curve.create(curveData);
+            let curve = await models.Curve.create(curveData); // create curve
 
             curveData.idCurve = curve.idCurve;
             curveData.isCurrentRevision = true;
-            const curveRevision = await models.CurveRevision.create(curveData);
+            const curveRevision = await models.CurveRevision.create(curveData); //create curve revision
 
             if (config.s3Path) {
                 const key = hashDir.getHashPath(dataset.username + dataset.wellname + dataset.name + curveData.name + curveData.unit + curveData.step) + curveData.name + '.txt';
@@ -32,8 +32,6 @@ async function importCurves(curves, dataset) {
                     .catch(err => {
                         console.log(err);
                     });
-                curveRevision.path = key;
-                curveRevision.save();
             }
             else if (curveData.wellname !== dataset.wellname || curveData.datasetname !== dataset.name) {
                 const oldCurve = {
@@ -54,9 +52,7 @@ async function importCurves(curves, dataset) {
                     step: curveData.step,
                     description: curveData.description
                 };
-                const changeSet = {};
-                curveRevision.path = await require('../../fileManagement').moveCurveFile(oldCurve, newCurve);
-                curveRevision.save();
+                await require('../../fileManagement').moveCurveFile(oldCurve, newCurve);
             }
             return curve;
         } catch (err) {

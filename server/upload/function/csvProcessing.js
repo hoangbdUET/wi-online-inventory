@@ -29,7 +29,6 @@ function uploadCSVFile(req) {
             let count = 0;
             let output = [];
             let separator = req.body.delimiter;
-            // let CHECKHEADERLINE = req.body.checkHeaderLine;
             let INDEXSETTING = selectedFields;
             let TITLE = titleOfFields;
             var importData = {};
@@ -53,8 +52,33 @@ function uploadCSVFile(req) {
                 },
             };
 
+            function createRegex() {
+                let regex = /[ \t\,\;]/;
+                if (req.body.delimiter != '') {
+                    separator = req.body.delimiter;
+                    return;
+                } else {
+                    if (!req.body.decimalComma) {
+                        separator = regex;
+                    } else {
+                        separator = new RegExp(
+                            regex.source.replace(
+                                '\\' + req.body.decimalComma,
+                                '',
+                            ),
+                        );
+                    }
+                }
+            }
+
+            createRegex();
+
             fs.createReadStream(inputURL)
-                .pipe(csv2())
+                .pipe(
+                    csv2({
+                        separator: /,/,
+                    }),
+                )
                 .pipe(
                     through2({objectMode: true}, function(
                         chunk,
@@ -62,16 +86,27 @@ function uploadCSVFile(req) {
                         callback,
                     ) {
                         let data = [];
-                        if (separator == '' && chunk.length == 1) {
-                            chunk = chunk[0].split(/[ \t\;]/g);
-                        }
-                        configWellHeader(chunk, count);
+                        chunk = chunk[0].split(separator);
                         importData.well.STOP.value = chunk[req.body.depthIndex];
                         for (let i = 0; i < INDEXSETTING.length; i++) {
                             if (INDEXSETTING[i] != req.body.depthIndex) {
+                                if (
+                                    req.body.decimalComma &&
+                                    req.body.decimalComma != '.' &&
+                                    chunk[INDEXSETTING[i]]
+                                ) {
+                                    chunk[INDEXSETTING[i]] = chunk[
+                                        INDEXSETTING[i]
+                                    ].replace(req.body.decimalComma, '.');
+                                    chunk[req.body.depthIndex] = chunk[
+                                        req.body.depthIndex
+                                    ].replace(req.body.decimalComma, '.');
+                                }
                                 data.push(chunk[INDEXSETTING[i]]);
                             }
                         }
+
+                        configWellHeader(chunk, count);
                         this.push(data);
                         callback();
                     }),
@@ -81,15 +116,11 @@ function uploadCSVFile(req) {
                         count == req.body.unitLineIndex ||
                         count >= req.body.dataLineIndex
                     ) {
-                        // if (CHECKHEADERLINE == 'false') {
                         let myObj = {};
                         for (let i = 0; i < data.length; i++) {
                             myObj[TITLE[i]] = data[i];
                         }
                         curveChosen.push(myObj);
-                        // } else {
-                        //     CHECKHEADERLINE = 'false';
-                        // }
                     }
                     count++;
                 })
@@ -114,7 +145,6 @@ function uploadCSVFile(req) {
                             );
                             output.push(uploadResult);
                             resolve(output);
-                            resolve('success');
                         });
                 });
         } catch (err) {
