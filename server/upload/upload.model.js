@@ -3,7 +3,7 @@ const lasProcessing = require('./function/lasProcessing');
 const asciiProcessing = require('./function/asciiProcessing');
 const coredataProcessing = require('./function/coredataProcessing');
 const csvProcessing = require('./function/csvProcessing');
-const dlisProcessing = require('./function/dlisProcessing');
+// const dlisProcessing = require('./function/dlisProcessing');
 const config = require('config');
 const wiImport = require('wi-import');
 
