@@ -52,4 +52,15 @@ router.post('/upload/csv', upload.array('file'), function(req, res) {
         });
 });
 
+router.post('/upload/dlis', upload.array('file'), function(req, res) {
+    uploadModel
+        .uploadDlisFiles(req)
+        .then(result => {
+            res.send(responseJSON(200, 'UPLOAD FILES SUCCESS', result));
+        })
+        .catch(err => {
+            res.send(responseJSON(500, 'UPLOAD FILES FAILED', err));
+        });
+});
+
 module.exports = router;

@@ -17,6 +17,10 @@ function uploadCSVFile(req) {
                 selectedFields.push(req.body.selectedFields);
                 titleOfFields.push(req.body.titleOfFields);
                 units.push(req.body.units);
+            } else {
+                selectedFields = req.body.selectedFields;
+                titleOfFields = req.body.titleOfFields;
+                units = req.body.units;
             }
 
             let inputFile = req.files[0];
@@ -25,7 +29,6 @@ function uploadCSVFile(req) {
             let count = 0;
             let output = [];
             let separator = req.body.delimiter;
-            let CHECKHEADERLINE = req.body.checkHeaderLine;
             let INDEXSETTING = selectedFields;
             let TITLE = titleOfFields;
             var importData = {};
@@ -35,6 +38,7 @@ function uploadCSVFile(req) {
             );
             importData.titleFields = titleOfFields;
             importData.units = units;
+            importData.unitDepth = req.body.unitDepth;
             importData.well = {
                 filename: inputFile.originalname,
                 name: req.body.wellName,
@@ -49,10 +53,31 @@ function uploadCSVFile(req) {
                 },
             };
 
+            function createRegex() {
+                let regex = /[ \t\,\;]/;
+                if (req.body.delimiter != '') {
+                    separator = req.body.delimiter;
+                    return;
+                } else {
+                    if (!req.body.decimalComma) {
+                        separator = regex;
+                    } else {
+                        separator = new RegExp(
+                            regex.source.replace(
+                                '\\' + req.body.decimalComma,
+                                '',
+                            ),
+                        );
+                    }
+                }
+            }
+
+            createRegex();
+
             fs.createReadStream(inputURL)
                 .pipe(
                     csv2({
-                        separator: separator,
+                        separator: /,/,
                     }),
                 )
                 .pipe(
@@ -62,36 +87,41 @@ function uploadCSVFile(req) {
                         callback,
                     ) {
                         let data = [];
-                        if (separator == '') {
-                            chunk = chunk[0].split(/[ \t]/);
-                            console.log(chunk);
-                        }
-                        configWellHeader(chunk, count);
+                        chunk = chunk[0].split(separator);
                         importData.well.STOP.value = chunk[req.body.depthIndex];
                         for (let i = 0; i < INDEXSETTING.length; i++) {
                             if (INDEXSETTING[i] != req.body.depthIndex) {
+                                if (
+                                    req.body.decimalComma &&
+                                    req.body.decimalComma != '.' &&
+                                    chunk[INDEXSETTING[i]]
+                                ) {
+                                    chunk[INDEXSETTING[i]] = chunk[
+                                        INDEXSETTING[i]
+                                    ].replace(req.body.decimalComma, '.');
+                                    chunk[req.body.depthIndex] = chunk[
+                                        req.body.depthIndex
+                                    ].replace(req.body.decimalComma, '.');
+                                }
                                 data.push(chunk[INDEXSETTING[i]]);
                             }
                         }
+
+                        configWellHeader(chunk, count);
                         this.push(data);
                         callback();
                     }),
                 )
                 .on('data', function(data) {
                     if (
-                        count == req.body.headerLineIndex ||
                         count == req.body.unitLineIndex ||
                         count >= req.body.dataLineIndex
                     ) {
-                        if (CHECKHEADERLINE == 'false') {
-                            let myObj = {};
-                            for (let i = 0; i < data.length; i++) {
-                                myObj[TITLE[i]] = data[i];
-                            }
-                            curveChosen.push(myObj);
-                        } else {
-                            CHECKHEADERLINE = 'false';
+                        let myObj = {};
+                        for (let i = 0; i < data.length; i++) {
+                            myObj[TITLE[i]] = data[i];
                         }
+                        curveChosen.push(myObj);
                     }
                     count++;
                 })
@@ -110,6 +140,9 @@ function uploadCSVFile(req) {
                                 inputURL,
                                 importData,
                             );
+                            console.log(
+                                '===>' + JSON.stringify(result, null, 2),
+                            );
                             let uploadResult = await importToDB(
                                 result,
                                 importData,
@@ -125,7 +158,6 @@ function uploadCSVFile(req) {
 
         function configWellHeader(chunk, count) {
             if (count == parseInt(req.body.dataLineIndex)) {
-                console.log(chunk);
                 importData.well.STRT = {};
                 // importData.well.name = chunk[0];
                 importData.well.STRT.value = chunk[req.body.depthIndex];

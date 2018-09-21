@@ -3,6 +3,7 @@ const lasProcessing = require('./function/lasProcessing');
 const asciiProcessing = require('./function/asciiProcessing');
 const coredataProcessing = require('./function/coredataProcessing');
 const csvProcessing = require('./function/csvProcessing');
+const dlisProcessing = require('./function/dlisProcessing');
 const config = require('config');
 const wiImport = require('wi-import');
 
@@ -20,5 +21,6 @@ module.exports = {
     uploadAsciiFiles: uploadAsciiFiles,
     uploadFiles: uploadFiles,
     uploadLasFiles: lasProcessing.uploadLasFiles,
-    uploadCSVFile: csvProcessing.uploadCSVFile
+    uploadCSVFile: csvProcessing.uploadCSVFile,
+    uploadDlisFiles: dlisProcessing.parseDlisFiles
 };
