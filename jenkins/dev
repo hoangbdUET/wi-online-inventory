@@ -18,7 +18,7 @@ pipeline {
 
         stage('Deploy to dev') {
             steps {
-                sh 'ssh i2g-inventory-dev "cd /home/ubuntu/wi-online-inventory && pm2 restart pm2.config.js"'
+                sh 'ssh i2g-inventory-dev "cd /home/ubuntu/wi-online-inventory && pm2 restart app"'
             }
         }
     }
