@@ -1,0 +1,25 @@
+pipeline {
+    agent {
+        label 'master'
+    }
+
+    stages {
+        stage("Rsync dev") {
+            steps {
+                sh 'rsync --delete -azvv ./* -e ssh i2g-inventory-production:/opt/wi-online-inventory'
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                sh 'ssh i2g-inventory-production "cd /opt/wi-online-inventory && npm install"'
+            }
+        }
+
+        stage('Deploy to dev') {
+            steps {
+                sh 'ssh i2g-inventory-production "cd /opt/wi-online-inventory && pm2 restart pm2.config.js"'
+            }
+        }
+    }
+}
