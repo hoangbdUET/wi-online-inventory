@@ -38,6 +38,7 @@ function uploadCSVFile(req) {
             );
             importData.titleFields = titleOfFields;
             importData.units = units;
+            importData.unitDepth = req.body.unitDepth;
             importData.well = {
                 filename: inputFile.originalname,
                 name: req.body.wellName,
@@ -138,6 +139,9 @@ function uploadCSVFile(req) {
                             let result = await CSVExtractor(
                                 inputURL,
                                 importData,
+                            );
+                            console.log(
+                                '===>' + JSON.stringify(result, null, 2),
                             );
                             let uploadResult = await importToDB(
                                 result,
