@@ -26,24 +26,34 @@ async function processFileUpload(file, importData) {
 }
 
 async function uploadLasFiles(req) {
+    let output = [];
+    let errFile;
     try {
         if (!req.files) return cb('NO FILE CHOSEN!!!');
         // console.log(req);
-        let output = [];
         let importData = {};
         importData.userInfo = req.decoded;
         importData.override = !!(req.body.override && req.body.override === "true");
 
         for (const file of req.files) {
-            console.log(importData);
+            errFile = file;
             const uploadResult = await processFileUpload(file, importData);
-            output.push(uploadResult);
+            output = output.concat(uploadResult);
         }
         return Promise.resolve(output);
     }
     catch (err) {
         console.log('upload las files failed: ' + err);
-        return Promise.reject(err);
+        const resVal = {
+            err: err,
+            errFile: errFile.originalname,
+            successWells: output
+        }
+        if(output.length > 0) {
+            return Promise.resolve(resVal);
+        } else {
+            return Promise.reject(resVal);
+        }
     }
 }
 
