@@ -40,7 +40,7 @@ async function uploadLasFiles(req) {
             errFile = file;
             const uploadResult = await processFileUpload(file, importData);
             successFiles.push(file.originalname);
-            successWells = succesWells.concat(uploadResult);
+            successWells = successWells.concat(uploadResult);
         }
         return Promise.resolve(successWells);
     }
