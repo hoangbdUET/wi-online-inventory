@@ -27,7 +27,7 @@ async function processFileUpload(file, importData) {
 
 async function uploadLasFiles(req) {
     let successFiles = [];
-    let succesWells = [];
+    let successWells = [];
     let errFile;
     try {
         if (!req.files) return cb('NO FILE CHOSEN!!!');
