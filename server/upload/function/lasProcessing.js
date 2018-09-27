@@ -26,7 +26,8 @@ async function processFileUpload(file, importData) {
 }
 
 async function uploadLasFiles(req) {
-    let output = [];
+    let successFiles = [];
+    let succesWells = [];
     let errFile;
     try {
         if (!req.files) return cb('NO FILE CHOSEN!!!');
@@ -38,18 +39,20 @@ async function uploadLasFiles(req) {
         for (const file of req.files) {
             errFile = file;
             const uploadResult = await processFileUpload(file, importData);
-            output = output.concat(uploadResult);
+            successFiles.push(file.originalname);
+            successWells = succesWells.concat(uploadResult);
         }
-        return Promise.resolve(output);
+        return Promise.resolve(successWells);
     }
     catch (err) {
         console.log('upload las files failed: ' + err);
         const resVal = {
             err: err,
             errFile: errFile.originalname,
-            successWells: output
+            successWells: successWells,
+            successFiles: successFiles
         }
-        if(output.length > 0) {
+        if(successFiles.length > 0) {
             return Promise.resolve(resVal);
         } else {
             return Promise.reject(resVal);
