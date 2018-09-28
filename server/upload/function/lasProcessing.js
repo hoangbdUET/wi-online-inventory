@@ -28,35 +28,35 @@ async function processFileUpload(file, importData) {
 async function uploadLasFiles(req) {
     let successFiles = [];
     let successWells = [];
-    let errFile;
-    try {
-        if (!req.files) return cb('NO FILE CHOSEN!!!');
-        // console.log(req);
-        let importData = {};
-        importData.userInfo = req.decoded;
-        importData.override = !!(req.body.override && req.body.override === "true");
+    let errFiles = [];
+    if (!req.files) return cb('NO FILE CHOSEN!!!');
+    // console.log(req);
+    let importData = {};
+    importData.userInfo = req.decoded;
+    importData.override = !!(req.body.override && req.body.override === "true");
 
-        for (const file of req.files) {
-            errFile = file;
+    for (const file of req.files) {
+        try {
             const uploadResult = await processFileUpload(file, importData);
             successFiles.push(file.originalname);
             successWells = successWells.concat(uploadResult);
+        } catch (err){
+            console.log('upload las files failed: ' + err);
+            errFiles.push({
+                filename: file.originalname,
+                err: err
+            });
         }
-        return Promise.resolve(successWells);
     }
-    catch (err) {
-        console.log('upload las files failed: ' + err);
-        const resVal = {
-            err: err,
-            errFile: errFile.originalname,
-            successWells: successWells,
-            successFiles: successFiles
-        }
-        if(successFiles.length > 0) {
-            return Promise.resolve(resVal);
-        } else {
-            return Promise.reject(resVal);
-        }
+    const resVal = {
+        errFiles: errFiles,
+        successWells: successWells,
+        successFiles: successFiles
+    }
+    if(successFiles.length > 0) {
+        return Promise.resolve(resVal);
+    } else {
+        return Promise.reject(resVal);
     }
 }
 
