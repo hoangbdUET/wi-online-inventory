@@ -257,7 +257,7 @@ async function importWell(well, token, callback, username) {
             }
         })
     } catch (e) {
-        console.log('err3', err);
+        console.log('err3', e);
         callback(e);
     }
 }
