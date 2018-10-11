@@ -17,6 +17,7 @@ let storage = multer.diskStorage({
 let upload = multer({storage: storage});
 
 router.post('/upload/lases', upload.array('file'), function(req, res) {
+    req.setTimeout(10*60*1000);
     uploadModel
         .uploadLasFiles(req)
         .then(result => {
