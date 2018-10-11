@@ -37,6 +37,7 @@ async function uploadLasFiles(req) {
     for (const file of req.files) {
         try {
             const uploadResult = await processFileUpload(file, importData);
+            console.log("processFileUpload DONE " + file.originalname)
             successFiles.push(file.originalname);
             successWells = successWells.concat(uploadResult);
         } catch (err){

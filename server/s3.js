@@ -40,7 +40,6 @@ function deleteCurve(key) {
     }
     s3.deleteObject(params, (err, data) => {
         if(err) console.log("s3 delete object failed " + err);
-        else console.log("s3 delete object done: " + data);
     })
 }
 
