@@ -47,7 +47,6 @@ async function importCurves(curves, dataset) {
                 const key = hashDir.getHashPath(dataset.username + dataset.wellname + dataset.name + curveData.name + curveData.unit + curveData.step) + curveData.name + '.txt';
                 await s3.upload(config.dataPath + '/' + curveData.path, key)
                     .then(data => {
-                        console.log(data.Location);
                     })
                     .catch(err => {
                         console.log(err);
@@ -185,7 +184,6 @@ async function importWell(wellData, override) {
         }
         return well;
     } catch (err) {
-        console.log('===' + err + "===> It's ok, rename now")
         if (err.name === 'SequelizeUniqueConstraintError') {
             if (wellData.name.indexOf(' ( copy ') < 0) {
                 wellData.name = wellData.name + ' ( copy 1 )';
@@ -235,7 +233,6 @@ async function importDatasets(datasets, well, override) {
                     const dataset = await models.Dataset.create(datasetInfo);
                     return dataset;
                 } catch (err) {
-                    console.log('>>>>>>>' + err + "===> It's ok, rename dataset now")
                     if (err.name === 'SequelizeUniqueConstraintError') {
                         if (datasetData.name.lastIndexOf('_') != datasetData.name.length - 2) {
                             datasetData.name = datasetData.name + '_1';

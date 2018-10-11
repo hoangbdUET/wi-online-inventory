@@ -24,7 +24,6 @@ function upload(path, key) {
                 reject(err);
             }
             if (data) {
-                console.log("Upload Success", data.Location);
                 fs.unlink(fileSystemPath, (err) => {
                     if(err) console.log("failed to remove curve: " + err);
                 })
@@ -35,31 +34,6 @@ function upload(path, key) {
 }
 
 function deleteCurve(key) {
-    // const curveName = curve.path.slice(curve.path.lastIndexOf('/') + 1, curve.path.length);
-    // const dir = curve.path.slice(0, curve.path.lastIndexOf('/') + 1);
-    // const params = {
-    //     Bucket: bucket,
-    //     Delimiter: '/',
-    //     Prefix: dir
-    // }
-    // s3.listObjects(params, (err, data) => {
-    //     let deleteParams = {
-    //         Bucket: bucket,
-    //         Delete: {Objects:[]}
-    //     }
-    //     data.Contents.forEach((content) => {
-    //         if(content.Key.indexOf(curveName) != -1) {
-    //             console.log(content.Key + ' will be deleted.');
-    //             deleteParams.Delete.Objects.push({Key: content.Key});
-    //         }
-    //     })
-    //
-    //     s3.deleteObjects(deleteParams, (err)=>{
-    //         if(err) console.log("s3 delete object failed " + err);
-    //         else console.log("s3 delete object done");
-    //     })
-    // })
-    console.log('---> ' + key);
     const params = {
         Bucket: bucket,
         Key: key
@@ -94,7 +68,6 @@ function moveCurve(srcKey, desKey) {
     s3.copyObject(params, function(err, data) {
         if (err) console.log(err, err.stack); // an error occurred
         else {
-            console.log(data);
             let deleteParams = {
                 Bucket: bucket,
                 Delete: {Objects:[{Key: srcKey}]}
@@ -108,7 +81,7 @@ function moveCurve(srcKey, desKey) {
 }
 
 async function getData(key) {
-    console.log('~~~getCurveDataFromS3~~~');
+    console.log('~~~ getCurveDataFromS3: ' + key);
     let params = {
         Bucket: "wi-inventory",
         Key: key
