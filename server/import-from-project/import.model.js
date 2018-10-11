@@ -110,9 +110,9 @@ function getDatasetFromProjectByName(name, idWell, token) {
 async function importWell(well, token, callback, username) {
     try {
         let _well = await getWellFromProject(well.name, well.idProject, token);
-        let topDepth = _well.well_headers.find(h => h.header === 'TOP').value;
-        let bottomDepth = _well.well_headers.find(h => h.header === 'STOP').value;
-        let step = _well.well_headers.find(h => h.header === 'STEP').value;
+        // let topDepth = _well.well_headers.find(h => h.header === 'TOP').value;
+        // let bottomDepth = _well.well_headers.find(h => h.header === 'STOP').value;
+        // let step = _well.well_headers.find(h => h.header === 'STEP').value;
         models.Well.findOrCreate({
             where: { name: _well.name, username: username },
             defaults: {
@@ -129,9 +129,9 @@ async function importWell(well, token, callback, username) {
                         idWell: newWell.idWell,
                         name: dataset.name,
                         unit: "M",
-                        top: topDepth,
-                        bottom: bottomDepth,
-                        step: step
+                        top: dataset.top,
+                        bottom: dataset.bottom,
+                        step: dataset.step
                     }
                 }).then(function (newDataset) {
                     newDataset = newDataset[0];
@@ -160,9 +160,9 @@ async function importWell(well, token, callback, username) {
                                     idCurve: _curve.idCurve,
                                     isCurrentRevision: 1,
                                     unit: projectCurve.unit,
-                                    startDepth: topDepth,
-                                    stopDepth: bottomDepth,
-                                    step: step
+                                    startDepth: dataset.top,
+                                    stopDepth: dataset.bottom,
+                                    step: dataset.step
                                 })
                                 // const key = hashDir.getHashPath(username + _well.name + dataset.name + curve.name + curveData.unit + curveData.step) + curveData.name + '.txt';
                                 // let curvePath = await curveModel.getCurveKey(revision);
