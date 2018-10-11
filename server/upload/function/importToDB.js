@@ -11,6 +11,26 @@ const curveModel = require('../../curve/curve.model');
 const readline = require('readline');
 const convert = require('../../utils/convert');
 
+function isFloatEqually(float1, float2){
+    const epsilon = 10 ** -7;
+    let rFloat1 = Math.round(float1 * 10 ** 6)/10**6;
+    let rFloat2 = Math.round(float2 * 10 ** 6)/10**6;
+    var delta = Math.abs(rFloat1 - rFloat2);
+    return delta < epsilon;
+}
+
+//return    -1 if float1 < float2
+//          0 if float1 == float2
+//          1 if float1 > float2
+function floatStrCompare (float1, float2){
+    const var1 = parseFloat(float1);
+    const var2 = parseFloat(float2);
+    if(isFloatEqually(var1, var2)) return 0;
+    if(var1 < var2) return -1;
+    if(var1 > var2) return 1;
+
+}
+
 async function importCurves(curves, dataset) {
     if (!curves || curves.length <= 0) return;
     const promises = curves.map(async curveData => {
@@ -27,7 +47,6 @@ async function importCurves(curves, dataset) {
                 const key = hashDir.getHashPath(dataset.username + dataset.wellname + dataset.name + curveData.name + curveData.unit + curveData.step) + curveData.name + '.txt';
                 await s3.upload(config.dataPath + '/' + curveData.path, key)
                     .then(data => {
-                        console.log(data.Location);
                     })
                     .catch(err => {
                         console.log(err);
@@ -132,7 +151,7 @@ async function importWell(wellData, override) {
                     well_header.unit = wellTop.unit;
                 }
                 // console.log("START =============", well_header.value);
-                well_header.value = well_header.value >= wellTop.value ? wellTop.value : well_header.value;
+                well_header.value = floatStrCompare(well_header.value, wellTop.value) == 1 ? wellTop.value : well_header.value;
 
             }
             if (well_header.header === "STOP" && wellStop) {
@@ -142,7 +161,7 @@ async function importWell(wellData, override) {
                     well_header.unit = wellStop.unit;
                 }
                 // console.log("STOP =============", well_header.value);
-                well_header.value = well_header.value <= wellStop.value ? wellStop.value : well_header.value;
+                well_header.value = floatStrCompare(well_header.value, wellStop.value) == -1 ? wellStop.value : well_header.value;
             }
             models.WellHeader.upsert(well_header)
                 .catch(err => {
@@ -165,7 +184,6 @@ async function importWell(wellData, override) {
         }
         return well;
     } catch (err) {
-        console.log('===' + err + "===> It's ok, rename now")
         if (err.name === 'SequelizeUniqueConstraintError') {
             if (wellData.name.indexOf(' ( copy ') < 0) {
                 wellData.name = wellData.name + ' ( copy 1 )';
@@ -215,16 +233,15 @@ async function importDatasets(datasets, well, override) {
                     const dataset = await models.Dataset.create(datasetInfo);
                     return dataset;
                 } catch (err) {
-                    console.log('>>>>>>>' + err + "===> It's ok, rename dataset now")
                     if (err.name === 'SequelizeUniqueConstraintError') {
-                        if (datasetData.name.indexOf(' ( copy ') < 0) {
-                            datasetData.name = datasetData.name + ' ( copy 1 )';
+                        if (datasetData.name.lastIndexOf('_') != datasetData.name.length - 2) {
+                            datasetData.name = datasetData.name + '_1';
                         }
                         else {
-                            let copy = datasetData.name.substr(datasetData.name.lastIndexOf(' ( copy '), datasetData.name.length);
-                            let copyNumber = parseInt(copy.replace(' ( copy ', '').replace(' )', ''));
+                            let copy = datasetData.name.substr(datasetData.name.lastIndexOf('_'), datasetData.name.length);
+                            let copyNumber = parseInt(copy.replace('_', ''), '');
                             copyNumber++;
-                            datasetData.name = datasetData.name.replace(copy, '') + ' ( copy ' + copyNumber + ' )';
+                            datasetData.name = datasetData.name.replace(copy, '') + '_' + copyNumber;
                         }
                         return await createDataset(datasetData);
                     }

@@ -74,6 +74,7 @@ async function deleteWell(idWell, username) {
                 await curveModel.deleteCurveFiles(curves);
                 well.destroy()
                     .then((rs) => {
+                        console.log("deleted well: " + rs.name)
                         Promise.resolve(rs);
                     })
                     .catch(err => {

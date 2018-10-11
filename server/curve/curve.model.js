@@ -50,10 +50,8 @@ function findCurveById(idCurve, username, attributes) {
 
 async function deleteCurveFiles(curves, callback) {
     //curves must be array
-    console.log('~~~deleteCurveFiles~~~ ' + JSON.stringify(curves));
     if (!curves || curves.length <= 0) return;
     for(let curve of curves){
-        console.log('===> ' + curve.name)
         for(let revision of curve.curve_revisions){
             if (config.s3Path) {
                 s3.deleteCurve(await getCurveKey(revision));
@@ -75,7 +73,6 @@ async function deleteCurve(idCurve, username) {
         revision: true
     }
     const curve = await findCurveById(idCurve, username, attributes);
-    console.log(JSON.stringify(curve));
     deleteCurveFiles([curve], function () {
         curve.destroy()
         .then((rs) => {
@@ -386,7 +383,6 @@ function findWellByCurveName(curveNames, callback, username) {
 }
 
 async function getCurveKey(curveRevision){
-    console.log('===> curve revision: ' + curveRevision.idRevision)
     try {
         const revision = await  models.CurveRevision.findById(curveRevision.idRevision, {
             include: {
@@ -407,7 +403,6 @@ async function getCurveKey(curveRevision){
             }
 
         });
-        console.log("============> " + revision)
         const hashStr = revision.curve.dataset.well.user.username + revision.curve.dataset.well.name + revision.curve.dataset.name + revision.curve.name + revision.unit + revision.step;
         const key = hashDir.getHashPath(hashStr) + revision.curve.name + '.txt';
         return Promise.resolve(key);

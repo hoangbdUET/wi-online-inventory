@@ -34,11 +34,18 @@ router.post('/curve/data', function (req, res) {
     const byline = require('byline');
     const convert = require('../utils/convert');
     let rate = 1;
+    let index = 0;
+    let step = 0;
     const convertTransform = new Transform({
         writableObjectMode: true,
         transform(chunk, encoding, callback) {
             let tokens = chunk.toString().split(/\s+/);
-            this.push(tokens[0] * rate + " " + tokens[1] + "\n");
+            if(step == 0) {
+                this.push(tokens[0] * rate + " " + tokens[1] + "\n");
+            }else {
+                this.push(index + " " + tokens[1] + "\n");
+                index++;
+            }
             callback();
         }
     });
@@ -49,6 +56,7 @@ router.post('/curve/data', function (req, res) {
         .then((curve) => {
             if (curve) {
                 datasetModel.findById(curve.idDataset).then(dataset => {
+                    step = dataset.step;
                     if (parseFloat(dataset.step) === 0) rate = convert.getDistanceRate(dataset.unit, "meter");
                     curveExport(curve, req.body.unit, req.body.step, (err, readStream) => {
                         if (!err) {

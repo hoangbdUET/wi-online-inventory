@@ -5,14 +5,13 @@ const LASExtractor = require("wi-import").LASExtractor;
 const importToDB = require('./importToDB');
 
 async function processFileUpload(file, importData) {
-    console.log("______processFileUpload________");
+    console.log("______processFileUpload: " + file.filename);
     // console.log(importData);
     // console.log(JSON.stringify(file));
     try {
         let fileFormat = file.filename.substring(file.filename.lastIndexOf('.') + 1);
         if (/LAS/.test(fileFormat.toUpperCase())) {
             const result = await LASExtractor(file, importData);
-            console.log("processFileUpload: " + JSON.stringify(result, null, 2));
             return importToDB(result, importData);
         }
         else {
@@ -26,24 +25,38 @@ async function processFileUpload(file, importData) {
 }
 
 async function uploadLasFiles(req) {
-    try {
-        if (!req.files) return cb('NO FILE CHOSEN!!!');
-        // console.log(req);
-        let output = [];
-        let importData = {};
-        importData.userInfo = req.decoded;
-        importData.override = !!(req.body.override && req.body.override === "true");
+    let successFiles = [];
+    let successWells = [];
+    let errFiles = [];
+    if (!req.files) return cb('NO FILE CHOSEN!!!');
+    // console.log(req);
+    let importData = {};
+    importData.userInfo = req.decoded;
+    importData.override = !!(req.body.override && req.body.override === "true");
 
-        for (const file of req.files) {
-            console.log(importData);
+    for (const file of req.files) {
+        try {
             const uploadResult = await processFileUpload(file, importData);
-            output.push(uploadResult);
+            console.log("processFileUpload DONE " + file.originalname)
+            successFiles.push(file.originalname);
+            successWells = successWells.concat(uploadResult);
+        } catch (err){
+            console.log('upload las files failed: ' + err);
+            errFiles.push({
+                filename: file.originalname,
+                err: err
+            });
         }
-        return Promise.resolve(output);
     }
-    catch (err) {
-        console.log('upload las files failed: ' + err);
-        return Promise.reject(err);
+    const resVal = {
+        errFiles: errFiles,
+        successWells: successWells,
+        successFiles: successFiles
+    }
+    if(successFiles.length > 0) {
+        return Promise.resolve(resVal);
+    } else {
+        return Promise.reject(resVal);
     }
 }
 
