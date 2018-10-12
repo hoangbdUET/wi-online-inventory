@@ -5,14 +5,13 @@ const LASExtractor = require("wi-import").LASExtractor;
 const importToDB = require('./importToDB');
 
 async function processFileUpload(file, importData) {
-    console.log("______processFileUpload________");
+    console.log("______processFileUpload: " + file.filename);
     // console.log(importData);
     // console.log(JSON.stringify(file));
     try {
         let fileFormat = file.filename.substring(file.filename.lastIndexOf('.') + 1);
         if (/LAS/.test(fileFormat.toUpperCase())) {
             const result = await LASExtractor(file, importData);
-            console.log("processFileUpload: " + JSON.stringify(result, null, 2));
             return importToDB(result, importData);
         }
         else {
@@ -38,6 +37,7 @@ async function uploadLasFiles(req) {
     for (const file of req.files) {
         try {
             const uploadResult = await processFileUpload(file, importData);
+            console.log("processFileUpload DONE " + file.originalname)
             successFiles.push(file.originalname);
             successWells = successWells.concat(uploadResult);
         } catch (err){
