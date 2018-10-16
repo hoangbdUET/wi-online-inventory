@@ -163,6 +163,9 @@ async function importWell(wellData, override) {
                 // console.log("STOP =============", well_header.value);
                 well_header.value = floatStrCompare(well_header.value, wellStop.value) == -1 ? wellStop.value : well_header.value;
             }
+            if(well_header.header == "NULL"){
+                well_header.value = "-9999";
+            }
             models.WellHeader.upsert(well_header)
                 .catch(err => {
                     console.log('=============' + err)
