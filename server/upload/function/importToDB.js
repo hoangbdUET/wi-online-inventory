@@ -261,6 +261,7 @@ async function importDatasets(datasets, well, override) {
             dataset.username = well.username;
 
             datasetData.params.forEach(param => {
+                if(param.mnem == 'SET') return;
                 param.idDataset = dataset.idDataset;
                 models.DatasetParams.create(param)
                     .catch(err => {
