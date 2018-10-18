@@ -9,7 +9,7 @@ const readline = require('line-by-line');
 function uploadCSVFile(req) {
     return new Promise(function(resolve, reject) {
         try {
-            console.log(req.body);
+            // console.log(req.body);
             let configs = req.body;
 
             let selectedFields = [];
@@ -25,7 +25,37 @@ function uploadCSVFile(req) {
                 units = configs['Unit line Data'];
             }
 
+            titleOfFields.forEach((tof, id, arr) => {
+                let idxOfTheSameCurve;
+                let duplicateCurve;
+                arr.forEach((e, idx) => {
+                    if (tof == e && idx > id) {
+                        idxOfTheSameCurve = idx;
+                        duplicateCurve = e;
+                    }
+                });
+                if (duplicateCurve) {
+                    let newName = '';
+                    let check = false;
+                    let suffixId = 1;
+                    do {
+                        newName = `${duplicateCurve}_${suffixId}`;
+                        if (
+                            !arr.find(
+                                (e, index) =>
+                                    e == newName && index > idxOfTheSameCurve
+                            )
+                        )
+                            check = true;
+                        suffixId++;
+                    } while (!check);
+                    arr[idxOfTheSameCurve] = newName;
+                }
+            });
+
             console.log(selectedFields, titleOfFields, units);
+
+            // resolve([]);
 
             let inputFile = req.files[0];
             let inputURL = inputFile.path;
