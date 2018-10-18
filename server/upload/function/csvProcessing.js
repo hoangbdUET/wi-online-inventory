@@ -49,12 +49,12 @@ function uploadCSVFile(req) {
                 dataset: configs['Dataset Name'],
                 NULL: {
                     value: configs.NULL,
-                    description: '',
+                    description: ''
                 },
                 STOP: {
                     value: null,
-                    description: '',
-                },
+                    description: ''
+                }
             };
 
             function createRegex() {
@@ -67,7 +67,7 @@ function uploadCSVFile(req) {
                         separator = regex;
                     } else {
                         separator = new RegExp(
-                            regex.source.replace('\\' + configs.decimal, ''),
+                            regex.source.replace('\\' + configs.decimal, '')
                         );
                     }
                 }
@@ -78,14 +78,14 @@ function uploadCSVFile(req) {
             fs.createReadStream(inputURL)
                 .pipe(
                     csv2({
-                        separator: /,/,
-                    }),
+                        separator: /,/
+                    })
                 )
                 .pipe(
                     through2({objectMode: true}, function(
                         chunk,
                         enc,
-                        callback,
+                        callback
                     ) {
                         let data = [];
                         chunk = chunk[0].split(separator);
@@ -114,7 +114,7 @@ function uploadCSVFile(req) {
                         configWellHeader(chunk, count, configs);
                         this.push(data);
                         callback();
-                    }),
+                    })
                 )
                 .on('data', function(data) {
                     if (
@@ -136,20 +136,20 @@ function uploadCSVFile(req) {
                             fs.createWriteStream(inputURL),
                             curveChosen,
                             {
-                                headers: true,
-                            },
+                                headers: true
+                            }
                         )
                         .on('finish', async function() {
                             let result = await CSVExtractor(
                                 inputURL,
-                                importData,
+                                importData
                             );
                             console.log(
-                                '===>' + JSON.stringify(result, null, 2),
+                                '===>' + JSON.stringify(result, null, 2)
                             );
                             let uploadResult = await importToDB(
                                 result,
-                                importData,
+                                importData
                             );
                             output.push(uploadResult);
                             resolve(output);
@@ -324,5 +324,5 @@ function uploadCSVFile(req) {
 }
 
 module.exports = {
-    uploadCSVFile: uploadCSVFile,
+    uploadCSVFile: uploadCSVFile
 };
