@@ -66,6 +66,9 @@ function uploadCSVFile(req) {
             let INDEXSETTING = selectedFields;
             let TITLE = titleOfFields;
             var importData = {};
+            if (configs.coreData) {
+                importData.coreData = configs.coreData;
+            }
             importData.userInfo = req.decoded;
             importData.override = !!(
                 configs.override && configs.override === 'true'
@@ -119,6 +122,7 @@ function uploadCSVFile(req) {
                     ) {
                         let data = [];
                         chunk = chunk[0].split(separator);
+                        data.push(chunk[configs['Reference Column']]);
                         importData.well.STOP.value =
                             chunk[configs['Reference Column']];
                         for (let i = 0; i < INDEXSETTING.length; i++) {
@@ -151,8 +155,8 @@ function uploadCSVFile(req) {
                         count == configs['Unit line'] ||
                         count >= configs['Data first line']
                     ) {
-                        let myObj = {};
-                        for (let i = 0; i < data.length; i++) {
+                        let myObj = {Depth: data[0]};
+                        for (let i = 1; i < data.length; i++) {
                             myObj[TITLE[i]] = data[i];
                         }
                         curveChosen.push(myObj);
@@ -341,12 +345,17 @@ function uploadCSVFile(req) {
             }
             if (count == parseInt(configs['Data first line']) + 1) {
                 importData.well.STEP = {};
-                importData.well.STEP.value = (
-                    chunk[configs['Reference Column']] -
-                    importData.well.STRT.value
-                )
-                    .toFixed(4)
-                    .toString();
+                if (importData.coreData) {
+                    let step = 0.0;
+                    importData.well.STEP.value = step.toString();
+                } else {
+                    importData.well.STEP.value = (
+                        chunk[configs['Reference Column']] -
+                        importData.well.STRT.value
+                    )
+                        .toFixed(4)
+                        .toString();
+                }
                 importData.well.STEP.description = '';
             }
         }
