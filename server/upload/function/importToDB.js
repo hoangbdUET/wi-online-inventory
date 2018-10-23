@@ -52,7 +52,7 @@ async function importCurves(curves, dataset) {
                         console.log(err);
                     });
             }
-            else if (curveData.wellname !== dataset.wellname || curveData.datasetname !== dataset.name) {
+            else  {
                 const oldCurve = {
                     username: dataset.username,
                     wellname: curveData.wellname,
@@ -60,7 +60,8 @@ async function importCurves(curves, dataset) {
                     curvename: curveData.name,
                     unit: curveData.unit,
                     step: curveData.step,
-                    description: curveData.description
+                    description: curveData.description,
+                    path: curveData.path
                 };
                 const newCurve = {
                     username: dataset.username,
@@ -173,7 +174,7 @@ async function importWell(wellData, override) {
         }
 
         for (let header in wellData) {
-            if (!arr.includes(header) && header !== 'TOTAL_DEPTH' && header !== 'TOTAL DEPTH')
+            if (!arr.includes(header) && header !== 'TD')
                 models.WellHeader.upsert({
                     idWell: well.idWell,
                     header: header,
@@ -281,7 +282,7 @@ async function importDatasets(datasets, well, override) {
 
 async function importToDB(inputWells, importData) {
     // console.log('importToDB inputWell: ' + JSON.stringify(inputWells));
-    if (!inputWells || inputWells.length <= 0) return cb('there is no well to import');
+    if (!inputWells || inputWells.length <= 0) return Promise.reject('there is no well to import');
     const promises = inputWells.map(async inputWell => {
         try {
             inputWell.username = importData.userInfo.username;
