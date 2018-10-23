@@ -174,7 +174,7 @@ async function importWell(wellData, override) {
         }
 
         for (let header in wellData) {
-            if (!arr.includes(header) && header !== 'TOTAL_DEPTH' && header !== 'TOTAL DEPTH')
+            if (!arr.includes(header) && header !== 'TOTAL_DEPTH' && header !== 'TOTAL DEPTH' && header !== 'TD')
                 models.WellHeader.upsert({
                     idWell: well.idWell,
                     header: header,
