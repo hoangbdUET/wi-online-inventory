@@ -9,7 +9,7 @@ const readline = require('line-by-line');
 function uploadCSVFile(req) {
     return new Promise(function(resolve, reject) {
         try {
-            console.log(req.body);
+            // console.log(req.body);
             let configs = req.body;
 
             let selectedFields = [];
@@ -25,7 +25,37 @@ function uploadCSVFile(req) {
                 units = configs['Unit line Data'];
             }
 
+            titleOfFields.forEach((tof, id, arr) => {
+                let idxOfTheSameCurve;
+                let duplicateCurve;
+                arr.forEach((e, idx) => {
+                    if (tof == e && idx > id) {
+                        idxOfTheSameCurve = idx;
+                        duplicateCurve = e;
+                    }
+                });
+                if (duplicateCurve) {
+                    let newName = '';
+                    let check = false;
+                    let suffixId = 1;
+                    do {
+                        newName = `${duplicateCurve}_${suffixId}`;
+                        if (
+                            !arr.find(
+                                (e, index) =>
+                                    e == newName && index > idxOfTheSameCurve
+                            )
+                        )
+                            check = true;
+                        suffixId++;
+                    } while (!check);
+                    arr[idxOfTheSameCurve] = newName;
+                }
+            });
+
             console.log(selectedFields, titleOfFields, units);
+
+            // resolve([]);
 
             let inputFile = req.files[0];
             let inputURL = inputFile.path;
@@ -36,6 +66,9 @@ function uploadCSVFile(req) {
             let INDEXSETTING = selectedFields;
             let TITLE = titleOfFields;
             var importData = {};
+            if (configs.coreData) {
+                importData.coreData = configs.coreData;
+            }
             importData.userInfo = req.decoded;
             importData.override = !!(
                 configs.override && configs.override === 'true'
@@ -49,12 +82,12 @@ function uploadCSVFile(req) {
                 dataset: configs['Dataset Name'],
                 NULL: {
                     value: configs.NULL,
-                    description: '',
+                    description: ''
                 },
                 STOP: {
                     value: null,
-                    description: '',
-                },
+                    description: ''
+                }
             };
 
             function createRegex() {
@@ -67,7 +100,7 @@ function uploadCSVFile(req) {
                         separator = regex;
                     } else {
                         separator = new RegExp(
-                            regex.source.replace('\\' + configs.decimal, ''),
+                            regex.source.replace('\\' + configs.decimal, '')
                         );
                     }
                 }
@@ -78,17 +111,18 @@ function uploadCSVFile(req) {
             fs.createReadStream(inputURL)
                 .pipe(
                     csv2({
-                        separator: /,/,
-                    }),
+                        separator: /,/
+                    })
                 )
                 .pipe(
                     through2({objectMode: true}, function(
                         chunk,
                         enc,
-                        callback,
+                        callback
                     ) {
                         let data = [];
                         chunk = chunk[0].split(separator);
+                        data.push(chunk[configs['Reference Column']]);
                         importData.well.STOP.value =
                             chunk[configs['Reference Column']];
                         for (let i = 0; i < INDEXSETTING.length; i++) {
@@ -114,15 +148,15 @@ function uploadCSVFile(req) {
                         configWellHeader(chunk, count, configs);
                         this.push(data);
                         callback();
-                    }),
+                    })
                 )
                 .on('data', function(data) {
                     if (
                         count == configs['Unit line'] ||
                         count >= configs['Data first line']
                     ) {
-                        let myObj = {};
-                        for (let i = 0; i < data.length; i++) {
+                        let myObj = {Depth: data[0]};
+                        for (let i = 1; i < data.length; i++) {
                             myObj[TITLE[i]] = data[i];
                         }
                         curveChosen.push(myObj);
@@ -136,20 +170,20 @@ function uploadCSVFile(req) {
                             fs.createWriteStream(inputURL),
                             curveChosen,
                             {
-                                headers: true,
-                            },
+                                headers: true
+                            }
                         )
                         .on('finish', async function() {
                             let result = await CSVExtractor(
                                 inputURL,
-                                importData,
+                                importData
                             );
                             console.log(
-                                '===>' + JSON.stringify(result, null, 2),
+                                '===>' + JSON.stringify(result, null, 2)
                             );
                             let uploadResult = await importToDB(
                                 result,
-                                importData,
+                                importData
                             );
                             output.push(uploadResult);
                             resolve(output);
@@ -311,12 +345,17 @@ function uploadCSVFile(req) {
             }
             if (count == parseInt(configs['Data first line']) + 1) {
                 importData.well.STEP = {};
-                importData.well.STEP.value = (
-                    chunk[configs['Reference Column']] -
-                    importData.well.STRT.value
-                )
-                    .toFixed(4)
-                    .toString();
+                if (importData.coreData) {
+                    let step = 0.0;
+                    importData.well.STEP.value = step.toString();
+                } else {
+                    importData.well.STEP.value = (
+                        chunk[configs['Reference Column']] -
+                        importData.well.STRT.value
+                    )
+                        .toFixed(4)
+                        .toString();
+                }
                 importData.well.STEP.description = '';
             }
         }
@@ -324,5 +363,5 @@ function uploadCSVFile(req) {
 }
 
 module.exports = {
-    uploadCSVFile: uploadCSVFile,
+    uploadCSVFile: uploadCSVFile
 };
