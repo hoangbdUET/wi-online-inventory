@@ -11,7 +11,9 @@ let exporter = require('wi-export-test');
 let curveModel = require('../curve/curve.model');
 
 router.post('/las2', function (req, res) {
+
     async.map(req.body.idObjs, function (idObj, callback) {
+
         models.Well.findById(idObj.idWell, {
             include: [{
                 model: models.WellHeader
@@ -27,6 +29,7 @@ router.post('/las2', function (req, res) {
                 }]
             }]
         }).then(well => {
+            console.log('found well');
             if (well && well.username == req.decoded.username) {
                 exporter.exportLas2FromInventory(well, idObj.datasets, config.exportPath, s3, curveModel, req.decoded.username, function (err, result) {
                     if (err) {
@@ -35,13 +38,17 @@ router.post('/las2', function (req, res) {
                         callback(null, result);
                     }
                 })
+            } else {
+                callback('Not found');
             }
+        }).catch(err => {
+            callback(err);
         })
     }, function (err, results) {
         if (err) {
             res.send(response(512, err));
         } else {
-            let responseArr = [];            
+            let responseArr = [];
             async.each(results, function (rs, next) {
                 async.each(rs, function (r, _next) {
                     responseArr.push(r);
@@ -84,7 +91,11 @@ router.post('/las3', function (req, res) {
                         callback(null, result);
                     }
                 })
+            } else {
+                callback('Not found');
             }
+        }).catch(err => {
+            callback(err);
         })
     }, function (err, result) {
         if (err) {
@@ -120,7 +131,11 @@ router.post('/csv/rv', function (req, res) {
                         callback(null, result);
                     }
                 })
+            } else {
+                callback('Not found');
             }
+        }).catch(err => {
+            callback(err);
         })
     }, function (err, results) {
         if (err) {
@@ -170,15 +185,19 @@ router.post('/csv/wdrv', function (req, res) {
                         callback(null, result);
                     }
                 })
+            } else {
+                callback('Not found');
             }
+        }).catch(err => {
+            callback(err);
         })
     }, function (err, result) {
-        if (err) {
-            res.send(response(404, err));
-        } else {
-            res.send(response(200, 'SUCCESSFULLY', result));
-        }
-    });
+            if (err) {
+                res.send(response(404, err));
+            } else {
+                res.send(response(200, 'SUCCESSFULLY', result));
+            }
+        });
 })
 
 router.post('/files', function (req, res) {
