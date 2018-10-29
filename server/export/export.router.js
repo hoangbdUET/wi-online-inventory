@@ -17,7 +17,12 @@ function getFullWellObj (idWell) {
             async.each(well.datasets, async (dataset, next) => {
                 dataset.curves = await models.Curve.findAll({where: {idDataset: dataset.idDataset}});
                 dataset.dataset_params = await models.DatasetParams.findAll({where: {idDataset: dataset.idDataset}});
-                next();
+                async.each(dataset.curves, async(curve, nextCurve) => {
+                    curve.curve_revisions = await models.CurveRevision.findAll({where: {idCurve: curve.idCurve}});
+                    nextCurve();
+                }, () => {
+                    next();
+                })
             }, () => {
                 resolve(well);
             });
