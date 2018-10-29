@@ -10,19 +10,14 @@ const s3 = require('../s3');
 let exporter = require('wi-export-test');
 let curveModel = require('../curve/curve.model');
 
-function getFullWellObj (idWell) {
-    return new Promise (async (resolve) => {
+function getFullWellObj(idWell) {
+    return new Promise(async (resolve) => {
         try {
-            let well = models.Well.findById(idWell, {include: [{model: models.WellHeader}, {model: models.Dataset}]});
+            let well = models.Well.findById(idWell, { include: [{ model: models.WellHeader }, { model: models.Dataset }] });
             async.each(well.datasets, async (dataset, next) => {
-                dataset.curves = await models.Curve.findAll({where: {idDataset: dataset.idDataset}});
-                dataset.dataset_params = await models.DatasetParams.findAll({where: {idDataset: dataset.idDataset}});
-                async.each(dataset.curves, async(curve, nextCurve) => {
-                    curve.curve_revisions = await models.CurveRevision.findAll({where: {idCurve: curve.idCurve}});
-                    nextCurve();
-                }, () => {
-                    next();
-                })
+                dataset.curves = await models.Curve.findAll({ where: { idDataset: dataset.idDataset }, include:{model: models.CurveRevision} });
+                dataset.dataset_params = await models.DatasetParams.findAll({ where: { idDataset: dataset.idDataset } });
+                next();
             }, () => {
                 resolve(well);
             });
@@ -219,12 +214,12 @@ router.post('/csv/wdrv', function (req, res) {
             callback(err);
         })
     }, function (err, result) {
-            if (err) {
-                res.send(response(404, err));
-            } else {
-                res.send(response(200, 'SUCCESSFULLY', result));
-            }
-        });
+        if (err) {
+            res.send(response(404, err));
+        } else {
+            res.send(response(200, 'SUCCESSFULLY', result));
+        }
+    });
 })
 
 router.post('/files', function (req, res) {
