@@ -10,25 +10,44 @@ const s3 = require('../s3');
 let exporter = require('wi-export-test');
 let curveModel = require('../curve/curve.model');
 
+function getFullWellObj (idWell) {
+    return new Promise (async (resolve) => {
+        try {
+            let well = models.Well.findById(idWell, {include: [{model: models.WellHeader}, {model: models.Dataset}]});
+            async.each(well.datasets, async (dataset, next) => {
+                dataset.curves = await models.Curve.findAll({where: {idDataset: dataset.idDataset}});
+                dataset.dataset_params = await models.DatasetParams.findAll({where: {idDataset: dataset.idDataset}});
+                next();
+            }, () => {
+                resolve(well);
+            });
+        } catch (e) {
+            console.log(e);
+            resolve(null);
+        }
+    })
+}
+
 router.post('/las2', function (req, res) {
 
     async.map(req.body.idObjs, function (idObj, callback) {
 
-        models.Well.findById(idObj.idWell, {
-            include: [{
-                model: models.WellHeader
-            }, {
-                model: models.Dataset,
-                include: [{
-                    model: models.Curve,
-                    include: {
-                        model: models.CurveRevision
-                    }
-                }, {
-                    model: models.DatasetParams
-                }]
-            }]
-        }).then(well => {
+        // models.Well.findById(idObj.idWell, {
+        //     include: [{
+        //         model: models.WellHeader
+        //     }, {
+        //         model: models.Dataset,
+        //         include: [{
+        //             model: models.Curve,
+        //             include: {
+        //                 model: models.CurveRevision
+        //             }
+        //         }, {
+        //             model: models.DatasetParams
+        //         }]
+        //     }]
+        // })
+        getFullWellObj(idObj.idWell).then(well => {
             console.log('found well');
             if (well && well.username == req.decoded.username) {
                 exporter.exportLas2FromInventory(well, idObj.datasets, config.exportPath, s3, curveModel, req.decoded.username, function (err, result) {
@@ -68,21 +87,22 @@ router.post('/las2', function (req, res) {
 })
 router.post('/las3', function (req, res) {
     async.map(req.body.idObjs, function (idObj, callback) {
-        models.Well.findById(idObj.idWell, {
-            include: [{
-                model: models.WellHeader
-            }, {
-                model: models.Dataset,
-                include: [{
-                    model: models.Curve,
-                    include: {
-                        model: models.CurveRevision
-                    }
-                }, {
-                    model: models.DatasetParams
-                }]
-            }]
-        }).then(well => {
+        // models.Well.findById(idObj.idWell, {
+        //     include: [{
+        //         model: models.WellHeader
+        //     }, {
+        //         model: models.Dataset,
+        //         include: [{
+        //             model: models.Curve,
+        //             include: {
+        //                 model: models.CurveRevision
+        //             }
+        //         }, {
+        //             model: models.DatasetParams
+        //         }]
+        //     }]
+        // })
+        getFullWellObj(idObj.idWell).then(well => {
             if (well && well.username == req.decoded.username) {
                 exporter.exportLas3FromInventory(well, idObj.datasets, config.exportPath, s3, curveModel, req.decoded.username, function (err, result) {
                     if (err) {
@@ -108,21 +128,22 @@ router.post('/las3', function (req, res) {
 
 router.post('/csv/rv', function (req, res) {
     async.map(req.body.idObjs, function (idObj, callback) {
-        models.Well.findById(idObj.idWell, {
-            include: [{
-                model: models.WellHeader
-            }, {
-                model: models.Dataset,
-                include: [{
-                    model: models.Curve,
-                    include: {
-                        model: models.CurveRevision
-                    }
-                }, {
-                    model: models.DatasetParams
-                }]
-            }]
-        }).then(well => {
+        // models.Well.findById(idObj.idWell, {
+        //     include: [{
+        //         model: models.WellHeader
+        //     }, {
+        //         model: models.Dataset,
+        //         include: [{
+        //             model: models.Curve,
+        //             include: {
+        //                 model: models.CurveRevision
+        //             }
+        //         }, {
+        //             model: models.DatasetParams
+        //         }]
+        //     }]
+        // })
+        getFullWellObj(idObj.idWell).then(well => {
             if (well && well.username == req.decoded.username) {
                 exporter.exportCsvRVFromInventory(well, idObj.datasets, config.exportPath, s3, curveModel, req.decoded.username, function (err, result) {
                     if (err) {
@@ -162,21 +183,22 @@ router.post('/csv/rv', function (req, res) {
 
 router.post('/csv/wdrv', function (req, res) {
     async.map(req.body.idObjs, function (idObj, callback) {
-        models.Well.findById(idObj.idWell, {
-            include: [{
-                model: models.WellHeader
-            }, {
-                model: models.Dataset,
-                include: [{
-                    model: models.Curve,
-                    include: {
-                        model: models.CurveRevision
-                    }
-                }, {
-                    model: models.DatasetParams
-                }]
-            }]
-        }).then(well => {
+        // models.Well.findById(idObj.idWell, {
+        //     include: [{
+        //         model: models.WellHeader
+        //     }, {
+        //         model: models.Dataset,
+        //         include: [{
+        //             model: models.Curve,
+        //             include: {
+        //                 model: models.CurveRevision
+        //             }
+        //         }, {
+        //             model: models.DatasetParams
+        //         }]
+        //     }]
+        // })
+        getFullWellObj(idObj.idWell).then(well => {
             if (well && well.username == req.decoded.username) {
                 exporter.exportCsvWDRVFromInventory(well, idObj.datasets, config.exportPath, s3, curveModel, req.decoded.username, function (err, result) {
                     if (err) {
