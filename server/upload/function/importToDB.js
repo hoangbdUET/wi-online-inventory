@@ -11,10 +11,10 @@ const curveModel = require('../../curve/curve.model');
 const readline = require('readline');
 const convert = require('../../utils/convert');
 
-function isFloatEqually(float1, float2){
+function isFloatEqually(float1, float2) {
     const epsilon = 10 ** -7;
-    let rFloat1 = Math.round(float1 * 10 ** 6)/10**6;
-    let rFloat2 = Math.round(float2 * 10 ** 6)/10**6;
+    let rFloat1 = Math.round(float1 * 10 ** 6) / 10 ** 6;
+    let rFloat2 = Math.round(float2 * 10 ** 6) / 10 ** 6;
     var delta = Math.abs(rFloat1 - rFloat2);
     return delta < epsilon;
 }
@@ -22,12 +22,12 @@ function isFloatEqually(float1, float2){
 //return    -1 if float1 < float2
 //          0 if float1 == float2
 //          1 if float1 > float2
-function floatStrCompare (float1, float2){
+function floatStrCompare(float1, float2) {
     const var1 = parseFloat(float1);
     const var2 = parseFloat(float2);
-    if(isFloatEqually(var1, var2)) return 0;
-    if(var1 < var2) return -1;
-    if(var1 > var2) return 1;
+    if (isFloatEqually(var1, var2)) return 0;
+    if (var1 < var2) return -1;
+    if (var1 > var2) return 1;
 
 }
 
@@ -52,7 +52,7 @@ async function importCurves(curves, dataset) {
                         console.log(err);
                     });
             }
-            else if (curveData.wellname !== dataset.wellname || curveData.datasetname !== dataset.name) {
+            else  {
                 const oldCurve = {
                     username: dataset.username,
                     wellname: curveData.wellname,
@@ -60,7 +60,8 @@ async function importCurves(curves, dataset) {
                     curvename: curveData.name,
                     unit: curveData.unit,
                     step: curveData.step,
-                    description: curveData.description
+                    description: curveData.description,
+                    path: curveData.path
                 };
                 const newCurve = {
                     username: dataset.username,
@@ -163,6 +164,9 @@ async function importWell(wellData, override) {
                 // console.log("STOP =============", well_header.value);
                 well_header.value = floatStrCompare(well_header.value, wellStop.value) == -1 ? wellStop.value : well_header.value;
             }
+            if (well_header.header == "NULL") {
+                well_header.value = "-9999";
+            }
             models.WellHeader.upsert(well_header)
                 .catch(err => {
                     console.log('=============' + err)
@@ -170,7 +174,7 @@ async function importWell(wellData, override) {
         }
 
         for (let header in wellData) {
-            if (!arr.includes(header))
+            if (!arr.includes(header) && header !== 'TD')
                 models.WellHeader.upsert({
                     idWell: well.idWell,
                     header: header,
@@ -258,6 +262,7 @@ async function importDatasets(datasets, well, override) {
             dataset.username = well.username;
 
             datasetData.params.forEach(param => {
+                if (param.mnem == 'SET') return;
                 param.idDataset = dataset.idDataset;
                 models.DatasetParams.create(param)
                     .catch(err => {
@@ -277,7 +282,7 @@ async function importDatasets(datasets, well, override) {
 
 async function importToDB(inputWells, importData) {
     // console.log('importToDB inputWell: ' + JSON.stringify(inputWells));
-    if (!inputWells || inputWells.length <= 0) return cb('there is no well to import');
+    if (!inputWells || inputWells.length <= 0) return Promise.reject('there is no well to import');
     const promises = inputWells.map(async inputWell => {
         try {
             inputWell.username = importData.userInfo.username;
