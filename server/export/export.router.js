@@ -10,45 +10,35 @@ const s3 = require('../s3');
 let exporter = require('wi-export-test');
 let curveModel = require('../curve/curve.model');
 
-function getFullWellObj(idWell) {
-    return new Promise(async (resolve) => {
-        try {
-            let well = models.Well.findById(idWell, { include: [{ model: models.WellHeader }, { model: models.Dataset }] });
-            async.each(well.datasets, async (dataset, next) => {
-                dataset.curves = await models.Curve.findAll({ where: { idDataset: dataset.idDataset }, include:{model: models.CurveRevision} });
-                dataset.dataset_params = await models.DatasetParams.findAll({ where: { idDataset: dataset.idDataset } });
-                next();
-            }, () => {
-                resolve(well);
-            });
-        } catch (e) {
-            console.log(e);
-            resolve(null);
-        }
-    })
+async function getFullWellObj(idWell){
+    try {
+        const well = await models.Well.findById(idWell, {
+            include: [{
+                model: models.WellHeader
+            }, {
+                model: models.Dataset,
+                include: [{
+                    model: models.Curve,
+                    include: [{
+                        model: models.CurveRevision
+                    }]
+                }, {
+                    model: models.DatasetParams
+                }]
+            }]
+        })
+        return Promise.resolve(well);
+    } catch (err) {
+        console.log("fail to get well: " + err);
+        return Promise.reject()
+    }
 }
 
 router.post('/las2', function (req, res) {
 
     async.map(req.body.idObjs, function (idObj, callback) {
-
-        // models.Well.findById(idObj.idWell, {
-        //     include: [{
-        //         model: models.WellHeader
-        //     }, {
-        //         model: models.Dataset,
-        //         include: [{
-        //             model: models.Curve,
-        //             include: {
-        //                 model: models.CurveRevision
-        //             }
-        //         }, {
-        //             model: models.DatasetParams
-        //         }]
-        //     }]
-        // })
         getFullWellObj(idObj.idWell).then(well => {
-            console.log('found well');
+            console.log('found well ');
             if (well && well.username == req.decoded.username) {
                 exporter.exportLas2FromInventory(well, idObj.datasets, config.exportPath, s3, curveModel, req.decoded.username, function (err, result) {
                     if (err) {
