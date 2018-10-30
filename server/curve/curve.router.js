@@ -77,6 +77,31 @@ router.post('/curve/data', function (req, res) {
         });
 });
 
+router.post('/curve/rawdata', function (req, res) {
+    const attributes = {
+        revision: true
+    };
+    curveModel.findCurveById(req.body.idCurve, req.decoded.username, attributes)
+        .then((curve) => {
+            if (curve) {
+                curveExport(curve, req.body.unit, req.body.step, (err, readStream) => {
+                    if (!err) {
+                        readStream.pipe(res);
+                    }
+                    else {
+                        console.log(err);
+                        res.send(response(500, 'CURVE CONVERSION FAILED', err));
+                    }
+                });
+            } else {
+                res.send(response(200, 'NO CURVE FOUND BY ID'));
+            }
+        })
+        .catch((err) => {
+            res.send(response(500, 'FAILED TO FIND CURVE', err));
+        });
+});
+
 router.post('/curve/edit', function (req, res) {
     curveModel.editCurve(req.body, req.decoded.username, (err, result) => {
         if (err) {

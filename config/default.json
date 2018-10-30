@@ -17,6 +17,5 @@
     "project": "dev.i2g.cloud"
   },
   "exportPath": "server/export/exported-files",
-  "s3Path": "https://s3-ap-southeast-1.amazonaws.com/wi-inventory",
   "dataPath": "/home/ubuntu/wi-inventory-data"
 }

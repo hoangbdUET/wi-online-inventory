@@ -6,7 +6,7 @@ const fs = require('fs');
 const credentials = new AWS.SharedIniFileCredentials({profile: 'wi_inventory'});
 AWS.config.credentials = credentials;
 const s3 = new AWS.S3({apiVersion: '2006-03-01'});
-const bucket = 'wi-inventory';
+const bucket = config.s3Bucket;
 
 function upload(path, key) {
     const fileSystemPath = path;
@@ -82,7 +82,7 @@ function moveCurve(srcKey, desKey) {
 async function getData(key) {
     console.log('~~~ getCurveDataFromS3: ' + key);
     let params = {
-        Bucket: "wi-inventory",
+        Bucket: bucket,
         Key: key
     }
     return new Promise((resolve, reject) => {

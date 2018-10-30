@@ -12,6 +12,10 @@
     "port": 9000,
     "jwtSecretKey": "secretKey"
   },
+
+  "s3Bucket": "wi-inventory-prod",
+  "s3Path": "https://s3-ap-southeast-1.amazonaws.com/wi-inventory-prod",
+
   "dataPath": "D:/tmp2",
   "exportPath": "exports"
 }
