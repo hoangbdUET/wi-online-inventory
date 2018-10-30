@@ -339,7 +339,7 @@ async function importCurves(curves, token, callback, username) {
                         idWell: well.idWell,
                         name: curve.datasetName
                     }, defaults: {
-                        idWell: curve.idWell,
+                        idWell: well.idWell,
                         name: curve.datasetName,
                         top: projectWell.topDepth,
                         bottom: projectWell.bottomDepth,

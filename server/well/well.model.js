@@ -295,7 +295,6 @@ function findOrCreateWellByName(wellName, username, idProjectWell, token, callba
                 console.log('well', well);
                 getWellFromProjectById(idProjectWell, token).then(function(projectWell){
                     if(projectWell) {
-                        callback(null, well);
                         for(let h of projectWell.well_headers) {
                             models.WellHeader.create({
                                 idWell: well.idWell,
@@ -308,6 +307,7 @@ function findOrCreateWellByName(wellName, username, idProjectWell, token, callba
                                 callback(err);
                             })
                         }
+                        callback(null, well);
                     } else {
                         callback('well not found');
                     }
