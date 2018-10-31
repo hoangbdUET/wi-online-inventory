@@ -57,7 +57,7 @@ router.post('/curve/data', function (req, res) {
             if (curve) {
                 datasetModel.findById(curve.idDataset).then(dataset => {
                     step = dataset.step;
-                    if (parseFloat(dataset.step) === 0) rate = convert.getDistanceRate(dataset.unit, "meter");
+                    if (parseFloat(dataset.step) === 0) rate = convert.getDistanceRate(dataset.unit, "meter") || 1;
                     curveExport(curve, req.body.unit, req.body.step, (err, readStream) => {
                         if (!err) {
                             byline.createStream(readStream).pipe(convertTransform).pipe(res);
