@@ -9,7 +9,7 @@ module.exports = {
             "log_date_format": "MM-DD-YYYY HH:mm Z",
             "max_memory_restart": "1G",
             "env": {
-                "NODE_ENV": "production"
+                "NODE_ENV": "dev"
             }
         }
     ]
