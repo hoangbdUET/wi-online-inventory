@@ -53,11 +53,7 @@ async function uploadLasFiles(req) {
         successWells: successWells,
         successFiles: successFiles
     }
-    if(successFiles.length > 0) {
-        return Promise.resolve(resVal);
-    } else {
-        return Promise.reject(resVal);
-    }
+    return Promise.resolve(resVal);
 }
 
 module.exports = {
