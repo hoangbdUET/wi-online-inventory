@@ -41,4 +41,5 @@ module.exports = {
     AREA: new WellHeader('Area', 'AREA', 'Area'),
     TYPE: new WellHeader('Type', 'TYPE', 'Type'),
     STATUS: new WellHeader('Status', 'STATUS', 'Status'),
+	WTYPE: new WellHeader('Well Type', 'WTYPE', 'Well Type'),
 };
