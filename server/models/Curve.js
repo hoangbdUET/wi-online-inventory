@@ -14,6 +14,14 @@ module.exports = function (sequelize, DataTypes) {
         description: {
             type: DataTypes.STRING,
             defaultValue: ''
+        },
+        dimension: {
+            type: DataTypes.INTEGER,
+            defaultValue: 1
+        },
+        delimiter: {
+            type: DataTypes.STRING,
+            defaultValue: ' '
         }
     });
 }

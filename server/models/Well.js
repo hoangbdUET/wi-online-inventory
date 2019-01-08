@@ -14,6 +14,10 @@ module.exports = function (sequelize, DataTypes) {
         filename : {
             type: DataTypes.STRING(100),
             allowNull: true
+        },
+        notes: {
+            type: DataTypes.TEXT,
+            allowNull: true
         }
     });
 }

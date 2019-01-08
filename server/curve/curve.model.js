@@ -129,7 +129,6 @@ async function getCurves(idDataset, username, cb) {
         console.log(err);
         return cb(err)
     }
-
 }
 
 async function editCurve(body, username, cb) {

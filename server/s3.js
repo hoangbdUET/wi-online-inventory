@@ -22,7 +22,7 @@ function upload(path, key) {
     return new Promise((resolve, reject)=> {
         s3.upload(uploadParams, function (err, data) {
             if (err) {
-                console.log("Error", err);
+                console.log("S3 upload error: ", err);
                 reject(err);
             }
             if (data) {

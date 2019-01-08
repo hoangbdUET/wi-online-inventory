@@ -28,7 +28,6 @@ function floatStrCompare(float1, float2) {
     if (isFloatEqually(var1, var2)) return 0;
     if (var1 < var2) return -1;
     if (var1 > var2) return 1;
-
 }
 
 async function importCurves(curves, dataset) {
@@ -137,6 +136,9 @@ async function importWell(wellData, override) {
             else if (wellData[WellHeader[property].CSVMnemnics]) {
                 well_header = wellData[WellHeader[property].CSVMnemnics];
                 delete wellData[WellHeader[property].CSVMnemnics];
+            }
+            else {
+                continue;
             }
             arr.push(property);
             well_header.idWell = well.idWell;
