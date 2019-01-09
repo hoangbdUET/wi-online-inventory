@@ -10,8 +10,7 @@ const sequelize = new Sequelize(config.dbName, config.user, config.password, {
     dialect: config.dialect,
     port: config.port,
     dialectOptions: {
-        charset: 'utf8',
-        collate: 'utf8_cs'
+        charset: 'utf8'
     },
     pool: {
         max: 2,
