@@ -46,9 +46,10 @@ async function importCurves(curves, dataset) {
                 const key = hashDir.getHashPath(dataset.username + dataset.wellname + dataset.name + curveData.name + curveData.unit + curveData.step) + curveData.name + '.txt';
                 await s3.upload(config.dataPath + '/' + curveData.path, key)
                     .then(data => {
+                        // console.log("s3 uploaded: " + key);
                     })
                     .catch(err => {
-                        console.log(err);
+                        console.log("s3 upload failed: " + err);
                     });
             }
             else  {

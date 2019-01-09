@@ -13,9 +13,9 @@ const sequelize = new Sequelize(config.dbName, config.user, config.password, {
         charset: 'utf8'
     },
     pool: {
-        max: 2,
+        max: 100,
         min: 0,
-        idle: 200
+        acquire: 60000
     },
     operatorsAliases: Sequelize.Op
     // storage: config.storage

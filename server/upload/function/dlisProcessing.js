@@ -24,7 +24,8 @@ function parseDlisFile(file, userInfo){
 
         function onWellInfo(wellInfo) {
             well.filename = wellInfo['FILE-SET-NAME'] ? wellInfo['FILE-SET-NAME'][0] : "";
-            well.name = wellInfo['WELL-NAME'] ? wellInfo['WELL-NAME'][0] : ""
+            well.name = wellInfo['WELL-NAME'] ? wellInfo['WELL-NAME'][0] : "";
+            // console.log("onWellInfo: " + JSON.stringify(well));
         }
 
         function onDatasetInfo(frame) {
@@ -37,6 +38,8 @@ function parseDlisFile(file, userInfo){
                 curves: [],
                 params: []
             }
+
+            // console.log("onDatasetInfo: " + JSON.stringify(dataset));
 
             if(channels){
                 //import curve to db
@@ -61,7 +64,7 @@ function parseDlisFile(file, userInfo){
         }
 
         function onCurveInfo(channel){
-            //console.log("CCC\n", curveInfo,"\n");
+            // console.log("CCC\n", channel,"\n");
             if(datasets.length > 0){
                 //import curve to db
             }else {

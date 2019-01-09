@@ -27,7 +27,7 @@
     "csv2": "^0.1.1",
     "delete-empty": "^1.0.1",
     "detect-character-encoding": "^0.5.1",
-    "dlis_parser": "^1.1.4",
+    "dlis_parser": "^1.1.8",
     "events": "^1.1.1",
     "express": "^4.16.2",
     "fast-csv": "^2.4.0",
