@@ -52,6 +52,7 @@ function parseDlisFile(file, userInfo){
                         stopDepth: frame['INDEX-MAX'] ? frame['INDEX-MAX'][0] : "0",
                         step: frame['SPACING'] ? frame['SPACING'][0] : "0",
                         path: channel.path,
+                        dimension: channel['DIMENSION'] ? channel['DIMENSION'][0] : 1,
                         description: channel['LONG-NAME'] ? channel['LONG-NAME'][0] : ""
                     }
                     dataset.curves.push(curve);
@@ -73,10 +74,6 @@ function parseDlisFile(file, userInfo){
             }
         }
 
-        function onCurveData(fdatas) {
-            //console.log(curveData);
-        }
-
         async function onEnd(){
             try {
                 const importData = {
@@ -92,7 +89,7 @@ function parseDlisFile(file, userInfo){
             }
         }
         userInfo.dataPath = config.dataPath;
-        dlisParser.parseFile(file.path, userInfo, onWellInfo, onDatasetInfo, onCurveInfo, onCurveData, onEnd);
+        dlisParser.parseFile(file.path, userInfo, onWellInfo, onDatasetInfo, onCurveInfo, onEnd);
     });
 };
 async function parseDlisFiles (req){
