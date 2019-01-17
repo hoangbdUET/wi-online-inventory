@@ -22,6 +22,11 @@ module.exports = function (sequelize, DataTypes) {
         delimiter: {
             type: DataTypes.STRING,
             defaultValue: ' '
+        },
+        type: {
+            type: DataTypes.ENUM("NUMBER","TEXT","ARRAY","OTHER"),
+            defaultValue: 'NUMBER',
+            allowNull: false
         }
     });
 }
