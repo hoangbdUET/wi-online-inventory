@@ -82,11 +82,17 @@ function parseDlisFile(file, userInfo){
                     override: true
                 }
                 await importToDB([well], importData);
-                console.log("dlis parses file done!");
-                resolve();
+                console.log("dlis parses file done! ==> " + file.originalname);
+                resolve({
+                    successFile: file.originalname,
+                    successWell: well.name
+                });
             } catch (err){
                 console.log("==> " + err);
-                reject();
+                reject({
+                    filename: file.originalname,
+                    err: err
+                });
             }
         }
         userInfo.dataPath = config.dataPath;
@@ -95,10 +101,20 @@ function parseDlisFile(file, userInfo){
 };
 async function parseDlisFiles (req){
     if (!req.files) return Promise.reject('NO FILE CHOSEN!!!');
-    let output = [];
-    for (const file of req.files) {
-        output.push(parseDlisFile(file, req.decoded));
+    const resVal = {
+        errFiles: [],
+        successWells: [],
+        successFiles: []
     }
-    return Promise.all(output);
+    for (const file of req.files) {
+        try {
+            const out = await parseDlisFile(file, req.decoded);
+            resVal.successFiles.push(out.successFile);
+            resVal.successWells.push(out.successWell);
+        } catch (e){
+            resVal.errFiles.push(e);
+        }
+    }
+    return Promise.resolve(resVal);
 }
 module.exports.parseDlisFiles = parseDlisFiles;
