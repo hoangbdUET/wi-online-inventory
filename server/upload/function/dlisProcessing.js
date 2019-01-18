@@ -14,17 +14,18 @@ function obname2Str(obj) {
 
 function parseDlisFile(file, userInfo){
     return new Promise(function(resolve, reject){
-        let well = {
-            filename: "",
-            name: "",
-            datasets: []
-        };
+        let well = null;
         let datasets = [];
         let channels = {};
 
         function onWellInfo(wellInfo) {
-            well.filename = wellInfo['FILE-SET-NAME'] ? wellInfo['FILE-SET-NAME'][0] : "";
-            well.name = wellInfo['WELL-NAME'] ? wellInfo['WELL-NAME'][0] : "";
+            if(!well) {
+                well = {
+                    filename: wellInfo['FILE-SET-NAME'] ? wellInfo['FILE-SET-NAME'][0] : "",
+                    name: wellInfo['WELL-NAME'] ? wellInfo['WELL-NAME'][0] : wellInfo.name,
+                    datasets: []
+                };
+            }
             // console.log("onWellInfo: " + JSON.stringify(well));
         }
 
