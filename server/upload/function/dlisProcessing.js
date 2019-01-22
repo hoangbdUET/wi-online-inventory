@@ -32,7 +32,7 @@ function parseDlisFile(file, userInfo){
         function onDatasetInfo(frame) {
             //console.log("DDD\n", frame,"\n");
             const dataset = {
-                name: obname2Str(frame),
+                name: frame.name,
                 top: frame['INDEX-MIN'] ? frame['INDEX-MIN'][0] : 0,
                 bottom: frame['INDEX-MAX'] ? frame['INDEX-MAX'][0] : 0,
                 step: frame['SPACING'] ? frame['SPACING'][0] : 0,
@@ -47,7 +47,7 @@ function parseDlisFile(file, userInfo){
                 frame['CHANNELS'].forEach(async channelName => {
                     const channel = channels[obname2Str(channelName)];
                     let curve = {
-                        name: obname2Str(channelName),
+                        name: channelName.name,
                         unit: channel['UNITS'] ? channel['UNITS'][0] : "",
                         startDepth: frame['INDEX-MIN'] ? frame['INDEX-MIN'][0] : "0",
                         stopDepth: frame['INDEX-MAX'] ? frame['INDEX-MAX'][0] : "0",
