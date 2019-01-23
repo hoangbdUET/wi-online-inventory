@@ -76,6 +76,7 @@ function parseDlisFile(file, userInfo){
         }
 
         async function onEnd(){
+            fs.unlinkSync(file.path);
             try {
                 const importData = {
                     userInfo: userInfo,
