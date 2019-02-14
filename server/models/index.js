@@ -8,6 +8,7 @@ const sequelize = new Sequelize(config.dbName, config.user, config.password, {
     },
     logging: config.logging,
     dialect: config.dialect,
+    host: config.host || "127.0.0.1",
     port: config.port,
     dialectOptions: {
         charset: 'utf8'
