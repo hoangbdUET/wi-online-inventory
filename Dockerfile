@@ -1,4 +1,4 @@
-FROM node:8.12.0-alpine
+FROM hoangbduet/wi-node-inv:latest
 
 MAINTAINER I2G
 
