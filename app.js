@@ -12,6 +12,7 @@ app.use(bodyParser.json());
 app.use('/exports/file', express.static('exports'));
 
 main();
+const mosca = require("./mosca.js");
 
 function main() {
     app.get('/', function (req, res) {

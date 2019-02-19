@@ -7,6 +7,7 @@ const config = require('config');
 const hashDir = require('wi-import').hashDir;
 const s3 = require('../../s3.js');
 const importToDB = require('./importToDB');
+const mosca = require('../../../mosca.js');
 
 function obname2Str(obj) {
     return obj.origin + "-" + obj.copy_number + "-" + obj.name;
@@ -111,22 +112,50 @@ function parseDlisFile(file, userInfo){
         dlisParser.parseFile(file.path, userInfo, onWellInfo, onDatasetInfo, onCurveInfo, onEnd);
     });
 };
+
 async function parseDlisFiles (req){
     if (!req.files) return Promise.reject('NO FILE CHOSEN!!!');
-    const resVal = {
-        errFiles: [],
-        successWells: [],
-        successFiles: []
-    }
     for (const file of req.files) {
         try {
             const out = await parseDlisFile(file, req.decoded);
-            resVal.successFiles.push(out.successFile);
-            resVal.successWells.push(out.successWell);
+            const message = {
+                topic: 'dlis/' + req.decoded.username,
+                payload: "DONE",
+                qos: 2, // 0, 1, or 2
+                retain: false // or true
+            };
+            mosca.publish(message, function() {
+            });
         } catch (e){
-            resVal.errFiles.push(e);
+            const message = {
+                topic: 'dlis/' + req.decoded.username,
+                payload: "FAILED",
+                qos: 2, // 0, 1, or 2
+                retain: false // or true
+            };
+            mosca.publish(message, function() {
+            });
         }
     }
-    return Promise.resolve(resVal);
 }
+
+// async function parseDlisFiles (req){
+//     if (!req.files) return Promise.reject('NO FILE CHOSEN!!!');
+//     const resVal = {
+//         errFiles: [],
+//         successWells: [],
+//         successFiles: []
+//     }
+//     for (const file of req.files) {
+//         try {
+//             const out = await parseDlisFile(file, req.decoded);
+//             resVal.successFiles.push(out.successFile);
+//             resVal.successWells.push(out.successWell);
+//         } catch (e){
+//             resVal.errFiles.push(e);
+//         }
+//     }
+//     return Promise.resolve(resVal);
+// }
+
 module.exports.parseDlisFiles = parseDlisFiles;
