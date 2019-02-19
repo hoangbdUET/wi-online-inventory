@@ -7,7 +7,9 @@ const config = require('config');
 const hashDir = require('wi-import').hashDir;
 const s3 = require('../../s3.js');
 const importToDB = require('./importToDB');
-const mosca = require('../../../mosca.js');
+
+const mqtt = require("mqtt");
+const client = mqtt.connect("mqtt://localhost:1883");
 
 function obname2Str(obj) {
     return obj.origin + "-" + obj.copy_number + "-" + obj.name;
@@ -118,23 +120,15 @@ async function parseDlisFiles (req){
     for (const file of req.files) {
         try {
             const out = await parseDlisFile(file, req.decoded);
-            const message = {
-                topic: 'dlis/' + req.decoded.username,
-                payload: "DONE",
+            const opts = {
                 qos: 2, // 0, 1, or 2
-                retain: false // or true
             };
-            mosca.publish(message, function() {
-            });
+            client.publish("dlis/" + req.decoded.username, "DONE", opts);
         } catch (e){
-            const message = {
-                topic: 'dlis/' + req.decoded.username,
-                payload: "FAILED",
+            const opts = {
                 qos: 2, // 0, 1, or 2
-                retain: false // or true
             };
-            mosca.publish(message, function() {
-            });
+            client.publish("dlis/" + req.decoded.username, "FAILED", opts);
         }
     }
 }
