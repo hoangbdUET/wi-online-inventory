@@ -3,7 +3,7 @@ const mosca = require('mosca');
 function start() {
     const mongoDbUrl = 'mongodb://localhost:27017/mqtt';
     const mqttPort = 1883;
-    const wsPort = 8000;
+    const wsPort = 8888;
 
     const moscaSettings = {
         port: mqttPort,

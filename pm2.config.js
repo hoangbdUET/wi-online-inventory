@@ -11,6 +11,10 @@ module.exports = {
             "env": {
                 "NODE_ENV": "dev"
             }
+        },
+        {
+            "name": "mosca",
+            "script": "./mosca.js"
         }
     ]
 }

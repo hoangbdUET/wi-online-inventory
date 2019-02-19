@@ -17,6 +17,6 @@
   "s3Bucket": "wi-inventory",
   "s3Path": "https://s3-ap-southeast-1.amazonaws.com/wi-inventory",
 
-  "dataPath": "server/export/exported-files",
+  "dataPath": "/home/ubuntu/wi-inventory-data",
   "exportPath": "server/export/exported-files"
 }
