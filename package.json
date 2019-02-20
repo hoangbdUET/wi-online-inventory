@@ -49,12 +49,7 @@
     "sequelize-cli": "^5.4.0",
     "tempfile": "^2.0.0",
     "through2": "^2.0.3",
-<<<<<<< HEAD
     "wi-export-test": "^1.1.39",
     "wi-import": "^1.1.55"
-=======
-    "wi-export-test": "^1.2.21",
-    "wi-import": "^1.1.52"
->>>>>>> 57f9127b441ddb017917cf8ae0652ca3b54b4088
   }
 }
