@@ -8,6 +8,9 @@ const hashDir = require('wi-import').hashDir;
 const s3 = require('../../s3.js');
 const importToDB = require('./importToDB');
 
+const mqtt = require("mqtt");
+const client = mqtt.connect("mqtt://localhost:1883");
+
 function obname2Str(obj) {
     return obj.origin + "-" + obj.copy_number + "-" + obj.name;
 }
@@ -111,22 +114,42 @@ function parseDlisFile(file, userInfo){
         dlisParser.parseFile(file.path, userInfo, onWellInfo, onDatasetInfo, onCurveInfo, onEnd);
     });
 };
+
 async function parseDlisFiles (req){
     if (!req.files) return Promise.reject('NO FILE CHOSEN!!!');
-    const resVal = {
-        errFiles: [],
-        successWells: [],
-        successFiles: []
-    }
     for (const file of req.files) {
         try {
             const out = await parseDlisFile(file, req.decoded);
-            resVal.successFiles.push(out.successFile);
-            resVal.successWells.push(out.successWell);
+            const opts = {
+                qos: 2, // 0, 1, or 2
+            };
+            client.publish("dlis/" + req.decoded.username, "DONE", opts);
         } catch (e){
-            resVal.errFiles.push(e);
+            const opts = {
+                qos: 2, // 0, 1, or 2
+            };
+            client.publish("dlis/" + req.decoded.username, "FAILED", opts);
         }
     }
-    return Promise.resolve(resVal);
 }
+
+// async function parseDlisFiles (req){
+//     if (!req.files) return Promise.reject('NO FILE CHOSEN!!!');
+//     const resVal = {
+//         errFiles: [],
+//         successWells: [],
+//         successFiles: []
+//     }
+//     for (const file of req.files) {
+//         try {
+//             const out = await parseDlisFile(file, req.decoded);
+//             resVal.successFiles.push(out.successFile);
+//             resVal.successWells.push(out.successWell);
+//         } catch (e){
+//             resVal.errFiles.push(e);
+//         }
+//     }
+//     return Promise.resolve(resVal);
+// }
+
 module.exports.parseDlisFiles = parseDlisFiles;
