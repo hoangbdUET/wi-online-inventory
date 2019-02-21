@@ -123,12 +123,20 @@ async function parseDlisFiles (req){
             const opts = {
                 qos: 2, // 0, 1, or 2
             };
-            client.publish("dlis/" + req.decoded.username, "DONE", opts);
+            const _content = JSON.stringify({
+                status: "OK",
+                file: out.successFile
+            })
+            client.publish("dlis/" + req.decoded.username, _content, opts);
         } catch (e){
             const opts = {
                 qos: 2, // 0, 1, or 2
             };
-            client.publish("dlis/" + req.decoded.username, "FAILED", opts);
+            const _content = JSON.stringify({
+                status: "ERR",
+                file: out.filename
+            })
+            client.publish("dlis/" + req.decoded.username, _content, opts);
         }
     }
 }
