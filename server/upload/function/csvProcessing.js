@@ -50,7 +50,7 @@ function uploadCSVFile(req) {
         }
       });
 
-      console.log(selectedFields, titleOfFields, units);
+      // console.log(selectedFields, titleOfFields, units);
 
       // resolve([]);
 
@@ -142,7 +142,6 @@ function uploadCSVFile(req) {
           for (let i = 0; i < TITLE.length; i++) {
             myObj[TITLE[i]] = data[i + 1];
           }
-          console.log(myObj);
           curveChosen.push(myObj);
         }
         count++;
