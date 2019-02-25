@@ -138,9 +138,7 @@ async function importWell(wellData, override) {
                 well_header = wellData[WellHeader[property].CSVMnemnics];
                 delete wellData[WellHeader[property].CSVMnemnics];
             }
-            else {
-                continue;
-            }
+
             arr.push(property);
             well_header.idWell = well.idWell;
             well_header.header = property;
