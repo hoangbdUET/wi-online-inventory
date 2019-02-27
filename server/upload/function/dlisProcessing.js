@@ -9,7 +9,7 @@ const s3 = require('../../s3.js');
 const importToDB = require('./importToDB');
 
 const mqtt = require("mqtt");
-const client = mqtt.connect("mqtt://localhost:1883");
+const client = mqtt.connect("ws://mqtt-broker.i2g.cloud:8888");
 
 function obname2Str(obj) {
     return obj.origin + "-" + obj.copy_number + "-" + obj.name;
