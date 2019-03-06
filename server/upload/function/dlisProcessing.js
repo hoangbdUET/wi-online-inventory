@@ -35,6 +35,7 @@ function parseDlisFile(file, userInfo){
         function onDatasetInfo(frame) {
             //console.log("DDD\n", frame,"\n");
             const dataset = {
+                _id: obname2Str(frame),
                 name: frame.name,
                 top: frame['INDEX-MIN'] ? frame['INDEX-MIN'][0] : 0,
                 bottom: frame['INDEX-MAX'] ? frame['INDEX-MAX'][0] : 0,
@@ -89,13 +90,23 @@ function parseDlisFile(file, userInfo){
             }
         }
 
-        async function onEnd(){
-            fs.unlinkSync(file.path);
+        async function onEnd(data){
+            fs.unlink(file.path, () => {});
             try {
                 const importData = {
                     userInfo: userInfo,
                     override: true
                 }
+
+                for (const dataset of well.datasets){
+                    for(const frame of data.frames){
+                        if(dataset._id == obname2Str(frame)){
+                            dataset.top = frame.index_min;
+                            dataset.bottom = frame.index_max;
+                        }
+                    }
+                }
+
                 await importToDB([well], importData);
                 console.log("dlis parses file done! ==> " + file.originalname);
                 resolve({
