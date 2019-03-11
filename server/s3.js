@@ -9,11 +9,24 @@ if(process.env.NODE_ENV == "local_dev") {
 }
 const s3 = new AWS.S3({apiVersion: '2006-03-01'});
 const bucket = config.s3Bucket;
+const { spawn } = require('child_process');
+const os = require('os');
 
-function upload(path, key) {
-    const fileSystemPath = path;
-
-    const fileStream = fs.createReadStream(fileSystemPath);
+function upload(path, key, direction) {
+    //direction = 0: increasing
+    //direction = 1: descreasing
+    let fileStream;
+    if(!direction) {
+        fileStream = fs.createReadStream(path);
+    }else {
+        if(os.type() == "Linux") {
+            fileStream = spawn('tac', [path]).stdout;
+        } else if (os.type() == "Darwin") {
+            fileStream = spawn('tail', ['-r', path]).stdout;
+        } else {
+            fileStream = fs.createReadStream(path);
+        }
+    }
     fileStream.on('error', function (err) {
         console.log('File Error', err);
     });
@@ -26,7 +39,7 @@ function upload(path, key) {
                 reject(err);
             }
             if (data) {
-                fs.unlink(fileSystemPath, (err) => {
+                fs.unlink(path, (err) => {
                     if(err) console.log("failed to remove curve: " + err);
                 })
                 resolve(data);

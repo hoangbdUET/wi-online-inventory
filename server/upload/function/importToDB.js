@@ -44,7 +44,7 @@ async function importCurves(curves, dataset) {
 
             if (config.s3Path) {
                 const key = hashDir.getHashPath(dataset.username + dataset.wellname + dataset.name + curveData.name + curveData.unit + curveData.step) + curveData.name + '.txt';
-                await s3.upload(config.dataPath + '/' + curveData.path, key)
+                await s3.upload(config.dataPath + '/' + curveData.path, key, dataset.direction == 'INCREASING')
                     .then(data => {
                         // console.log("s3 uploaded: " + key);
                     })
@@ -261,6 +261,7 @@ async function importDatasets(datasets, well, override) {
             dataset = dataset.toJSON();
             dataset.wellname = well.name;
             dataset.username = well.username;
+            dataset.direction = datasetData.direction;
 
             datasetData.params.forEach(param => {
                 if (param.mnem == 'SET') return;

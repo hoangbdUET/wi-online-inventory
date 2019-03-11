@@ -34,12 +34,29 @@ function parseDlisFile(file, userInfo){
 
         function onDatasetInfo(frame) {
             //console.log("DDD\n", frame,"\n");
+            let _direction = 'INCREASING';
+            if(frame['SPACING']){
+                if(frame['SPACING'][0] < 0) _direction = 'DECREASING';
+            } else if(frame['DIRECTION']){
+                _direction = frame['DIRECTION'][0];
+            }
+            let _step = frame['SPACING'] ? frame['SPACING'][0] : 0;
+            let _top = frame['INDEX-MIN'] ? frame['INDEX-MIN'][0] : 0;
+            let _bottom = frame['INDEX-MAX'] ? frame['INDEX-MAX'][0] : 0;
+            if(_direction == 'DECREASING'){
+                _step = -_step;
+                const tmp = _top;
+                _top = _bottom;
+                _bottom = tmp;
+            }
+
             const dataset = {
                 _id: obname2Str(frame),
                 name: frame.name,
-                top: frame['INDEX-MIN'] ? frame['INDEX-MIN'][0] : 0,
-                bottom: frame['INDEX-MAX'] ? frame['INDEX-MAX'][0] : 0,
-                step: frame['SPACING'] ? frame['SPACING'][0] : 0,
+                top: _top,
+                bottom: _bottom,
+                step: _step,
+                direction: _direction,
                 curves: [],
                 params: []
             }
@@ -63,9 +80,9 @@ function parseDlisFile(file, userInfo){
                     let curve = {
                         name: channelName.name,
                         unit: channel['UNITS'] ? channel['UNITS'][0] : "",
-                        startDepth: frame['INDEX-MIN'] ? frame['INDEX-MIN'][0] : "0",
-                        stopDepth: frame['INDEX-MAX'] ? frame['INDEX-MAX'][0] : "0",
-                        step: frame['SPACING'] ? frame['SPACING'][0] : "0",
+                        startDepth: dataset.top,
+                        stopDepth: dataset.bottom,
+                        step: dataset.step,
                         path: channel.path,
                         dimension: _dimension,
                         description: channel['LONG-NAME'] ? channel['LONG-NAME'][0] : "",
@@ -97,7 +114,7 @@ function parseDlisFile(file, userInfo){
                     userInfo: userInfo,
                     override: true
                 }
-
+                // update dataset top/bottom
                 for (const dataset of well.datasets){
                     for(const frame of data.frames){
                         if(dataset._id == obname2Str(frame)){
