@@ -44,7 +44,7 @@ async function importCurves(curves, dataset) {
 
             if (config.s3Path) {
                 const key = hashDir.getHashPath(dataset.username + dataset.wellname + dataset.name + curveData.name + curveData.unit + curveData.step) + curveData.name + '.txt';
-                await s3.upload(config.dataPath + '/' + curveData.path, key, dataset.direction == 'INCREASING')
+                await s3.upload(config.dataPath + '/' + curveData.path, key, dataset.direction == 'DECREASING')
                     .then(data => {
                         // console.log("s3 uploaded: " + key);
                     })
