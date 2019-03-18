@@ -7,13 +7,10 @@ const config = require('config');
 const hashDir = require('wi-import').hashDir;
 const s3 = require('../../s3.js');
 const importToDB = require('./importToDB');
+const del = require('del');
 
 const mqtt = require("mqtt");
 const client = mqtt.connect("ws://mqtt-broker.i2g.cloud:8888");
-
-function obname2Str(obj) {
-    return obj.origin + "-" + obj.copy_number + "-" + obj.name;
-}
 
 function parseDlisFile(file, userInfo){
     return new Promise(function(resolve, reject){
@@ -26,6 +23,7 @@ function parseDlisFile(file, userInfo){
                 }
 
                 const importResult = await importToDB(wells, importData);
+                del(wells[0].dataDir);
                 console.log("dlis parses file done! ==> " + file.originalname);
                 resolve({
                     successFile: file.originalname,
@@ -69,24 +67,5 @@ async function parseDlisFiles (req){
         }
     }
 }
-
-// async function parseDlisFiles (req){
-//     if (!req.files) return Promise.reject('NO FILE CHOSEN!!!');
-//     const resVal = {
-//         errFiles: [],
-//         successWells: [],
-//         successFiles: []
-//     }
-//     for (const file of req.files) {
-//         try {
-//             const out = await parseDlisFile(file, req.decoded);
-//             resVal.successFiles.push(out.successFile);
-//             resVal.successWells.push(out.successWell);
-//         } catch (e){
-//             resVal.errFiles.push(e);
-//         }
-//     }
-//     return Promise.resolve(resVal);
-// }
 
 module.exports.parseDlisFiles = parseDlisFiles;
