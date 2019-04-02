@@ -14,7 +14,7 @@
   },
 
   "s3AccessKeyId": "",
-  "secretAccessKey": "",
+  "s3SecretAccessKey": "",
   //if s3Path is defined, curves's data will be stored on aws s3, otherwise they will be stored on disk
   "s3Bucket": "",
   "s3Path": "",
