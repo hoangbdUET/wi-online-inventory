@@ -60,7 +60,7 @@ async function convertCurve(curve, newUnit, callback) {
 
 module.exports = function (curve, unit, step, callback) {
     console.log('~~~curveExport~~~');
-    console.log('config.s3Path: ' + process.env.INVENTORY_S3PATH || config.s3Path);
+    console.log('config.s3Path: ' + (process.env.INVENTORY_S3PATH || config.s3Path));
     curve.curve_revisions.forEach(async revision => {
         if (revision.isCurrentRevision) {
             const key = await curveModel.getCurveKey(revision);
