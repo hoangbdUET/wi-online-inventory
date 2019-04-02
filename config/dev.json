@@ -12,10 +12,11 @@
     "port": 9000,
     "jwtSecretKey": "secretKey"
   },
-
+  "s3AccessKeyId": "",
+  "secretAccessKey": "",
   //if s3Path is defined, curves's data will be stored on aws s3, otherwise they will be stored on disk
-  "s3Bucket": "wi-inventory",
-  "s3Path": "https://s3-ap-southeast-1.amazonaws.com/wi-inventory",
+  "s3Bucket": "",
+  "s3Path": "",
 
   "dataPath": "/home/ubuntu/wi-inventory-data",
   "exportPath": "server/export/exported-files"

@@ -42,9 +42,9 @@ async function importCurves(curves, dataset) {
             curveData.isCurrentRevision = true;
             const curveRevision = await models.CurveRevision.create(curveData); //create curve revision
 
-            if (config.s3Path) {
+            if (process.env.INVENTORY_S3PATH || config.s3Path) {
                 const key = hashDir.getHashPath(dataset.username + dataset.wellname + dataset.name + curveData.name + curveData.unit + curveData.step) + curveData.name + '.txt';
-                await s3.upload(config.dataPath + '/' + curveData.path, key, dataset.direction == 'DECREASING')
+                await s3.upload((process.env.INVENTORY_DATAPATH || config.dataPath) + '/' + curveData.path, key, dataset.direction == 'DECREASING')
                     .then(data => {
                         // console.log("s3 uploaded: " + key);
                     })

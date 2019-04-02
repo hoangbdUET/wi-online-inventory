@@ -16,6 +16,10 @@
     //"project": "127.0.0.1:3000"
     "project": "dev.i2g.cloud"
   },
+  "s3AccessKeyId": "",
+  "secretAccessKey": "",
+  "s3Bucket": "",
+  "s3Path": "",
   "exportPath": "server/export/exported-files",
   "dataPath": "/home/ubuntu/wi-inventory-data"
 }

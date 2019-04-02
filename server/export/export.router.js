@@ -40,7 +40,7 @@ router.post('/las2', function (req, res) {
         getFullWellObj(idObj.idWell).then(well => {
             console.log('found well ');
             if (well && well.username == req.decoded.username) {
-                exporter.exportLas2FromInventory(well, idObj.datasets, config.exportPath, s3, curveModel, req.decoded.username, function (err, result) {
+                exporter.exportLas2FromInventory(well, idObj.datasets, process.env.INVENTORY_EXPORTPATH || config.exportPath, s3, curveModel, req.decoded.username, function (err, result) {
                     if (err) {
                         callback(err, null);
                     } else {
@@ -94,7 +94,7 @@ router.post('/las3', function (req, res) {
         // })
         getFullWellObj(idObj.idWell).then(well => {
             if (well && well.username == req.decoded.username) {
-                exporter.exportLas3FromInventory(well, idObj.datasets, config.exportPath, s3, curveModel, req.decoded.username, function (err, result) {
+                exporter.exportLas3FromInventory(well, idObj.datasets, process.env.INVENTORY_EXPORTPATH || config.exportPath, s3, curveModel, req.decoded.username, function (err, result) {
                     if (err) {
                         callback(err, null);
                     } else {
@@ -135,7 +135,7 @@ router.post('/csv/rv', function (req, res) {
         // })
         getFullWellObj(idObj.idWell).then(well => {
             if (well && well.username == req.decoded.username) {
-                exporter.exportCsvRVFromInventory(well, idObj.datasets, config.exportPath, s3, curveModel, req.decoded.username, function (err, result) {
+                exporter.exportCsvRVFromInventory(well, idObj.datasets, process.env.INVENTORY_EXPORTPATH || config.exportPath, s3, curveModel, req.decoded.username, function (err, result) {
                     if (err) {
                         callback(err, null);
                     } else {
@@ -190,7 +190,7 @@ router.post('/csv/wdrv', function (req, res) {
         // })
         getFullWellObj(idObj.idWell).then(well => {
             if (well && well.username == req.decoded.username) {
-                exporter.exportCsvWDRVFromInventory(well, idObj.datasets, config.exportPath, s3, curveModel, req.decoded.username, function (err, result) {
+                exporter.exportCsvWDRVFromInventory(well, idObj.datasets, process.env.INVENTORY_EXPORTPATH || config.exportPath, s3, curveModel, req.decoded.username, function (err, result) {
                     if (err) {
                         callback(err, null);
                     } else {
@@ -213,7 +213,7 @@ router.post('/csv/wdrv', function (req, res) {
 })
 
 router.post('/files', function (req, res) {
-    let filePath = path.join(config.exportPath, req.decoded.username, req.body.fileName);
+    let filePath = path.join(process.env.INVENTORY_EXPORTPATH || config.exportPath, req.decoded.username, req.body.fileName);
     fs.exists(filePath, function (exists) {
         if (exists) {
             // res.writeHead(200, {

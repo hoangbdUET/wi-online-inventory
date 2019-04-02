@@ -6,16 +6,16 @@
     "user": "root",
     "password": "qwertyui",
     "logging": false,
-    "dbName": "wi_online_inventory"
+    "dbName": "inventory"
   },
   "Application": {
     "port": 9000,
     "jwtSecretKey": "secretKey"
   },
-
-  "s3Bucket": "wi-inventory-prod",
-  "s3Path": "https://s3-ap-southeast-1.amazonaws.com/wi-inventory-prod",
-
-  "dataPath": "D:/tmp2",
-  "exportPath": "exports"
+  "s3AccessKeyId": "",
+  "secretAccessKey": "",
+  "s3Bucket": "",
+  "s3Path": "",
+  //  "dataPath": "D:/tmp2",
+  "exportPath": "D:/tmp2"
 }

@@ -112,8 +112,8 @@ function copyDatasets(req, cb) {
                                 delete curve.updatedAt;
                                 curve.idDataset = newDataset.idDataset;
                                 const hashedNewCurveDir = hashDir.getHashPath(req.decoded.username + well.name + dataset.name + curve.name);
-                                if (!config.s3Path) {
-                                    hashDir.copyFile(config.dataPath, curve.path, hashedNewCurveDir, curve.name + '.txt');
+                                if (!(process.env.INVENTORY_S3PATH || config.s3Path)) {
+                                    hashDir.copyFile(process.env.INVENTORY_DATAPATH || config.dataPath, curve.path, hashedNewCurveDir, curve.name + '.txt');
                                 }
                                 else {
                                     require('../s3').copyCurve(curve.path, hashedNewCurveDir + curve.name + '.txt');

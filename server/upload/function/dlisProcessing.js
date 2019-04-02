@@ -10,7 +10,7 @@ const importToDB = require('./importToDB');
 const del = require('del');
 
 const mqtt = require("mqtt");
-const client = mqtt.connect("ws://mqtt-broker.i2g.cloud:8888");
+const client = mqtt.connect(process.env.INVENTORY_MQTT_BROKER || "ws://mqtt-broker.i2g.cloud:8888");
 
 function parseDlisFile(file, userInfo){
     return new Promise(function(resolve, reject){
@@ -37,7 +37,7 @@ function parseDlisFile(file, userInfo){
                 });
             }
         }
-        userInfo.dataPath = config.dataPath;
+        userInfo.dataPath = process.env.INVENTORY_DATAPATH || config.dataPath;
         dlisParser.parseFile(file.path, userInfo, onEnd);
     });
 };

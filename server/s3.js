@@ -3,10 +3,14 @@
 const AWS = require('aws-sdk');
 const config = require('config');
 const fs = require('fs');
-const credentials = new AWS.SharedIniFileCredentials({profile: 'wi_inventory'});
+// const credentials = new AWS.SharedIniFileCredentials({profile: 'wi_inventory'});
+const credentials = new AWS.Credentials({
+    accessKeyId: process.env.INVENTORY_ACCESS_KEY_ID || config.s3AccessKeyId,
+    secretAccessKey: process.env.INVENTORY_SECRET_ACCESS_KEY || config.s3SecretAccessKey
+});
 AWS.config.credentials = credentials;
 const s3 = new AWS.S3({apiVersion: '2006-03-01'});
-const bucket = config.s3Bucket;
+const bucket = process.env.INVENTORY_S3BUCKET || config.s3Bucket;
 const { spawn } = require('child_process');
 const os = require('os');
 

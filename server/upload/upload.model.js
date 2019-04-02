@@ -7,7 +7,7 @@ const dlisProcessing = require('./function/dlisProcessing');
 const config = require('config');
 const wiImport = require('wi-import');
 
-wiImport.setBasePath(config.dataPath);
+wiImport.setBasePath(process.env.INVENTORY_DATAPATH || config.dataPath);
 
 let uploadAsciiFiles = function (req, cb) {
     asciiProcessing.uploadAsciiFiles(req, cb);

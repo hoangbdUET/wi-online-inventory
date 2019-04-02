@@ -8,19 +8,19 @@ const s3 = require('./s3');
 async function moveCurveFile(oldCurve, newCurve) {
     try {
         let srcKey = "";
-        if(oldCurve.path && !config.s3Path){
+        if(oldCurve.path && !(process.env.INVENTORY_S3PATH || config.s3Path)){
             srcKey = oldCurve.path;
         }else {
             const srcHashStr = oldCurve.username + oldCurve.wellname + oldCurve.datasetname + oldCurve.curvename + oldCurve.unit + oldCurve.step;
             srcKey = hash_dir.getHashPath(srcHashStr) + oldCurve.curvename + '.txt';
         }
         const desHashStr = newCurve.username + newCurve.wellname + newCurve.datasetname + newCurve.curvename + newCurve.unit + newCurve.step;
-        const desPath = hash_dir.createPath(config.dataPath, desHashStr, newCurve.curvename + '.txt');
-        const desKey = desPath.replace(config.dataPath + '/', '');
-        if (config.s3Path) {
+        const desPath = hash_dir.createPath(process.env.INVENTORY_DATAPATH || config.dataPath, desHashStr, newCurve.curvename + '.txt');
+        const desKey = desPath.replace(process.env.INVENTORY_DATAPATH || config.dataPath + '/', '');
+        if (process.env.INVENTORY_S3PATH || config.s3Path) {
             s3.moveCurve(srcKey, desKey);
         } else {
-            fs.renameSync(config.dataPath + '/' + srcKey, desPath);
+            fs.renameSync((process.env.INVENTORY_DATAPATH || config.dataPath) + '/' + srcKey, desPath);
         }
         return desKey;
     } catch (err) {

@@ -9,7 +9,7 @@ module.exports = function authenticate() {
     return function (req, res, next) {
         let token = req.body.token || req.query.token || req.headers['x-access-token'] || req.get('Authorization');
         if (token) {
-            jwt.verify(token, configApp.jwtSecretKey, function (err, decoded) {
+            jwt.verify(token, process.env.INVENTORY_JWTKEY || configApp.jwtSecretKey, function (err, decoded) {
                 if (err) {
                     return res.status(401).send(responseJSON(401, 'Failed to authenticate'));
                 } else {
