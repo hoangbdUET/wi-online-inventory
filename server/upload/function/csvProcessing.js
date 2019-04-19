@@ -50,10 +50,6 @@ function uploadCSVFile(req) {
         }
       });
 
-      // console.log(selectedFields, titleOfFields, units);
-
-      // resolve([]);
-
       let inputFile = req.files[0];
       let inputURL = inputFile.path;
       let curveChosen = [];
@@ -140,8 +136,10 @@ function uploadCSVFile(req) {
         ) {
           let myObj = {Depth: data[0]};
           for (let i = 0; i < TITLE.length; i++) {
+			if (data[i + 1] && data[i + 1].includes('"')) data[i + 1] = data[i + 1].slice(1, data[i + 1].length - 1);
             myObj[TITLE[i]] = data[i + 1];
           }
+			// if (count >= 40 && count <= 50)	curveChosen.push(myObj);
           curveChosen.push(myObj);
         }
         count++;
@@ -154,8 +152,8 @@ function uploadCSVFile(req) {
             headers: true
           })
           .on('finish', async function() {
+			// resolve([]);
             let result = await CSVExtractor(inputURL, importData);
-            console.log('===>' + JSON.stringify(result, null, 2));
             let uploadResult = await importToDB(result, importData);
             output.push(uploadResult);
             resolve(output);
