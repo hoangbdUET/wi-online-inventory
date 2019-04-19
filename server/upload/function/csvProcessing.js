@@ -102,47 +102,48 @@ function uploadCSVFile(req) {
       let rl = new readline(inputURL);
 
       rl.on('line', function(line) {
-        let data = [];
-        // chunk = chunk[0].split(separator);
-        chunk = customSplit(line, separator);
-        data.push(chunk[configs['Reference Column']]);
-        importData.well.STOP.value = chunk[configs['Reference Column']];
-        for (let i = 0; i < INDEXSETTING.length; i++) {
-          if (INDEXSETTING[i] != configs['Reference Column']) {
-            if (
-              configs.decimal &&
-              configs.decimal != '.' &&
-              chunk[INDEXSETTING[i]]
-            ) {
-              chunk[INDEXSETTING[i]] = chunk[INDEXSETTING[i]].replace(
-                configs.decimal,
-                '.'
-              );
-              chunk[configs['Reference Column']] = chunk[
-                configs['Reference Column']
-              ].replace(configs.decimal, '.');
-            }
-            data.push(chunk[INDEXSETTING[i]]);
-          }
-        }
+		  if (line) {
+			let data = [];
+			chunk = customSplit(line, separator);
+			data.push(chunk[configs['Reference Column']]);
+			importData.well.STOP.value = chunk[configs['Reference Column']];
+			for (let i = 0; i < INDEXSETTING.length; i++) {
+			  if (INDEXSETTING[i] != configs['Reference Column']) {
+				if (
+				  configs.decimal &&
+				  configs.decimal != '.' &&
+				  chunk[INDEXSETTING[i]]
+				) {
+				  chunk[INDEXSETTING[i]] = chunk[INDEXSETTING[i]].replace(
+					configs.decimal,
+					'.'
+				  );
+				  chunk[configs['Reference Column']] = chunk[
+					configs['Reference Column']
+				  ].replace(configs.decimal, '.');
+				}
+				data.push(chunk[INDEXSETTING[i]]);
+			  }
+			}
 
-        configWellHeader(chunk, count, configs);
-        // this.push(data);
-        // callback();
+			configWellHeader(chunk, count, configs);
+			// this.push(data);
+			// callback();
 
-        if (
-          count == configs['Unit line'] ||
-          count >= configs['Data first line']
-        ) {
-          let myObj = {Depth: data[0]};
-          for (let i = 0; i < TITLE.length; i++) {
-			if (data[i + 1] && data[i + 1].includes('"')) data[i + 1] = data[i + 1].slice(1, data[i + 1].length - 1);
-            myObj[TITLE[i]] = data[i + 1];
-          }
-			// if (count >= 40 && count <= 50)	curveChosen.push(myObj);
-          curveChosen.push(myObj);
-        }
-        count++;
+			if (
+			  count == configs['Unit line'] ||
+			  count >= configs['Data first line']
+			) {
+			  let myObj = {Depth: data[0]};
+			  for (let i = 0; i < TITLE.length; i++) {
+				if (data[i + 1] && data[i + 1].includes('"')) data[i + 1] = data[i + 1].slice(1, data[i + 1].length - 1);
+				myObj[TITLE[i]] = data[i + 1];
+			  }
+				// if (count >= 5520 && count <= 5525)	console.log(myObj);
+			  curveChosen.push(myObj);
+			}
+			count++;
+		  }
       });
 
       rl.on('end', function() {
