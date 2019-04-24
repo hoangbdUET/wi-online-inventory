@@ -133,7 +133,7 @@ function uploadCSVFile(req) {
                             myObj[TITLE[i]] = data[i + 1];
                         }
                         // if (count >= 5520 && count <= 5525)	console.log(myObj);
-                        if (count == configs['Unit line'] || parseFloat(data[0])) curveChosen.push(myObj);
+                        if (count == configs['Unit line'] || data[0] != '') curveChosen.push(myObj);
                     }
                     count++;
                 }
@@ -184,7 +184,7 @@ function uploadCSVFile(req) {
         function configWellHeader(chunk, count, configs) {
             if (count == parseInt(configs['Data first line'])) {
                 let startDepth = chunk[configs['Reference Column']];
-                if (parseFloat(startDepth)) {
+                if (startDepth != '') {
                     importData.well.STRT = {};
                     importData.well.STRT.value = startDepth;
                     importData.well.STRT.description = '';
