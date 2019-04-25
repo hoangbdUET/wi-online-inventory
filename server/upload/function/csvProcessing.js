@@ -101,7 +101,7 @@ function uploadCSVFile(req) {
                     let data = [];
                     chunk = customSplit(line, separator);
                     data.push(chunk[configs['Reference Column']]);
-                    importData.well.STOP.value = chunk[configs['Reference Column']];
+                    // importData.well.STOP.value = chunk[configs['Reference Column']];
                     for (let i = 0; i < INDEXSETTING.length; i++) {
                         if (INDEXSETTING[i] != configs['Reference Column']) {
                             if (
@@ -127,14 +127,23 @@ function uploadCSVFile(req) {
                         count == configs['Unit line'] ||
                         count >= configs['Data first line']
                     ) {
+						if (count == configs['Data first line'] && configs['Unit line'] < 0) {
+							let myObj = { Depth: '' };
+							for (let i = 0; i < TITLE.length; i++) {
+								myObj[TITLE[i]] = '';
+							}
+							curveChosen.push(myObj);
+						}
                         let myObj = { Depth: data[0] };
                         for (let i = 0; i < TITLE.length; i++) {
                             if (data[i + 1] && data[i + 1].includes('"')) data[i + 1] = data[i + 1].slice(1, data[i + 1].length - 1);
                             myObj[TITLE[i]] = data[i + 1];
                         }
                         // if (count >= 5520 && count <= 5525)	console.log(myObj);
-                        if (count == configs['Unit line'] || data[0] != '') curveChosen.push(myObj);
-                    }
+						if (count == configs['Unit line'] || data[0] != '') {
+							importData.well.STOP.value = data[0];
+							curveChosen.push(myObj);
+						}                    }
                     count++;
                 }
             });
@@ -147,6 +156,7 @@ function uploadCSVFile(req) {
                     })
                     .on('finish', async function () {
                         // resolve([]);
+						// console.log(importData);
                         let result = await CSVExtractor(inputURL, importData);
                         let uploadResult = await importToDB(result, importData);
                         output.push(uploadResult);
