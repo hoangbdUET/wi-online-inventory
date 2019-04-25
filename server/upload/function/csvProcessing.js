@@ -123,8 +123,6 @@ function uploadCSVFile(req) {
                         let data = [];
                         chunk = chunk[0].split(separator);
                         data.push(chunk[configs['Reference Column']]);
-                        importData.well.STOP.value =
-                            chunk[configs['Reference Column']];
                         for (let i = 0; i < INDEXSETTING.length; i++) {
                             if (
                                 INDEXSETTING[i] != configs['Reference Column']
@@ -155,11 +153,21 @@ function uploadCSVFile(req) {
                         count == configs['Unit line'] ||
                         count >= configs['Data first line']
                     ) {
+						if (count == configs['Data first line'] && configs['Unit line'] < 0) {
+							let myObj = {Depth: ''};
+							for (let i = 1; i < data.length; i++) {
+								myObj[TITLE[i]] = '';
+							}
+							curveChosen.push(myObj);
+						}
                         let myObj = {Depth: data[0]};
                         for (let i = 1; i < data.length; i++) {
                             myObj[TITLE[i]] = data[i];
                         }
-                        if (count == configs['Unit line'] || data[0] != '') curveChosen.push(myObj);
+						if (count == configs['Unit line'] || data[0] != '') {
+							importData.well.STOP.value = data[0];
+							curveChosen.push(myObj);
+						}
                     }
                     count++;
                 })
