@@ -9,14 +9,8 @@ async function processFileUpload(file, importData) {
     // console.log(importData);
     // console.log(JSON.stringify(file));
     try {
-        let fileFormat = file.filename.substring(file.filename.lastIndexOf('.') + 1);
-        if (/LAS/.test(fileFormat.toUpperCase())) {
-            const result = await LASExtractor(file, importData);
-            return importToDB(result, importData);
-        }
-        else {
-            throw 'this is not las file';
-        }
+        const result = await LASExtractor(file, importData);
+        return importToDB(result, importData);
     }
     catch (err) {
         console.log(err);
