@@ -49,12 +49,12 @@ function uploadCSVFile(req) {
 
             let inputFile = req.files[0];
             let inputURL = inputFile.path;
-            let curveChosen = [];
             let count = 0;
             let output = [];
             let separator;
             let INDEXSETTING = selectedFields;
             let TITLE = titleOfFields;
+            let curveChosen = [['Depth', ...TITLE]];
             var importData = {};
             if (configs.coreData) {
                 importData.coreData = configs.coreData;
@@ -95,6 +95,14 @@ function uploadCSVFile(req) {
             }
             createRegex();
 
+			if (configs['Unit line'] < 0) {
+				let arrLine = [''];
+				for (let i = 0; i < TITLE.length; i++) {
+					arrLine.push('');
+				}
+				curveChosen.push(arrLine);
+			}
+
             let rl = new readline(inputURL);
             rl.on('line', function (line) {
                 if (line) {
@@ -127,23 +135,17 @@ function uploadCSVFile(req) {
                         count == configs['Unit line'] ||
                         count >= configs['Data first line']
                     ) {
-						if (count == configs['Data first line'] && configs['Unit line'] < 0) {
-							let myObj = { Depth: '' };
-							for (let i = 0; i < TITLE.length; i++) {
-								myObj[TITLE[i]] = '';
-							}
-							curveChosen.push(myObj);
-						}
-                        let myObj = { Depth: data[0] };
+						let arrLine = [data[0]];
                         for (let i = 0; i < TITLE.length; i++) {
                             if (data[i + 1] && data[i + 1].includes('"')) data[i + 1] = data[i + 1].slice(1, data[i + 1].length - 1);
-                            myObj[TITLE[i]] = data[i + 1];
+							arrLine.push(data[i+1]);
                         }
-                        // if (count >= 5520 && count <= 5525)	console.log(myObj);
+                        // if (count < 10)	console.log(myObj);
 						if (count == configs['Unit line'] || data[0] != '') {
 							importData.well.STOP.value = data[0];
-							curveChosen.push(myObj);
-						}                    }
+							curveChosen.push(arrLine);
+						}                    
+					}
                     count++;
                 }
             });
