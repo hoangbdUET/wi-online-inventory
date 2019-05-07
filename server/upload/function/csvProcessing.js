@@ -161,12 +161,12 @@ function uploadCSVFile(req) {
                         headers: true
                     })
                     .on('finish', async function () {
-                        resolve([]);
+                        // resolve([]);
 						// console.log(importData);
-                        // let result = await CSVExtractor(inputURL, importData);
-                        // let uploadResult = await importToDB(result, importData);
-                        // output.push(uploadResult);
-                        // resolve(output);
+                        let result = await CSVExtractor(inputURL, importData);
+                        let uploadResult = await importToDB(result, importData);
+                        output.push(uploadResult);
+                        resolve(output);
                     });
             });
         } catch (err) {
