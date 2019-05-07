@@ -139,9 +139,10 @@ function uploadCSVFile(req) {
                         for (let i = 0; i < TITLE.length; i++) {
 							let cell = data[i + 1];
                             if (cell && cell.includes('"')) cell = cell.slice(1, cell.length - 1);
-							if (parseFloat(cell) === parseFloat(configs.NULL)) {
-								arrLine.push("");
-							} else arrLine.push(data[i+1]);
+							// if (parseFloat(cell) === parseFloat(configs.NULL)) {
+							// 	arrLine.push("");
+							// } else arrLine.push(data[i+1]);
+							arrLine.push(cell);
                         }
                         // if (count < 10)	console.log(myObj);
 						if (count == configs['Unit line'] || data[0] != '') {
@@ -160,12 +161,12 @@ function uploadCSVFile(req) {
                         headers: true
                     })
                     .on('finish', async function () {
-                        // resolve([]);
+                        resolve([]);
 						// console.log(importData);
-                        let result = await CSVExtractor(inputURL, importData);
-                        let uploadResult = await importToDB(result, importData);
-                        output.push(uploadResult);
-                        resolve(output);
+                        // let result = await CSVExtractor(inputURL, importData);
+                        // let uploadResult = await importToDB(result, importData);
+                        // output.push(uploadResult);
+                        // resolve(output);
                     });
             });
         } catch (err) {
