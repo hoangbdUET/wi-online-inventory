@@ -137,8 +137,11 @@ function uploadCSVFile(req) {
                     ) {
 						let arrLine = [data[0]];
                         for (let i = 0; i < TITLE.length; i++) {
-                            if (data[i + 1] && data[i + 1].includes('"')) data[i + 1] = data[i + 1].slice(1, data[i + 1].length - 1);
-							arrLine.push(data[i+1]);
+							let cell = data[i + 1];
+                            if (cell && cell.includes('"')) cell = cell.slice(1, cell.length - 1);
+							if (parseFloat(cell) === parseFloat(configs.NULL)) {
+								arrLine.push("");
+							} else arrLine.push(data[i+1]);
                         }
                         // if (count < 10)	console.log(myObj);
 						if (count == configs['Unit line'] || data[0] != '') {
