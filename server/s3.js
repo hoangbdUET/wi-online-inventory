@@ -97,7 +97,7 @@ function moveCurve(srcKey, desKey) {
 }
 
 async function getData(key) {
-    console.log('~~~ getCurveDataFromS3: ' + key);
+    console.log('~~~ getCurveDataFromS3: ' + bucket + "/" + key);
     let params = {
         Bucket: bucket,
         Key: key

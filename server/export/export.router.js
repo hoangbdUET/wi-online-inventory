@@ -1,3 +1,4 @@
+'use strict'
 let express = require('express');
 let router = express.Router();
 let async = require('async');
@@ -9,6 +10,8 @@ let response = require('../response');
 const s3 = require('../s3');
 let exporter = require('wi-export-test');
 let curveModel = require('../curve/curve.model');
+const dlisExport = require('dlis_export');
+const Op = require('sequelize').Op;
 
 async function getFullWellObj(idWell){
     try {
@@ -227,6 +230,93 @@ router.post('/files', function (req, res) {
             res.send(response(404, "ERROR File does not exist"));
         }
     });
+})
+
+router.post('/dlisv1', async function (req, res) {
+    try {
+        const results = [];
+        for (const obj of req.body.idObjs){
+            const datasetIDs = [];
+            let curveIDs = [];
+
+            for(const dataset of obj.datasets){
+                datasetIDs.push(dataset.idDataset)
+                curveIDs = curveIDs.concat(dataset.idCurves)
+            }
+
+            let well = await models.Well.findById(obj.idWell, {
+                include: [{
+                    model: models.WellHeader
+                },{
+                    model: models.Dataset,
+                    where: {
+                        idDataset: {
+                            [Op.in]: datasetIDs
+                        }
+                    },
+                    include: [{
+                        model: models.Curve,
+                        where: {
+                            idCurve: {
+                                [Op.in]: curveIDs
+                            }
+                        },
+                        include: [{
+                            model: models.CurveRevision
+                        }]
+                    }
+                    ]
+                }]
+            })
+            well = well.toJSON();
+            for(const dataset of well.datasets){
+                for(const curve of dataset.curves){
+                    for(const revision of curve.curve_revisions){
+                        if(revision.isCurrentRevision){
+                            curve.unit = revision.unit;
+                            curve.key = await curveModel.getCurveKey(revision);
+                            break;
+                        }
+                    }
+                    delete curve.curve_revisions;
+                }
+            }
+            const exportDir = config.exportPath + '/' + req.decoded.username;
+            const fileName = Date.now() + well.name + '.dlis';
+            if(!fs.existsSync(exportDir)){
+                fs.mkdirSync(exportDir, {recursive: true});
+            }
+            await dlisExport.export([well], exportDir + '/' + fileName);
+            results.push({
+                fileName: fileName,
+                wellName: well.name
+            })
+        }
+
+        res.send(response(200, 'SUCCESSFULLY', results));
+    }
+    catch (err){
+        console.log(err)
+        res.send(response(404, err));
+    }
+})
+
+router.post('/clear', function (req, res) {
+    try{
+        const dir = config.exportPath + '/' + req.decoded.username;
+        fs.readdir(dir, (err, files) => {
+            if (err) throw err;
+
+            for (const file of files) {
+                fs.unlink(path.join(dir, file), err => {
+                    if (err) throw err;
+                });
+            }
+        });
+    } catch (err){
+        console.log(err);
+    }
+    res.send(response(200, 'SUCCESSFULLY'));
 })
 
 module.exports = router;

@@ -34,7 +34,6 @@ async function importCurves(curves, dataset) {
     if (!curves || curves.length <= 0) return;
     const promises = curves.map(async curveData => {
         try {
-            // console.log(curveData);
             curveData.idDataset = dataset.idDataset;
             let curve = await models.Curve.create(curveData); // create curve
 
