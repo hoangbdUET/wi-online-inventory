@@ -10,7 +10,7 @@ let response = require('../response');
 const s3 = require('../s3');
 let exporter = require('wi-export-test');
 let curveModel = require('../curve/curve.model');
-const dlisExport = require('dlis_export');
+const dlisExport = require('dlis_export')(config);
 const Op = require('sequelize').Op;
 
 async function getFullWellObj(idWell){
