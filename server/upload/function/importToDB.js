@@ -28,14 +28,12 @@ function floatStrCompare(float1, float2) {
     if (isFloatEqually(var1, var2)) return 0;
     if (var1 < var2) return -1;
     if (var1 > var2) return 1;
-
 }
 
 async function importCurves(curves, dataset) {
     if (!curves || curves.length <= 0) return;
     const promises = curves.map(async curveData => {
         try {
-            // console.log(curveData);
             curveData.idDataset = dataset.idDataset;
             let curve = await models.Curve.create(curveData); // create curve
 
@@ -43,13 +41,14 @@ async function importCurves(curves, dataset) {
             curveData.isCurrentRevision = true;
             const curveRevision = await models.CurveRevision.create(curveData); //create curve revision
 
-            if (config.s3Path) {
+            if (process.env.INVENTORY_S3PATH || config.s3Path) {
                 const key = hashDir.getHashPath(dataset.username + dataset.wellname + dataset.name + curveData.name + curveData.unit + curveData.step) + curveData.name + '.txt';
-                await s3.upload(config.dataPath + '/' + curveData.path, key)
+                await s3.upload((process.env.INVENTORY_DATAPATH || config.dataPath) + '/' + curveData.path, key, dataset.direction == 'DECREASING')
                     .then(data => {
+                        // console.log("s3 uploaded: " + key);
                     })
                     .catch(err => {
-                        console.log(err);
+                        console.log("s3 upload failed: " + err);
                     });
             }
             else  {
@@ -138,6 +137,7 @@ async function importWell(wellData, override) {
                 well_header = wellData[WellHeader[property].CSVMnemnics];
                 delete wellData[WellHeader[property].CSVMnemnics];
             }
+
             arr.push(property);
             well_header.idWell = well.idWell;
             well_header.header = property;
@@ -260,6 +260,7 @@ async function importDatasets(datasets, well, override) {
             dataset = dataset.toJSON();
             dataset.wellname = well.name;
             dataset.username = well.username;
+            dataset.direction = datasetData.direction;
 
             datasetData.params.forEach(param => {
                 if (param.mnem == 'SET') return;

@@ -13,6 +13,8 @@
     "jwtSecretKey": "secretKey"
   },
 
+  "s3AccessKeyId": "",
+  "s3SecretAccessKey": "",
   //if s3Path is defined, curves's data will be stored on aws s3, otherwise they will be stored on disk
   "s3Bucket": "inventory-local",
   "s3Path": "https://s3-ap-southeast-1.amazonaws.com/inventory-local",

@@ -2,21 +2,21 @@
 let Sequelize = require('sequelize');
 var config = require('config').Database;
 
-const sequelize = new Sequelize(config.dbName, config.user, config.password, {
+const sequelize = new Sequelize(process.env.INVENTORY_DBNAME || config.dbName, process.env.INVENTORY_DBUSER || config.user, process.env.INVENTORY_DBPASSWORD || config.password, {
     define: {
         freezeTableName: true
     },
-    logging: config.logging,
-    dialect: config.dialect,
-    port: config.port,
+    logging: false,
+    dialect: process.env.INVENTORY_DIALECT || config.dialect,
+    host: process.env.INVENTORY_DBHOST || config.host || "127.0.0.1",
+    port: process.env.INVENTORY_DBPORT || config.port,
     dialectOptions: {
-        charset: 'utf8',
-        collate: 'utf8_cs'
+        charset: 'utf8'
     },
     pool: {
-        max: 2,
+        max: 100,
         min: 0,
-        idle: 200
+        acquire: 60000
     },
     operatorsAliases: Sequelize.Op
     // storage: config.storage

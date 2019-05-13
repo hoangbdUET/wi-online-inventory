@@ -53,11 +53,11 @@ async function deleteCurveFiles(curves, callback) {
     if (!curves || curves.length <= 0) return;
     for(let curve of curves){
         for(let revision of curve.curve_revisions){
-            if (config.s3Path) {
+            if (process.env.INVENTORY_S3PATH || config.s3Path) {
                 s3.deleteCurve(await getCurveKey(revision));
             }
             else {
-                const path = config.dataPath + '/' + await getCurveKey(revision);
+                const path = (process.env.INVENTORY_DATAPATH || config.dataPath) + '/' + await getCurveKey(revision);
                 require('fs').unlink(path, (err) => {
                     if (err) console.log('delete curve file failed: ' + err);
                 });
@@ -129,7 +129,6 @@ async function getCurves(idDataset, username, cb) {
         console.log(err);
         return cb(err)
     }
-
 }
 
 async function editCurve(body, username, cb) {
@@ -178,13 +177,13 @@ async function createRevision(curve, newUnit, newStep) {
         if (newStep) newRevision.step = newStep;
         else if (newUnit) newRevision.unit = newUnit;
 
-        const oldPath = config.dataPath + '/' + currentRevisionPath;
+        const oldPath = (process.env.INVENTORY_DATAPATH || config.dataPath) + '/' + currentRevisionPath;
         const dir = curve.username + curve.dataset.well.name + curve.dataset.name + curve.name + newRevision.unit + newRevision.step;
-        const filePath = hashDir.createPath(config.dataPath, dir, curve.name + '.txt');
-        newRevision.path = filePath.replace(config.dataPath + '/', '');
+        const filePath = hashDir.createPath((process.env.INVENTORY_DATAPATH || config.dataPath), dir, curve.name + '.txt');
+        newRevision.path = filePath.replace((process.env.INVENTORY_DATAPATH || config.dataPath) + '/', '');
         if (newStep) curveInterpolation(currentRevision, newRevision);
         else if (newUnit) {
-            if (config.s3Path) {
+            if (process.env.INVENTORY_S3PATH || config.s3Path) {
                 s3.copyCurve(currentRevisionPath, newRevision.path);
             }
             else {
@@ -296,7 +295,7 @@ async function curveInterpolation(originRevision, newRevision) {
     const originRevisionPath = await getCurveKey(originRevision);
 
 
-    if (config.s3Path) {
+    if (process.env.INVENTORY_S3PATH || config.s3Path) {
         const tempDir = fs.mkdtempSync(require('path').join(require('os').tmpdir(), 'wi_inventory_'));
         const tempPath = tempDir + '/' + Date.now() + '_' + originRevision.idRevision + '.txt';
         // const writeStream = fs.createWriteStream(pathOnDisk);
@@ -324,8 +323,8 @@ async function curveInterpolation(originRevision, newRevision) {
             s3.upload(tempPath, newRevision.path);
         })
     } else {
-        const originPath = config.dataPath + '/' + originRevisionPath;
-        const path = config.dataPath + '/' + newRevision.path;
+        const originPath = (process.env.INVENTORY_DATAPATH || config.dataPath) + '/' + originRevisionPath;
+        const path = (process.env.INVENTORY_DATAPATH || config.dataPath) + '/' + newRevision.path;
         const curveContents = fs.readFileSync(originPath, 'utf8').trim().split('\n');
         for (const line of curveContents) {
             curveDatas.push(Number(line.trim().split(' ')[1]));

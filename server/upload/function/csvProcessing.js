@@ -1,15 +1,12 @@
 const fs = require('fs');
 const fast_csv = require('fast-csv');
-const csv2 = require('csv2');
-const through2 = require('through2');
 const CSVExtractor = require('wi-import').extractFromCSV;
 const importToDB = require('./importToDB');
 const readline = require('line-by-line');
 
 function uploadCSVFile(req) {
-    return new Promise(function(resolve, reject) {
+    return new Promise(function (resolve, reject) {
         try {
-            // console.log(req.body);
             let configs = req.body;
 
             let selectedFields = [];
@@ -41,10 +38,7 @@ function uploadCSVFile(req) {
                     do {
                         newName = `${duplicateCurve}_${suffixId}`;
                         if (
-                            !arr.find(
-                                (e, index) =>
-                                    e == newName && index > idxOfTheSameCurve
-                            )
+                            !arr.find((e, index) => e == newName && index > idxOfTheSameCurve)
                         )
                             check = true;
                         suffixId++;
@@ -53,26 +47,20 @@ function uploadCSVFile(req) {
                 }
             });
 
-            console.log(selectedFields, titleOfFields, units);
-
-            // resolve([]);
-
             let inputFile = req.files[0];
             let inputURL = inputFile.path;
-            let curveChosen = [];
             let count = 0;
             let output = [];
             let separator;
             let INDEXSETTING = selectedFields;
             let TITLE = titleOfFields;
+            let curveChosen = [['Depth', ...TITLE]];
             var importData = {};
             if (configs.coreData) {
                 importData.coreData = configs.coreData;
             }
             importData.userInfo = req.decoded;
-            importData.override = !!(
-                configs.override && configs.override === 'true'
-            );
+            importData.override = !!(configs.override && configs.override === 'true');
             importData.titleFields = titleOfFields;
             importData.units = units;
             importData.unitDepth = configs.unitReference;
@@ -105,235 +93,108 @@ function uploadCSVFile(req) {
                     }
                 }
             }
-
             createRegex();
 
-            fs.createReadStream(inputURL)
-                .pipe(
-                    csv2({
-                        separator: /,/
-                    })
-                )
-                .pipe(
-                    through2({objectMode: true}, function(
-                        chunk,
-                        enc,
-                        callback
-                    ) {
-                        let data = [];
-                        chunk = chunk[0].split(separator);
-                        data.push(chunk[configs['Reference Column']]);
-                        importData.well.STOP.value =
-                            chunk[configs['Reference Column']];
-                        for (let i = 0; i < INDEXSETTING.length; i++) {
-                            if (
-                                INDEXSETTING[i] != configs['Reference Column']
-                            ) {
-                                if (
-                                    configs.decimal &&
-                                    configs.decimal != '.' &&
-                                    chunk[INDEXSETTING[i]]
-                                ) {
-                                    chunk[INDEXSETTING[i]] = chunk[
-                                        INDEXSETTING[i]
-                                    ].replace(configs.decimal, '.');
-                                    chunk[configs['Reference Column']] = chunk[
-                                        configs['Reference Column']
-                                    ].replace(configs.decimal, '.');
-                                }
-                                data.push(chunk[INDEXSETTING[i]]);
-                            }
-                        }
+			if (configs['Unit line'] < 0) {
+				let arrLine = [''];
+				for (let i = 0; i < TITLE.length; i++) {
+					arrLine.push('');
+				}
+				curveChosen.push(arrLine);
+			}
 
-                        configWellHeader(chunk, count, configs);
-                        this.push(data);
-                        callback();
-                    })
-                )
-                .on('data', function(data) {
+            let rl = new readline(inputURL);
+            rl.on('line', function (line) {
+                if (line) {
+                    let data = [];
+                    chunk = customSplit(line, separator);
+                    data.push(chunk[configs['Reference Column']]);
+                    // importData.well.STOP.value = chunk[configs['Reference Column']];
+                    for (let i = 0; i < INDEXSETTING.length; i++) {
+                        if (INDEXSETTING[i] != configs['Reference Column']) {
+                            if (
+                                configs.decimal &&
+                                configs.decimal != '.' &&
+                                chunk[INDEXSETTING[i]]
+                            ) {
+                                chunk[INDEXSETTING[i]] = chunk[INDEXSETTING[i]].replace(
+                                    configs.decimal,
+                                    '.'
+                                );
+                                chunk[configs['Reference Column']] = chunk[
+                                    configs['Reference Column']
+                                ].replace(configs.decimal, '.');
+                            }
+                            data.push(chunk[INDEXSETTING[i]]);
+                        }
+                    }
+
+                    configWellHeader(chunk, count, configs);
+
                     if (
                         count == configs['Unit line'] ||
                         count >= configs['Data first line']
                     ) {
-                        let myObj = {Depth: data[0]};
-                        for (let i = 1; i < data.length; i++) {
-                            myObj[TITLE[i]] = data[i];
+						let arrLine = [data[0]];
+                        for (let i = 0; i < TITLE.length; i++) {
+							let cell = data[i + 1];
+                            if (cell && cell.includes('"')) cell = cell.slice(1, cell.length - 1);
+							// if (parseFloat(cell) === parseFloat(configs.NULL)) {
+							// 	arrLine.push("");
+							// } else arrLine.push(data[i+1]);
+							arrLine.push(cell);
                         }
-                        if (count == configs['Unit line'] || data[0] != '') curveChosen.push(myObj);
-                    }
+                        // if (count < 10)	console.log(myObj);
+						if (count == configs['Unit line'] || data[0] != '') {
+							importData.well.STOP.value = data[0];
+							curveChosen.push(arrLine);
+						}                    
+					}
                     count++;
-                })
-                .on('end', function() {
-                    fs.unlinkSync(inputURL);
-                    fast_csv
-                        .writeToStream(
-                            fs.createWriteStream(inputURL),
-                            curveChosen,
-                            {
-                                headers: true
-                            }
-                        )
-                        .on('finish', async function() {
-                            let result = await CSVExtractor(
-                                inputURL,
-                                importData
-                            );
-                            console.log(
-                                '===>' + JSON.stringify(result, null, 2)
-                            );
-                            let uploadResult = await importToDB(
-                                result,
-                                importData
-                            );
-                            output.push(uploadResult);
-                            resolve(output);
-                        });
-                });
+                }
+            });
 
-            // let selectedFields = [];
-            // let titleOfFields = [];
-            // let units = [];
-            // if (typeof req.body.titleOfFields == 'string') {
-            //     selectedFields.push(req.body.selectedFields);
-            //     titleOfFields.push(req.body.titleOfFields);
-            //     units.push(req.body.units);
-            // } else {
-            //     selectedFields = req.body.selectedFields;
-            //     titleOfFields = req.body.titleOfFields;
-            //     units = req.body.units;
-            // }
-
-            // let inputFile = req.files[0];
-            // let inputURL = inputFile.path;
-            // let curveChosen = [];
-            // let count = 0;
-            // let output = [];
-            // let separator = req.body.delimiter;
-            // let INDEXSETTING = selectedFields;
-            // let TITLE = titleOfFields;
-            // var importData = {};
-            // importData.userInfo = req.decoded;
-            // importData.override = !!(
-            //     req.body.override && req.body.override === 'true'
-            // );
-            // importData.titleFields = titleOfFields;
-            // importData.units = units;
-            // importData.unitDepth = req.body.unitDepth;
-            // importData.well = {
-            //     filename: inputFile.originalname,
-            //     name: req.body.wellName,
-            //     dataset: req.body.datasetName,
-            //     NULL: {
-            //         value: req.body.defaultNULL,
-            //         description: '',
-            //     },
-            //     STOP: {
-            //         value: null,
-            //         description: '',
-            //     },
-            // };
-
-            // function createRegex() {
-            //     let regex = /[ \t\,\;]/;
-            //     if (req.body.delimiter != '') {
-            //         separator = req.body.delimiter;
-            //         return;
-            //     } else {
-            //         if (!req.body.decimalComma) {
-            //             separator = regex;
-            //         } else {
-            //             separator = new RegExp(
-            //                 regex.source.replace(
-            //                     '\\' + req.body.decimalComma,
-            //                     '',
-            //                 ),
-            //             );
-            //         }
-            //     }
-            // }
-
-            // createRegex();
-
-            // fs.createReadStream(inputURL)
-            //     .pipe(
-            //         csv2({
-            //             separator: /,/,
-            //         }),
-            //     )
-            //     .pipe(
-            //         through2({objectMode: true}, function(
-            //             chunk,
-            //             enc,
-            //             callback,
-            //         ) {
-            //             let data = [];
-            //             chunk = chunk[0].split(separator);
-            //             importData.well.STOP.value = chunk[req.body.depthIndex];
-            //             for (let i = 0; i < INDEXSETTING.length; i++) {
-            //                 if (INDEXSETTING[i] != req.body.depthIndex) {
-            //                     if (
-            //                         req.body.decimalComma &&
-            //                         req.body.decimalComma != '.' &&
-            //                         chunk[INDEXSETTING[i]]
-            //                     ) {
-            //                         chunk[INDEXSETTING[i]] = chunk[
-            //                             INDEXSETTING[i]
-            //                         ].replace(req.body.decimalComma, '.');
-            //                         chunk[req.body.depthIndex] = chunk[
-            //                             req.body.depthIndex
-            //                         ].replace(req.body.decimalComma, '.');
-            //                     }
-            //                     data.push(chunk[INDEXSETTING[i]]);
-            //                 }
-            //             }
-
-            //             configWellHeader(chunk, count);
-            //             this.push(data);
-            //             callback();
-            //         }),
-            //     )
-            //     .on('data', function(data) {
-            //         if (
-            //             count == req.body.unitLineIndex ||
-            //             count >= req.body.dataLineIndex
-            //         ) {
-            //             let myObj = {};
-            //             for (let i = 0; i < data.length; i++) {
-            //                 myObj[TITLE[i]] = data[i];
-            //             }
-            //             curveChosen.push(myObj);
-            //         }
-            //         count++;
-            //     })
-            //     .on('end', function() {
-            //         fs.unlinkSync(inputURL);
-            //         fast_csv
-            //             .writeToStream(
-            //                 fs.createWriteStream(inputURL),
-            //                 curveChosen,
-            //                 {
-            //                     headers: true,
-            //                 },
-            //             )
-            //             .on('finish', async function() {
-            //                 let result = await CSVExtractor(
-            //                     inputURL,
-            //                     importData,
-            //                 );
-            //                 console.log(
-            //                     '===>' + JSON.stringify(result, null, 2),
-            //                 );
-            //                 let uploadResult = await importToDB(
-            //                     result,
-            //                     importData,
-            //                 );
-            //                 output.push(uploadResult);
-            //                 resolve(output);
-            //             });
-            //     });
+            rl.on('end', function () {
+                fs.unlinkSync(inputURL);
+                fast_csv
+                    .writeToStream(fs.createWriteStream(inputURL), curveChosen, {
+                        headers: true
+                    })
+                    .on('finish', async function () {
+                        // resolve([]);
+						// console.log(importData);
+                        let result = await CSVExtractor(inputURL, importData);
+                        let uploadResult = await importToDB(result, importData);
+                        output.push(uploadResult);
+                        resolve(output);
+                    });
+            });
         } catch (err) {
             console.log('Failed: ' + err);
             reject(err);
+        }
+
+        function customSplit(str, delimiter) {
+            let words;
+            if (str.includes('"')) {
+                str = str.replace(/"[^"]+"/g, function (match) {
+                    let tmp = match.replace(/"/g, '');
+                    return '"' + Buffer.from(tmp).toString('base64') + '"';
+                });
+                words = str.split(delimiter);
+                words = words.map(function (word) {
+                    if (word.includes('"')) {
+                        return (
+                            '"' +
+                            Buffer.from(word.replace(/"/g, ''), 'base64').toString() +
+                            '"'
+                        );
+                    } else return word;
+                });
+            } else {
+                words = str.split(delimiter);
+            }
+            return words;
         }
 
         function configWellHeader(chunk, count, configs) {
@@ -352,8 +213,7 @@ function uploadCSVFile(req) {
                     importData.well.STEP.value = step.toString();
                 } else {
                     importData.well.STEP.value = (
-                        chunk[configs['Reference Column']] -
-                        importData.well.STRT.value
+                        chunk[configs['Reference Column']] - importData.well.STRT.value
                     )
                         .toFixed(4)
                         .toString();

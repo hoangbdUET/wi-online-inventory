@@ -12,7 +12,7 @@ async function convertCurve(curve, newUnit, callback) {
     console.log('~~~convertCurve~~~');
     let index = 0;
 
-    if (config.s3Path) {
+    if (process.env.INVENTORY_S3PATH || config.s3Path) {
         let tempPath = fs.mkdtempSync(require('os').tmpdir());
         let newKey = curve.path.substring(0, curve.path.lastIndexOf('/') + 1) + newUnit + '_' + curve.name + '.txt';
         let pathOnDisk = tempPath + '/' + newUnit + '_' + curve.name + '.txt';
@@ -43,10 +43,10 @@ async function convertCurve(curve, newUnit, callback) {
         })
     }
     else {
-        let newPath = config.dataPath + '/' + curve.path.substring(0, curve.path.lastIndexOf('/') + 1) + newUnit + '_' + curve.name + '.txt';
+        let newPath = (process.env.INVENTORY_DATAPATH || config.dataPath) + '/' + curve.path.substring(0, curve.path.lastIndexOf('/') + 1) + newUnit + '_' + curve.name + '.txt';
         const writeStream = fs.createWriteStream(newPath);
         const rl = readline.createInterface({
-            input: fs.createReadStream(config.dataPath + '/' + curve.path)
+            input: fs.createReadStream((process.env.INVENTORY_DATAPATH || config.dataPath) + '/' + curve.path)
         })
         rl.on('line', (line) => {
             writeStream.write(index + ' ' + unitConversion.convert(parseFloat(line.trim().split(' ')[1]), curve.unit, newUnit) + '\n');
@@ -60,11 +60,11 @@ async function convertCurve(curve, newUnit, callback) {
 
 module.exports = function (curve, unit, step, callback) {
     console.log('~~~curveExport~~~');
-    console.log('config.s3Path: ' + config.s3Path);
+    console.log('config.s3Path: ' + (process.env.INVENTORY_S3PATH || config.s3Path));
     curve.curve_revisions.forEach(async revision => {
         if (revision.isCurrentRevision) {
             const key = await curveModel.getCurveKey(revision);
-            if (config.s3Path) {
+            if (process.env.INVENTORY_S3PATH || config.s3Path) {
                 s3.getData(key)
                     .then(dataStream => {
                         callback(null, dataStream);
@@ -73,8 +73,8 @@ module.exports = function (curve, unit, step, callback) {
                 })
             }
             else {
-                if (fs.existsSync(config.dataPath + '/' + key)) {
-                    callback(null, fs.createReadStream(config.dataPath + '/' + key));
+                if (fs.existsSync((process.env.INVENTORY_DATAPATH || config.dataPath) + '/' + key)) {
+                    callback(null, fs.createReadStream((process.env.INVENTORY_DATAPATH || config.dataPath) + '/' + key));
                 }
                 else {
                     callback('No such file or directory')

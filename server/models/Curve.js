@@ -14,6 +14,19 @@ module.exports = function (sequelize, DataTypes) {
         description: {
             type: DataTypes.STRING,
             defaultValue: ''
+        },
+        dimension: {
+            type: DataTypes.INTEGER,
+            defaultValue: 1
+        },
+        delimiter: {
+            type: DataTypes.STRING,
+            defaultValue: ' '
+        },
+        type: {
+            type: DataTypes.ENUM("NUMBER","TEXT","ARRAY","OTHER"),
+            defaultValue: 'NUMBER',
+            allowNull: false
         }
     });
 }
