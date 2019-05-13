@@ -189,17 +189,18 @@ async function importWell(wellData, override) {
         return well;
     } catch (err) {
         if (err.name === 'SequelizeUniqueConstraintError') {
-            if (wellData.name.indexOf(' ( copy ') < 0) {
-                wellData.name = wellData.name + ' ( copy 1 )';
+            if(!override) {
+                if (wellData.name.indexOf(' ( copy ') < 0) {
+                    wellData.name = wellData.name + ' ( copy 1 )';
+                }
+                else {
+                    let copy = wellData.name.substr(wellData.name.lastIndexOf(' ( copy '), wellData.name.length);
+                    let copyNumber = parseInt(copy.replace(' ( copy ', '').replace(' )', ''));
+                    copyNumber++;
+                    wellData.name = wellData.name.replace(copy, '') + ' ( copy ' + copyNumber + ' )';
+                }
             }
-            else {
-                let copy = wellData.name.substr(wellData.name.lastIndexOf(' ( copy '), wellData.name.length);
-                let copyNumber = parseInt(copy.replace(' ( copy ', '').replace(' )', ''));
-                copyNumber++;
-                wellData.name = wellData.name.replace(copy, '') + ' ( copy ' + copyNumber + ' )';
-            }
-            return await
-                importWell(wellData);
+            return await importWell(wellData, override);
         }
         else {
             throw err;
