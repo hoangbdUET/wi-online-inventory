@@ -23,7 +23,10 @@ function parseDlisFile(file, userInfo){
                 }
 
                 const importResult = await importToDB(wells, importData);
-                del(wells[0].dataDir);
+                del(wells[0].dataDir, {force: true})
+                    .catch(err => {
+                        //do nothing
+                    })
                 console.log("dlis parses file done! ==> " + file.originalname);
                 resolve({
                     successFile: file.originalname,
