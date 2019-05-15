@@ -10,7 +10,7 @@ let asyncEach = require('async/each');
 router.use(bodyParser.json());
 
 router.post('/user/info', function (req, res) {
-    User.findById(req.decoded.username).then(user => {
+    User.findByPk(req.decoded.username).then(user => {
         if (user) {
             res.send(response(200, 'GET USER INFOR SUCCESS', user));
         } else {

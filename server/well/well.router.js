@@ -64,7 +64,7 @@ router.post('/well/full-info', function (req, res) {
             res.send(response(512, 'ERROR', err.message));
         });
     } else {
-        Well.findById(req.body.idWell, {
+        Well.findByPk(req.body.idWell, {
             include: [
                 {model: models.WellHeader},
                 {

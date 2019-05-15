@@ -35,7 +35,7 @@ function findWellById(idWell, username, attributes) {
         }
         include.push(includeWellHeader);
     }
-    return Well.findById(
+    return Well.findByPk(
         idWell,
         {
             include: include
@@ -91,7 +91,7 @@ async function deleteWell(idWell, username) {
 
 function copyDatasets(req, cb) {
     let newDatasets = [];
-    Well.findById(req.body.idWell)
+    Well.findByPk(req.body.idWell)
         .then(well => {
             asyncLoop(req.body.datasets, (dataset, nextDataset) => {
                 models.Curve.findAll({
@@ -180,7 +180,7 @@ function editWell(body, username, cb) {
                         };
                         let changedCurves = require('../fileManagement').moveWellFiles(changeSet);
                         changedCurves.forEach(changedCurve => {
-                            models.Curve.findById(changedCurve.idCurve)
+                            models.Curve.findByPk(changedCurve.idCurve)
                                 .then(curve => {
                                     Object.assign(curve, changedCurve);
                                     curve.save().catch(err => {
@@ -250,7 +250,7 @@ function exportWellHeader(idWells, callback) {
             });
         } else {
             asyncEach(idWells, function (idWell, nextWell) {
-                Well.findById(idWell, { include: models.WellHeader }).then(well => {
+                Well.findByPk(idWell, { include: models.WellHeader }).then(well => {
                     let data = {};
                     asyncEach(well.well_headers, function (header, nextHeader) {
                         data.WELL_NAME = well.name;

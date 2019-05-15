@@ -60,7 +60,7 @@ router.post('/curve/data', function (req, res) {
     curveModel.findCurveById(req.body.idCurve, req.decoded.username, attributes)
         .then((curve) => {
             if (curve) {
-                datasetModel.findById(curve.idDataset).then(dataset => {
+                datasetModel.findByPk(curve.idDataset).then(dataset => {
                     step = dataset.step;
                     _delimiter = curve.delimiter;
                     _dimension = curve.dimension;
