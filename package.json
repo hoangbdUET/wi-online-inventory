@@ -41,6 +41,7 @@
     "line-by-line": "^0.1.6",
     "md5": "^2.2.1",
     "mosca": "^2.8.3",
+    "mqtt": "^2.18.8",
     "multer": "^1.3.0",
     "mysql": "^2.13.0",
     "mysql2": "^1.5.1",
@@ -51,7 +52,7 @@
     "sequelize-cli": "^5.4.0",
     "tempfile": "^2.0.0",
     "through2": "^2.0.3",
-    "wi-export-test": "^1.2.29",
+    "wi-export-test": "^1.2.30",
     "wi-import": "^1.1.73"
   }
 }
