@@ -3,10 +3,10 @@
     "dialect": "mysql",
     "host": "localhost",
     "port": 3306,
-    "user": "root",
-    "password": "qwertyui",
+    "user": "wi",
+    "password": "@Abc123456",
     "logging": false,
-    "dbName": "inventory"
+    "dbName": "wi_online_inventory"
   },
   "Application": {
     "port": 9000,
@@ -20,6 +20,6 @@
   "s3SecretAccessKey": "",
   "s3Bucket": "",
   "s3Path": "",
-  "exportPath": "server/export/exported-files",
-  "dataPath": "/home/ubuntu/wi-inventory-data"
+  "exportPath": "./exported-files",
+  "dataPath": "./wi-inventory-data"
 }
