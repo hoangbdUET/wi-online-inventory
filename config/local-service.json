@@ -1,0 +1,24 @@
+{
+  "Database": {
+    "dialect": "mysql",
+    "host": "172.17.0.1",
+    "port": 3306,
+    "user": "thanh",
+    "password": "qwertyuiop",
+    "logging": false,
+    "dbName": "inventory"
+  },
+  "Application": {
+    "port": 80,
+    "jwtSecretKey": "secretKey"
+  },
+
+  "s3AccessKeyId": "AKIA3PCPNILJKLDENWGZ",
+  "s3SecretAccessKey": "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",
+  //if s3Path is defined, curves's data will be stored on aws s3, otherwise they will be stored on disk
+  "s3Bucket": "wi-thanh-inventory",
+  "s3Path": "https://s3-ap-southeast-1.amazonaws.com/wi-thanh-inventory",
+
+  "dataPath": "/tmp",
+  "exportPath": "exports"
+}

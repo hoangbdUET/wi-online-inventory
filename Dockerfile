@@ -7,13 +7,13 @@ WORKDIR /app
 
 # Copy app source
 COPY . /app
-
+RUN mkdir uploads exports
 # Install npm package
 COPY package.json /app
 RUN npm install
 
 # Set Environment
-ENV NODE_ENV=production
+#ENV NODE_ENV=production
 
 EXPOSE 80
 

@@ -11,7 +11,36 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use('/exports/file', express.static('exports'));
 
-main();
+let Sequelize = require('sequelize');
+let configDb = require('config').Database;
+const sequelize = new Sequelize(process.env.INVENTORY_DBNAME || configDb.dbName, process.env.INVENTORY_DBUSER || configDb.user, process.env.INVENTORY_DBPASSWORD || configDb.password, {
+    define: {
+        freezeTableName: true
+    },
+    logging: false,
+    dialect: process.env.INVENTORY_DIALECT || configDb.dialect,
+    host: process.env.INVENTORY_DBHOST || configDb.host || "127.0.0.1",
+    port: process.env.INVENTORY_DBPORT || configDb.port,
+    dialectOptions: {
+        charset: 'utf8'
+    },
+    pool: {
+        max: 100,
+        min: 0,
+        acquire: 60000
+    },
+    operatorsAliases: Sequelize.Op
+    // storage: config.storage
+});
+sequelize.authenticate()
+    .then(() => {
+        console.log('Connection has been established successfully.');
+        main();
+    })
+    .catch(err => {
+        console.error('Unable to connect to the database:', err);
+        process.exit(0);
+    });
 
 function main() {
     app.get('/', function (req, res) {

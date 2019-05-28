@@ -68,3 +68,5 @@ uploads/
 #configs
 /config/production.json
 /package-lock.json
+/config/local-service.json
+
