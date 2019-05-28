@@ -7,7 +7,7 @@ WORKDIR /app
 
 # Copy app source
 COPY . /app
-RUN mkdir uploads exports
+RUN mkdir -p /app/uploads
 # Install npm package
 COPY package.json /app
 RUN npm install

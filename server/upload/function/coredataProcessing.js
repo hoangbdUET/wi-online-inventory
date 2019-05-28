@@ -36,7 +36,7 @@ module.exports.uploadFiles = function (req, cb) {
     let importData = {};
     importData.userInfor = req.decoded;
     importData.isUnitsRow = req.body.isUnitsRow;
-    models.Well.findById(req.body.idWell)
+    models.Well.findByPk(req.body.idWell)
         .then(well => {
             importData.well = well;
             asyncLoop(req.files, (file, next) => {

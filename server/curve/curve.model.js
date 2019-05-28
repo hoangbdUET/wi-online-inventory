@@ -42,7 +42,7 @@ function findCurveById(idCurve, username, attributes) {
             model: models.CurveRevision
         })
     }
-    return Curve.findById(idCurve, {
+    return Curve.findByPk(idCurve, {
         include: include
         //logging: console.log
     });
@@ -351,8 +351,8 @@ function findWellByCurveName(curveNames, callback, username) {
         let wells = [];
         Curve.findAll({where: {name: curveName}}).then(curves => {
             asyncEach(curves, function (curve, nextCurve) {
-                Dataset.findById(curve.idDataset).then(dataset => {
-                    Well.findById(dataset.idWell).then(well => {
+                Dataset.findByPk(curve.idDataset).then(dataset => {
+                    Well.findByPk(dataset.idWell).then(well => {
                         if (well.username === username) {
                             wells.push(dataset.idWell);
                         }
@@ -371,7 +371,7 @@ function findWellByCurveName(curveNames, callback, username) {
             wellArray = wellArray.filter(idWell => maps[i].includes(idWell));
         }
         asyncEach(wellArray, function (idWell, next) {
-            Well.findById(idWell).then(well => {
+            Well.findByPk(idWell).then(well => {
                 response.push({wellName: well.name, idWell: well.idWell});
                 next();
             });
@@ -383,7 +383,7 @@ function findWellByCurveName(curveNames, callback, username) {
 
 async function getCurveKey(curveRevision){
     try {
-        const revision = await  models.CurveRevision.findById(curveRevision.idRevision, {
+        const revision = await  models.CurveRevision.findByPk(curveRevision.idRevision, {
             include: {
                 model: models.Curve,
                 attributes: ['name'],

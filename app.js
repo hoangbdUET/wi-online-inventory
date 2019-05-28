@@ -11,6 +11,7 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use('/exports/file', express.static('exports'));
 
+// Check connection to database
 let Sequelize = require('sequelize');
 let configDb = require('config').Database;
 const sequelize = new Sequelize(process.env.INVENTORY_DBNAME || configDb.dbName, process.env.INVENTORY_DBUSER || configDb.user, process.env.INVENTORY_DBPASSWORD || configDb.password, {

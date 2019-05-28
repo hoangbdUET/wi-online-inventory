@@ -15,7 +15,7 @@ const Op = require('sequelize').Op;
 
 async function getFullWellObj(idWell){
     try {
-        const well = await models.Well.findById(idWell, {
+        const well = await models.Well.findByPk(idWell, {
             include: [{
                 model: models.WellHeader
             }, {
@@ -80,7 +80,7 @@ router.post('/las2', function (req, res) {
 })
 router.post('/las3', function (req, res) {
     async.map(req.body.idObjs, function (idObj, callback) {
-        // models.Well.findById(idObj.idWell, {
+        // models.Well.findByPk(idObj.idWell, {
         //     include: [{
         //         model: models.WellHeader
         //     }, {
@@ -121,7 +121,7 @@ router.post('/las3', function (req, res) {
 
 router.post('/csv/rv', function (req, res) {
     async.map(req.body.idObjs, function (idObj, callback) {
-        // models.Well.findById(idObj.idWell, {
+        // models.Well.findByPk(idObj.idWell, {
         //     include: [{
         //         model: models.WellHeader
         //     }, {
@@ -176,7 +176,7 @@ router.post('/csv/rv', function (req, res) {
 
 router.post('/csv/wdrv', function (req, res) {
     async.map(req.body.idObjs, function (idObj, callback) {
-        // models.Well.findById(idObj.idWell, {
+        // models.Well.findByPk(idObj.idWell, {
         //     include: [{
         //         model: models.WellHeader
         //     }, {
@@ -244,7 +244,7 @@ router.post('/dlisv1', async function (req, res) {
                 curveIDs = curveIDs.concat(dataset.idCurves)
             }
 
-            let well = await models.Well.findById(obj.idWell, {
+            let well = await models.Well.findByPk(obj.idWell, {
                 include: [{
                     model: models.WellHeader
                 },{

@@ -47,12 +47,12 @@ function uploadAsciiFiles(req, cb) {
             resolve();
         }
         else if(req.body.createNewDataset == 'true') {
-            models.Well.findById(req.body.idWell)
+            models.Well.findByPk(req.body.idWell)
                 .then(well => { resolve(well); })
                 .catch((err) => { reject(err); })
         }
         else {
-            models.Well.findById(req.body.idWell, {
+            models.Well.findByPk(req.body.idWell, {
                     include: {
                         model: models.Dataset,
                         // attributes: [],

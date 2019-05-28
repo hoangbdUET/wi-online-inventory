@@ -34,7 +34,7 @@ function findDatasetById(idDataset, username, attributes) {
         }
         include.push(Curve);
     }
-    return Dataset.findById(idDataset, {
+    return Dataset.findByPk(idDataset, {
         include: include
     })
 }
@@ -113,7 +113,7 @@ function editDataset(body, username, cb) {
                     };
                     let changedCurves = require('../fileManagement').moveDatasetFiles(changeSet);
                     changedCurves.forEach(changedCurve => {
-                        models.Curve.findById(changedCurve.idCurve)
+                        models.Curve.findByPk(changedCurve.idCurve)
                             .then(curve => {
                                 Object.assign(curve, changedCurve);
                                 curve.save().catch(err => {

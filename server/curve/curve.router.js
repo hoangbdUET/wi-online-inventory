@@ -38,17 +38,44 @@ router.post('/curve/data', function (req, res) {
     let step = 0;
     let _delimiter = ' ';
     let _dimension = 1;
+    let curveType = "NUMBER";
+
+    function customSplit(str, delimiter){
+        let words;
+        if(str.includes('"')){
+            str = str.replace(/"[^"]+"/g, function (match, idx, string){
+                let tmp = match.replace(/"/g, '');
+                return '"' + Buffer.from(tmp).toString('base64') + '"';
+            })
+            words = str.split(delimiter);
+            words = words.map(function(word){
+                if(word.includes('"')){
+                    return '"' + Buffer.from(word.replace(/"/g, ''), 'base64').toString() + '"';
+                }
+                else return word;
+            })
+        }else {
+            words = str.split(delimiter);
+        }
+        return words;
+    }
     const convertTransform = new Transform({
         writableObjectMode: true,
         transform(chunk, encoding, callback) {
             const _str = chunk.toString();
-
-            const _depth = chunk.toString().substring(0, _str.indexOf(_delimiter));
-            const _data = chunk.toString().substring(_str.indexOf(_delimiter) + 1);
+            const arr = customSplit(_str, _delimiter);
+            if(curveType == "TEXT"){
+                for(let i = 1; i < arr.length; i++){
+                    if(arr[i] == "null"){
+                        arr[i] = '""';
+                    }
+                }
+            }
             if(step == 0) {
-                this.push(_depth * rate + " " + _data + "\n");
+                this.push(parseFloat(arr.shift()) * rate + " " + arr.join(_delimiter) + "\n");
             }else {
-                this.push(index + " " + _data + "\n");
+                arr.shift();
+                this.push(index + " " + arr.join(_delimiter) + "\n");
                 index++;
             }
             callback();
@@ -60,7 +87,8 @@ router.post('/curve/data', function (req, res) {
     curveModel.findCurveById(req.body.idCurve, req.decoded.username, attributes)
         .then((curve) => {
             if (curve) {
-                datasetModel.findById(curve.idDataset).then(dataset => {
+                datasetModel.findByPk(curve.idDataset).then(dataset => {
+                    curveType = curve.type;
                     step = dataset.step;
                     _delimiter = curve.delimiter;
                     _dimension = curve.dimension;
