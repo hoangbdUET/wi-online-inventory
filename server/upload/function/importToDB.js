@@ -239,14 +239,18 @@ async function importDatasets(datasets, well, override) {
                     return dataset;
                 } catch (err) {
                     if (err.name === 'SequelizeUniqueConstraintError') {
-                        if (datasetData.name.lastIndexOf('_') != datasetData.name.length - 2) {
+                        if (datasetData.name.length <= 2) {
                             datasetData.name = datasetData.name + '_1';
                         }
                         else {
-                            let copy = datasetData.name.substr(datasetData.name.lastIndexOf('_'), datasetData.name.length);
-                            let copyNumber = parseInt(copy.replace('_', ''), '');
-                            copyNumber++;
-                            datasetData.name = datasetData.name.replace(copy, '') + '_' + copyNumber;
+                            const _index = datasetData.name.lastIndexOf('_');
+                            const copy = datasetData.name.substr(_index + 1, datasetData.name.length);
+                            if(isNaN(copy)){
+                                datasetData.name = datasetData.name + '_1';
+                            }else {
+                                const copyNumber = parseInt(copy) + 1;
+                                datasetData.name = datasetData.name.substr(0, _index) + '_' + copyNumber;
+                            }
                         }
                         return await createDataset(datasetData);
                     }
