@@ -236,6 +236,8 @@ router.post('/dlisv1', async function (req, res) {
     try {
         const results = [];
         const wells = [];
+        let fileName = Date.now();
+        let wellName = '';
         for (const obj of req.body.idObjs){
             const datasetIDs = [];
             let curveIDs = [];
@@ -283,16 +285,22 @@ router.post('/dlisv1', async function (req, res) {
                 }
             }
             wells.push(well);
+            fileName += '_' + well.name;
+            if(wellName.length <= 0){
+                wellName = well.name;
+            }else {
+                wellName += '_' + well.name;
+            }
         }
         const exportDir = config.exportPath + '/' + req.decoded.username;
-        const fileName = Date.now() + well.name + '.dlis';
+        fileName += '.dlis';
         if(!fs.existsSync(exportDir)){
             fs.mkdirSync(exportDir, {recursive: true});
         }
         await dlisExport.export(wells, exportDir + '/' + fileName);
         results.push({
             fileName: fileName,
-            wellName: well.name
+            wellName: wellName
         })
 
         res.send(response(200, 'SUCCESSFULLY', results));
