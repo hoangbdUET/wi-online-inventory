@@ -235,6 +235,7 @@ router.post('/files', function (req, res) {
 router.post('/dlisv1', async function (req, res) {
     try {
         const results = [];
+        const wells = [];
         for (const obj of req.body.idObjs){
             const datasetIDs = [];
             let curveIDs = [];
@@ -281,17 +282,18 @@ router.post('/dlisv1', async function (req, res) {
                     delete curve.curve_revisions;
                 }
             }
-            const exportDir = config.exportPath + '/' + req.decoded.username;
-            const fileName = Date.now() + well.name + '.dlis';
-            if(!fs.existsSync(exportDir)){
-                fs.mkdirSync(exportDir, {recursive: true});
-            }
-            await dlisExport.export([well], exportDir + '/' + fileName);
-            results.push({
-                fileName: fileName,
-                wellName: well.name
-            })
+            wells.push(well);
         }
+        const exportDir = config.exportPath + '/' + req.decoded.username;
+        const fileName = Date.now() + well.name + '.dlis';
+        if(!fs.existsSync(exportDir)){
+            fs.mkdirSync(exportDir, {recursive: true});
+        }
+        await dlisExport.export(wells, exportDir + '/' + fileName);
+        results.push({
+            fileName: fileName,
+            wellName: well.name
+        })
 
         res.send(response(200, 'SUCCESSFULLY', results));
     }
