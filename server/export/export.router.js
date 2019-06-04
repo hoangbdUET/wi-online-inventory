@@ -310,6 +310,67 @@ router.post('/dlisv1', async function (req, res) {
         res.send(response(404, err));
     }
 })
+router.post('/dlisv1obj', async function (req, res) {
+    try {
+        const results = [];
+        for (const obj of req.body.idObjs){
+            const datasetIDs = [];
+            let curveIDs = [];
+
+            for(const dataset of obj.datasets){
+                datasetIDs.push(dataset.idDataset)
+                curveIDs = curveIDs.concat(dataset.idCurves)
+            }
+
+            let well = await models.Well.findByPk(obj.idWell, {
+                include: [{
+                    model: models.WellHeader
+                },{
+                    model: models.Dataset,
+                    where: {
+                        idDataset: {
+                            [Op.in]: datasetIDs
+                        }
+                    },
+                    include: [{
+                        model: models.Curve,
+                        where: {
+                            idCurve: {
+                                [Op.in]: curveIDs
+                            }
+                        },
+                        include: [{
+                            model: models.CurveRevision
+                        }]
+                    }
+                    ]
+                }]
+            })
+            well = well.toJSON();
+            for(const dataset of well.datasets){
+                for(const curve of dataset.curves){
+                    for(const revision of curve.curve_revisions){
+                        if(revision.isCurrentRevision){
+                            curve.unit = revision.unit;
+                            curve.key = await curveModel.getCurveKey(revision);
+                            break;
+                        }
+                    }
+                    delete curve.curve_revisions;
+                }
+            }
+            results.push({
+                well: well
+            })
+        }
+
+        res.send(response(200, 'SUCCESSFULLY', results));
+    }
+    catch (err){
+        console.log(err)
+        res.send(response(404, err));
+    }
+})
 
 router.post('/clear', function (req, res) {
     try{
