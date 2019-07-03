@@ -64,7 +64,7 @@ async function parseDlisFiles (req){
             };
             const _content = JSON.stringify({
                 status: "ERR",
-                file: out.filename
+                file: file.originalname
             })
             client.publish("dlis/" + req.decoded.username, _content, opts);
         }
