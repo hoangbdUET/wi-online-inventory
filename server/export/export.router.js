@@ -216,7 +216,7 @@ router.post('/csv/wdrv', function (req, res) {
 })
 
 router.post('/files', function (req, res) {
-    let filePath = path.join(process.env.INVENTORY_EXPORTPATH || config.exportPath, req.decoded.username, req.body.fileName);
+    const filePath = path.join(process.env.INVENTORY_EXPORTPATH || config.exportPath, req.decoded.username, req.body.fileName);
     fs.exists(filePath, function (exists) {
         if (exists) {
             // res.writeHead(200, {
@@ -225,7 +225,7 @@ router.post('/files', function (req, res) {
             // });
             // fs.createReadStream(filePath).pipe(res);
 
-            res.sendFile(path.join(__dirname, '../../', filePath));
+            res.sendFile(filePath);
         } else {
             res.send(response(404, "ERROR File does not exist"));
         }
