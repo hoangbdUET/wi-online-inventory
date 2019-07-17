@@ -236,7 +236,7 @@ router.post('/dlisv1', async function (req, res) {
     try {
         const results = [];
         const wells = [];
-        let fileName = Date.now();
+        const fileName = Date.now() + "_I2GExport.dlis";
         let wellName = '';
         for (const obj of req.body.idObjs){
             const datasetIDs = [];
@@ -285,7 +285,6 @@ router.post('/dlisv1', async function (req, res) {
                 }
             }
             wells.push(well);
-            fileName += '_' + well.name;
             if(wellName.length <= 0){
                 wellName = well.name;
             }else {
@@ -293,7 +292,6 @@ router.post('/dlisv1', async function (req, res) {
             }
         }
         const exportDir = process.env.INVENTORY_EXPORTPATH || config.exportPath + '/' + req.decoded.username;
-        fileName += '.dlis';
         if(!fs.existsSync(exportDir)){
             fs.mkdirSync(exportDir, {recursive: true});
         }
