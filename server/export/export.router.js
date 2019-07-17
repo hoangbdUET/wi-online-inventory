@@ -292,7 +292,7 @@ router.post('/dlisv1', async function (req, res) {
                 wellName += '_' + well.name;
             }
         }
-        const exportDir = process.env.INVENTORY_EXPORTPATH || config.exportPath + '/' + req.decoded.username;
+        const exportDir = (process.env.INVENTORY_EXPORTPATH || config.exportPath) + '/' + req.decoded.username;
         fileName += '.dlis';
         if(!fs.existsSync(exportDir)){
             fs.mkdirSync(exportDir, {recursive: true});
