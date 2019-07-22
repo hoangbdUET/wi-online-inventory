@@ -34,6 +34,7 @@ async function importCurves(curves, dataset) {
     if (!curves || curves.length <= 0) return;
     const promises = curves.map(async curveData => {
         try {
+            curveData.name = curveData.name.replace(/[¤&:*?"<>|.]/g, '_');
             curveData.idDataset = dataset.idDataset;
             let curve = await models.Curve.create(curveData); // create curve
 
@@ -101,6 +102,7 @@ async function importWell(wellData, override) {
         // console.log(wellData);
         let well, wellTop, wellStop, wellStep;
         const Op = require('sequelize').Op;
+        wellData.name = wellData.name.replace(/[¤&:*?"<>|.]/g, '_');
 
         if (override) {
             well = (await models.Well.findOrCreate({
@@ -216,6 +218,7 @@ async function importDatasets(datasets, well, override) {
     try {
         const promises = datasets.map(async datasetData => {
             let dataset = null;
+            datasetData.name = datasetData.name.replace(/[¤&:*?"<>|.]/g, '_');
             datasetData.idWell = well.idWell;
             if (datasetData.idDataset) {
                 dataset = await models.Dataset.findOne({
