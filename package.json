@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/hoangbdUET/wi-online-inventory#readme",
   "dependencies": {
+    "archiver": "^3.0.0",
     "async": "^2.6.0",
     "aws-sdk": "^2.187.0",
     "body-parser": "^1.17.2",
@@ -28,8 +29,8 @@
     "del": "^4.0.0",
     "delete-empty": "^1.0.1",
     "detect-character-encoding": "^0.5.1",
-    "dlis_export": "^1.0.7",
-    "dlis_parser": "^1.1.34",
+    "dlis_export": "^1.0.12",
+    "dlis_parser": "^1.1.40",
     "events": "^1.1.1",
     "express": "^4.16.2",
     "fast-csv": "^2.4.0",
@@ -52,7 +53,7 @@
     "sequelize-cli": "^5.4.0",
     "tempfile": "^2.0.0",
     "through2": "^2.0.3",
-    "wi-export-test": "^1.1.39",
-    "wi-import": "^1.1.73"
+    "wi-export-test": "^1.2.42",
+    "wi-import": "^1.1.75"
   }
 }

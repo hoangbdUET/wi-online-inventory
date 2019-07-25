@@ -20,5 +20,6 @@
   "s3Path": "https://s3-ap-southeast-1.amazonaws.com/inventory-local",
 
   "dataPath": "/Users/dodang/uet_work/backend/wi-online-inventory/tmp",
-  "exportPath": "exports"
+  "exportPath": "/Users/dodang/uet_work/backend/wi-online-inventory/exports"
+
 }
