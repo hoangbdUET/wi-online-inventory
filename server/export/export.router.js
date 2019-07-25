@@ -12,6 +12,7 @@ let exporter = require('wi-export-test');
 let curveModel = require('../curve/curve.model');
 const dlisExport = require('dlis_export')(config);
 const Op = require('sequelize').Op;
+const archiver = require('archiver');
 
 async function getFullWellObj(idWell){
     try {
@@ -38,6 +39,14 @@ async function getFullWellObj(idWell){
 }
 
 router.post('/las2', function (req, res) {
+    let wellnames = '';
+    const userFolder = (process.env.INVENTORY_EXPORTPATH || config.exportPath) + '/' + req.decoded.username + '/';
+    const zipFile = Date.now() + '_I2GExport.zip';
+    const output = fs.createWriteStream(userFolder + zipFile);
+    const archive = archiver('zip', {
+        zlib: {level: 9} // Sets the compression level.
+    });
+    archive.pipe(output);
 
     async.map(req.body.idObjs, function (idObj, callback) {
         getFullWellObj(idObj.idWell).then(well => {
@@ -47,6 +56,13 @@ router.post('/las2', function (req, res) {
                     if (err) {
                         callback(err, null);
                     } else {
+                        if(wellnames.length <= 0)
+                            wellnames = result[0].wellName;
+                        else
+                            wellnames += "_" + result[0].wellName;
+                        for(const file of result) {
+                            archive.file(userFolder + file.fileName, {name: file.wellName + '_' + file.datasetName + '.las'});
+                        }
                         callback(null, result);
                     }
                 })
@@ -60,47 +76,33 @@ router.post('/las2', function (req, res) {
         if (err) {
             res.send(response(512, err));
         } else {
-            let responseArr = [];
-            async.each(results, function (rs, next) {
-                async.each(rs, function (r, _next) {
-                    responseArr.push(r);
-                    _next();
-                }, function (err) {
-                    next();
-                })
-            }, function (err) {
-                if (err) {
-                    res.send(response(512, err));
-                } else {
-                    res.send(response(200, 'SUCCESSFULLY', responseArr));
-                }
-            })
+            archive.finalize();
+            res.send(response(200, 'SUCCESSFULLY', [{fileName: zipFile, wellName: wellnames + '.zip'}]));
         }
     });
 })
 router.post('/las3', function (req, res) {
+    let wellnames = '';
+    const userFolder = (process.env.INVENTORY_EXPORTPATH || config.exportPath) + '/' + req.decoded.username + '/';
+    const zipFile = Date.now() + '_I2GExport.zip';
+    const output = fs.createWriteStream(userFolder + zipFile);
+    const archive = archiver('zip', {
+        zlib: {level: 9} // Sets the compression level.
+    });
+    archive.pipe(output);
+
     async.map(req.body.idObjs, function (idObj, callback) {
-        // models.Well.findByPk(idObj.idWell, {
-        //     include: [{
-        //         model: models.WellHeader
-        //     }, {
-        //         model: models.Dataset,
-        //         include: [{
-        //             model: models.Curve,
-        //             include: {
-        //                 model: models.CurveRevision
-        //             }
-        //         }, {
-        //             model: models.DatasetParams
-        //         }]
-        //     }]
-        // })
         getFullWellObj(idObj.idWell).then(well => {
             if (well && well.username == req.decoded.username) {
                 exporter.exportLas3FromInventory(well, idObj.datasets, process.env.INVENTORY_EXPORTPATH || config.exportPath, s3, curveModel, req.decoded.username, function (err, result) {
                     if (err) {
                         callback(err, null);
                     } else {
+                        if(wellnames.length <= 0)
+                            wellnames = result.wellName;
+                        else
+                            wellnames += "_" + result.wellName;
+                        archive.file(userFolder + result.fileName, {name: result.wellName + '.las'});
                         callback(null, result);
                     }
                 })
@@ -114,34 +116,36 @@ router.post('/las3', function (req, res) {
         if (err) {
             res.send(response(404, err));
         } else {
-            res.send(response(200, 'SUCCESSFULLY', result));
+            archive.finalize();
+            res.send(response(200, 'SUCCESSFULLY', [{fileName: zipFile, wellName: wellnames + '.zip'}]));
         }
     });
+
 })
 
 router.post('/csv/rv', function (req, res) {
+    let wellnames = '';
+    const userFolder = (process.env.INVENTORY_EXPORTPATH || config.exportPath) + '/' + req.decoded.username + '/';
+    const zipFile = Date.now() + '_I2GExport.zip';
+    const output = fs.createWriteStream(userFolder + zipFile);
+    const archive = archiver('zip', {
+        zlib: {level: 9} // Sets the compression level.
+    });
+    archive.pipe(output);
     async.map(req.body.idObjs, function (idObj, callback) {
-        // models.Well.findByPk(idObj.idWell, {
-        //     include: [{
-        //         model: models.WellHeader
-        //     }, {
-        //         model: models.Dataset,
-        //         include: [{
-        //             model: models.Curve,
-        //             include: {
-        //                 model: models.CurveRevision
-        //             }
-        //         }, {
-        //             model: models.DatasetParams
-        //         }]
-        //     }]
-        // })
         getFullWellObj(idObj.idWell).then(well => {
             if (well && well.username == req.decoded.username) {
                 exporter.exportCsvRVFromInventory(well, idObj.datasets, process.env.INVENTORY_EXPORTPATH || config.exportPath, s3, curveModel, req.decoded.username, function (err, result) {
                     if (err) {
                         callback(err, null);
                     } else {
+                        if(wellnames.length <= 0)
+                            wellnames = result[0].wellName;
+                        else
+                            wellnames += "_" + result[0].wellName;
+                        for(const file of result) {
+                            archive.file(userFolder + file.fileName, {name: file.wellName + '_' + file.datasetName + '.csv'});
+                        }
                         callback(null, result);
                     }
                 })
@@ -155,48 +159,33 @@ router.post('/csv/rv', function (req, res) {
         if (err) {
             res.send(response(512, err));
         } else {
-            let responseArr = [];
-            async.each(results, function (rs, next) {
-                async.each(rs, function (r, _next) {
-                    responseArr.push(r);
-                    _next();
-                }, function (err) {
-                    next();
-                })
-            }, function (err) {
-                if (err) {
-                    res.send(response(512, err));
-                } else {
-                    res.send(response(200, 'SUCCESSFULLY', responseArr));
-                }
-            })
+            archive.finalize();
+            res.send(response(200, 'SUCCESSFULLY', [{fileName: zipFile, wellName: wellnames + '.zip'}]));
         }
     });
 })
 
 router.post('/csv/wdrv', function (req, res) {
+    let wellnames = '';
+    const userFolder = (process.env.INVENTORY_EXPORTPATH || config.exportPath) + '/' + req.decoded.username + '/';
+    const zipFile = Date.now() + '_I2GExport.zip';
+    const output = fs.createWriteStream(userFolder + zipFile);
+    const archive = archiver('zip', {
+        zlib: {level: 9} // Sets the compression level.
+    });
+    archive.pipe(output);
     async.map(req.body.idObjs, function (idObj, callback) {
-        // models.Well.findByPk(idObj.idWell, {
-        //     include: [{
-        //         model: models.WellHeader
-        //     }, {
-        //         model: models.Dataset,
-        //         include: [{
-        //             model: models.Curve,
-        //             include: {
-        //                 model: models.CurveRevision
-        //             }
-        //         }, {
-        //             model: models.DatasetParams
-        //         }]
-        //     }]
-        // })
         getFullWellObj(idObj.idWell).then(well => {
             if (well && well.username == req.decoded.username) {
                 exporter.exportCsvWDRVFromInventory(well, idObj.datasets, process.env.INVENTORY_EXPORTPATH || config.exportPath, s3, curveModel, req.decoded.username, function (err, result) {
                     if (err) {
                         callback(err, null);
                     } else {
+                        if(wellnames.length <= 0)
+                            wellnames = result.wellName;
+                        else
+                            wellnames += "_" + result.wellName;
+                        archive.file(userFolder + result.fileName, {name: result.wellName + '.csv'});
                         callback(null, result);
                     }
                 })
@@ -210,13 +199,14 @@ router.post('/csv/wdrv', function (req, res) {
         if (err) {
             res.send(response(404, err));
         } else {
-            res.send(response(200, 'SUCCESSFULLY', result));
+            archive.finalize();
+            res.send(response(200, 'SUCCESSFULLY', [{fileName: zipFile, wellName: wellnames + '.zip'}]));
         }
     });
 })
 
 router.post('/files', function (req, res) {
-    let filePath = path.join(process.env.INVENTORY_EXPORTPATH || config.exportPath, req.decoded.username, req.body.fileName);
+    const filePath = path.join(process.env.INVENTORY_EXPORTPATH || config.exportPath, req.decoded.username, req.body.fileName);
     fs.exists(filePath, function (exists) {
         if (exists) {
             // res.writeHead(200, {
@@ -224,8 +214,8 @@ router.post('/files', function (req, res) {
             //     "Content-Disposition": "attachment; filename=" + req.body.fileName
             // });
             // fs.createReadStream(filePath).pipe(res);
-
-            res.sendFile(path.join(__dirname, '../../', filePath));
+            res.contentType('application/octet-stream')
+            res.download(filePath);
         } else {
             res.send(response(404, "ERROR File does not exist"));
         }
@@ -292,7 +282,7 @@ router.post('/dlisv1', async function (req, res) {
                 wellName += '_' + well.name;
             }
         }
-        const exportDir = process.env.INVENTORY_EXPORTPATH || config.exportPath + '/' + req.decoded.username;
+        const exportDir = (process.env.INVENTORY_EXPORTPATH || config.exportPath) + '/' + req.decoded.username;
         fileName += '.dlis';
         if(!fs.existsSync(exportDir)){
             fs.mkdirSync(exportDir, {recursive: true});
@@ -300,7 +290,7 @@ router.post('/dlisv1', async function (req, res) {
         await dlisExport.export(wells, exportDir + '/' + fileName);
         results.push({
             fileName: fileName,
-            wellName: wellName
+            wellName: wellName + '.dlis'
         })
 
         res.send(response(200, 'SUCCESSFULLY', results));
