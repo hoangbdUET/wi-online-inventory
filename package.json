@@ -29,7 +29,7 @@
     "del": "^4.0.0",
     "delete-empty": "^1.0.1",
     "detect-character-encoding": "^0.5.1",
-    "dlis_export": "^1.0.12",
+    "dlis_export": "^1.0.30",
     "dlis_parser": "^1.1.40",
     "events": "^1.1.1",
     "express": "^4.16.2",
