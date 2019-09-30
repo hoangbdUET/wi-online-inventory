@@ -1,6 +1,6 @@
 "use strict";
 const express = require('express');
-const config = require('config').Application;
+const config = require('config');
 const cors = require('cors');
 const app = express();
 const http = require('http');
@@ -10,6 +10,7 @@ const responseJSON = require('./server/response');
 app.use(cors());
 app.use(bodyParser.json());
 app.use('/exports/file', express.static('exports'));
+const fs = require('fs');
 
 main();
 
@@ -34,6 +35,18 @@ function main() {
     app.use('/user/well/', datasetRouter);
     app.use('/user/', wellRouter);
     app.use('/', userRouter);
+    app.use('/export', function(req, res, next){
+        const userFolder = (process.env.INVENTORY_EXPORTPATH || config.exportPath) + '/' + req.decoded.username + '/';
+        if(!fs.existsSync(userFolder)){
+            fs.mkdir(userFolder, { recursive: true }, (err) => {
+                if(err) {
+                    console.log("Export create folder failed!!!");
+                    console.log(userFolder)
+                }
+            });
+        }
+        next();
+    })
     app.use('/export', exportRouter);
     app.use('/import/project', importFromProjectRouter);
 
@@ -57,7 +70,7 @@ function main() {
     app.use(function (req, res) {
         res.status(404).send(responseJSON(404, "Not found", "Not found router"));
     });
-    app.listen(process.env.INVENTORY_PORT || config.port, function () {
-        console.log('Listening on port : ' + (process.env.INVENTORY_PORT || config.port));
+    app.listen(process.env.INVENTORY_PORT || config.Application.port, function () {
+        console.log('Listening on port : ' + (process.env.INVENTORY_PORT || config.Application.port));
     })
 }
