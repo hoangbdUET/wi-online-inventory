@@ -65,6 +65,7 @@ module.exports = function (curve, unit, step, callback) {
         if (revision.isCurrentRevision) {
             const key = await curveModel.getCurveKey(revision);
             if (process.env.INVENTORY_S3PATH || config.s3Path) {
+                console.log("get data from s3")
                 s3.getData(key)
                     .then(dataStream => {
                         callback(null, dataStream);
@@ -73,6 +74,7 @@ module.exports = function (curve, unit, step, callback) {
                 })
             }
             else {
+                console.log("get data from local")
                 if (fs.existsSync((process.env.INVENTORY_DATAPATH || config.dataPath) + '/' + key)) {
                     callback(null, fs.createReadStream((process.env.INVENTORY_DATAPATH || config.dataPath) + '/' + key));
                 }
