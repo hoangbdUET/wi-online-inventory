@@ -7,7 +7,6 @@ let fs = require('fs');
 let config = require('config');
 let models = require('../models');
 let response = require('../response');
-const s3 = require('../s3');
 let exporter = require('wi-export-test');
 let curveModel = require('../curve/curve.model');
 const dlisExport = require('dlis_export')(config);
@@ -52,7 +51,7 @@ router.post('/las2', function (req, res) {
         getFullWellObj(idObj.idWell).then(well => {
             console.log('found well ');
             if (well && well.username == req.decoded.username) {
-                exporter.exportLas2FromInventory(well, idObj.datasets, process.env.INVENTORY_EXPORTPATH || config.exportPath, s3, curveModel, req.decoded.username, function (err, result) {
+                exporter.exportLas2FromInventory(well, idObj.datasets, process.env.INVENTORY_EXPORTPATH || config.exportPath, curveModel, req.decoded.username, function (err, result) {
                     if (err) {
                         callback(err, null);
                     } else {
@@ -94,7 +93,7 @@ router.post('/las3', function (req, res) {
     async.map(req.body.idObjs, function (idObj, callback) {
         getFullWellObj(idObj.idWell).then(well => {
             if (well && well.username == req.decoded.username) {
-                exporter.exportLas3FromInventory(well, idObj.datasets, process.env.INVENTORY_EXPORTPATH || config.exportPath, s3, curveModel, req.decoded.username, function (err, result) {
+                exporter.exportLas3FromInventory(well, idObj.datasets, process.env.INVENTORY_EXPORTPATH || config.exportPath, curveModel, req.decoded.username, function (err, result) {
                     if (err) {
                         callback(err, null);
                     } else {
@@ -135,7 +134,7 @@ router.post('/csv/rv', function (req, res) {
     async.map(req.body.idObjs, function (idObj, callback) {
         getFullWellObj(idObj.idWell).then(well => {
             if (well && well.username == req.decoded.username) {
-                exporter.exportCsvRVFromInventory(well, idObj.datasets, process.env.INVENTORY_EXPORTPATH || config.exportPath, s3, curveModel, req.decoded.username, function (err, result) {
+                exporter.exportCsvRVFromInventory(well, idObj.datasets, process.env.INVENTORY_EXPORTPATH || config.exportPath, curveModel, req.decoded.username, function (err, result) {
                     if (err) {
                         callback(err, null);
                     } else {
@@ -177,7 +176,7 @@ router.post('/csv/wdrv', function (req, res) {
     async.map(req.body.idObjs, function (idObj, callback) {
         getFullWellObj(idObj.idWell).then(well => {
             if (well && well.username == req.decoded.username) {
-                exporter.exportCsvWDRVFromInventory(well, idObj.datasets, process.env.INVENTORY_EXPORTPATH || config.exportPath, s3, curveModel, req.decoded.username, function (err, result) {
+                exporter.exportCsvWDRVFromInventory(well, idObj.datasets, process.env.INVENTORY_EXPORTPATH || config.exportPath, curveModel, req.decoded.username, function (err, result) {
                     if (err) {
                         callback(err, null);
                     } else {
@@ -267,16 +266,8 @@ router.post('/dlisv1', async function (req, res) {
                     for(const revision of curve.curve_revisions){
                         if(revision.isCurrentRevision){
                             curve.unit = revision.unit;
-                            if(s3.check()) {
-                                curve.key = await curveModel.getCurveKey(revision);
-                            }
-                            else {
-                                curve.path = config.dataPath + '/' + await curveModel.getCurveKey(revision);
-                            }
-                            break;
                         }
                     }
-                    delete curve.curve_revisions;
                 }
             }
             wells.push(well);
@@ -292,7 +283,7 @@ router.post('/dlisv1', async function (req, res) {
         if(!fs.existsSync(exportDir)){
             fs.mkdirSync(exportDir, {recursive: true});
         }
-        await dlisExport.export(wells, exportDir + '/' + fileName);
+        await dlisExport.export(wells, exportDir + '/' + fileName, curveModel.getCurveData);
         results.push({
             fileName: fileName,
             wellName: wellName + '.dlis'

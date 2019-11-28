@@ -9,6 +9,7 @@ const hashDir = require('wi-import').hashDir;
 const s3 = require('../s3');
 const readline = require('readline');
 const asyncEach = require('async/each');
+const fs = require('fs');
 
 function createCurve(body, cb) {
     Curve.create(body).then(curve => {
@@ -58,7 +59,7 @@ async function deleteCurveFiles(curves, callback) {
             }
             else {
                 const path = (process.env.INVENTORY_DATAPATH || config.dataPath) + '/' + await getCurveKey(revision);
-                require('fs').unlink(path, (err) => {
+                fs.unlink(path, (err) => {
                     if (err) console.log('delete curve file failed: ' + err);
                 });
             }
@@ -187,7 +188,6 @@ async function createRevision(curve, newUnit, newStep) {
                 s3.copyCurve(currentRevisionPath, newRevision.path);
             }
             else {
-                const fs = require('fs');
                 fs.createReadStream(oldPath).pipe(fs.createWriteStream(filePath));
             }
         }
@@ -289,7 +289,6 @@ async function editCurveStep(curve, newStep, cb) {
 }
 
 async function curveInterpolation(originRevision, newRevision) {
-    const fs = require('fs');
     let curveDatas = [];
 
     const originRevisionPath = await getCurveKey(originRevision);
@@ -411,6 +410,29 @@ async function getCurveKey(curveRevision){
     }
 }
 
+async function getCurveData(curve){
+    if(curve.curve_revisions) {
+        let key = '';
+        for (const revision of curve.curve_revisions) {
+            if (revision.isCurrentRevision) {
+                key = await getCurveKey(revision);
+                curve.path = config.dataPath + '/' + await getCurveKey(revision);
+                break;
+            }
+        }
+        if(s3.check()){
+            return s3.getData(key);
+        }
+        else {
+            return fs.createReadStream(config.dataPath + '/' + key);
+        }
+    }
+    else {
+        //TODO get curve revisions from db
+        return null;
+    }
+}
+
 module.exports = {
     findCurveById: findCurveById,
     deleteCurve: deleteCurve,
@@ -419,5 +441,6 @@ module.exports = {
     createCurve: createCurve,
     editCurve: editCurve,
     findWellByCurveName: findWellByCurveName,
-    getCurveKey: getCurveKey
+    getCurveKey: getCurveKey,
+    getCurveData: getCurveData
 };
