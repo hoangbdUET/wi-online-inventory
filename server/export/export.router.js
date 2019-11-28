@@ -267,7 +267,12 @@ router.post('/dlisv1', async function (req, res) {
                     for(const revision of curve.curve_revisions){
                         if(revision.isCurrentRevision){
                             curve.unit = revision.unit;
-                            curve.key = await curveModel.getCurveKey(revision);
+                            if(s3.check()) {
+                                curve.key = await curveModel.getCurveKey(revision);
+                            }
+                            else {
+                                curve.path = config.dataPath + '/' + await curveModel.getCurveKey(revision);
+                            }
                             break;
                         }
                     }

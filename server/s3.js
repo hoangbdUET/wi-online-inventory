@@ -110,10 +110,20 @@ async function getData(key) {
     })
 }
 
+function check(){
+    if(config.s3Path) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
 module.exports = {
     upload: upload,
     deleteCurve: deleteCurve,
     copyCurve: copyCurve,
     moveCurve: moveCurve,
-    getData: getData
+    getData: getData,
+    check: check
 }
