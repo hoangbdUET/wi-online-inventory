@@ -111,7 +111,7 @@ async function getData(key) {
 }
 
 function check(){
-    if(config.s3Path) {
+    if(process.env.INVENTORY_S3BUCKET || config.s3Path) {
         return true;
     }
     else {
