@@ -219,7 +219,7 @@ function makeFileFromJSON(JSONdata, callback) {
 function exportWellHeader(idWells, callback) {
     const asyncEach = require('async/each');
     let JSONdata = {};
-    JSONdata.fields = ['WELL_NAME', 'API', 'AREA', 'AUTHOR', 'CNTY', 'CODE', 'COMP', 'COMPANY', 'COUN', 'CTRY', 'DATE', 'EASTING', 'filename', 'FLD', 'GDAT', 'GEN1', 'GEN2', 'GEN3', 'GEN4', 'GEN5', 'GEN6', 'GL', 'ID', 'KB', 'LATI', 'LIC', 'LOC', 'LOGDATE', 'LONG', 'LOSTARTIME', 'NAME', 'NORTHING', 'NULL', 'OPERATOR', 'PROJ', 'PROV', 'SRVC', 'STATE', 'STATUS', 'STEP', 'STOP', 'STRT', 'TD', 'TOP', 'TYPE', 'UWI', 'WELL', 'WTYPE'];
+    JSONdata.fields = ['WELL_NAME', 'API', 'AREA', 'AUTHOR', 'CNTY', 'CODE', 'COMP', 'COMPANY', 'COUN', 'CTRY', 'DATE', 'EASTING', 'filename', 'FLD', 'GDAT', 'GEN1', 'GEN2', 'GEN3', 'GEN4', 'GEN5', 'GEN6', 'GL', 'ID', 'KB', 'LATI', 'LIC', 'LOC', 'LOGDATE', 'LONG', 'LOSTARTIME', 'NAME', 'NORTHING', 'NULL', 'OPERATOR', 'PROJ', 'PROV', 'SRVC', 'STATE', 'STATUS', 'STEP', 'STOP', 'STRT', 'TD', 'TOP', 'TYPE', 'UWI', 'WELL', 'WTYPE', 'FLUID'];
     JSONdata.data = [];
     if (!idWells) {
         callback("NO_WELL", null);
