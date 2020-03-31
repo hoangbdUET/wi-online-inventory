@@ -60,7 +60,8 @@ router.post('/las2', function (req, res) {
                         else
                             wellnames += "_" + result[0].wellName;
                         for(const file of result) {
-                            archive.file(userFolder + file.fileName, {name: file.wellName + '_' + file.datasetName + '.las'});
+                            let zip_file_name = (file.wellName + '_' + file.datasetName + '.las').replace(/\//g, '_')
+                            archive.file(userFolder + file.fileName, {name: zip_file_name});
                         }
                         callback(null, result);
                     }
@@ -75,8 +76,11 @@ router.post('/las2', function (req, res) {
         if (err) {
             res.send(response(512, err));
         } else {
+            archive.on('end', ()=>{
+                console.log("Zip done: " + wellnames)
+                res.send(response(200, 'SUCCESSFULLY', [{fileName: zipFile, wellName: wellnames + '.zip'}]));
+            })
             archive.finalize();
-            res.send(response(200, 'SUCCESSFULLY', [{fileName: zipFile, wellName: wellnames + '.zip'}]));
         }
     });
 })
@@ -101,7 +105,7 @@ router.post('/las3', function (req, res) {
                             wellnames = result.wellName;
                         else
                             wellnames += "_" + result.wellName;
-                        archive.file(userFolder + result.fileName, {name: result.wellName + '.las'});
+                        archive.file(userFolder + result.fileName, {name: result.wellName.replace(/\//g, '_') + '.las'});
                         callback(null, result);
                     }
                 })
@@ -115,8 +119,12 @@ router.post('/las3', function (req, res) {
         if (err) {
             res.send(response(404, err));
         } else {
+            archive.on('end', ()=> {
+                console.log("zip done: " + wellnames)
+                res.send(response(200, 'SUCCESSFULLY', [{fileName: zipFile, wellName: wellnames + '.zip'}]));
+            })
             archive.finalize();
-            res.send(response(200, 'SUCCESSFULLY', [{fileName: zipFile, wellName: wellnames + '.zip'}]));
+
         }
     });
 
@@ -143,7 +151,8 @@ router.post('/csv/rv', function (req, res) {
                         else
                             wellnames += "_" + result[0].wellName;
                         for(const file of result) {
-                            archive.file(userFolder + file.fileName, {name: file.wellName + '_' + file.datasetName + '.csv'});
+                            let zip_file_name = (file.wellName + '_' + file.datasetName + '.csv').replace(/\//g, '_')
+                            archive.file(userFolder + file.fileName, {name: zip_file_name});
                         }
                         callback(null, result);
                     }
@@ -158,8 +167,11 @@ router.post('/csv/rv', function (req, res) {
         if (err) {
             res.send(response(512, err));
         } else {
+            archive.on('end', ()=> {
+                console.log("zip done: " + wellnames)
+                res.send(response(200, 'SUCCESSFULLY', [{fileName: zipFile, wellName: wellnames + '.zip'}]));
+            })
             archive.finalize();
-            res.send(response(200, 'SUCCESSFULLY', [{fileName: zipFile, wellName: wellnames + '.zip'}]));
         }
     });
 })
@@ -184,7 +196,7 @@ router.post('/csv/wdrv', function (req, res) {
                             wellnames = result.wellName;
                         else
                             wellnames += "_" + result.wellName;
-                        archive.file(userFolder + result.fileName, {name: result.wellName + '.csv'});
+                        archive.file(userFolder + result.fileName, {name: result.wellName.replace(/\//g, '_') + '.csv'});
                         callback(null, result);
                     }
                 })
@@ -198,8 +210,11 @@ router.post('/csv/wdrv', function (req, res) {
         if (err) {
             res.send(response(404, err));
         } else {
+            archive.on('end', ()=> {
+                console.log("zip done: " + wellnames)
+                res.send(response(200, 'SUCCESSFULLY', [{fileName: zipFile, wellName: wellnames + '.zip'}]));
+            })
             archive.finalize();
-            res.send(response(200, 'SUCCESSFULLY', [{fileName: zipFile, wellName: wellnames + '.zip'}]));
         }
     });
 })
@@ -271,7 +286,7 @@ router.post('/dlisv1', async function (req, res) {
                 }
             }
             wells.push(well);
-            fileName += '_' + well.name;
+            fileName += '_' + well.name.replace(/\//g, "_");
             if(wellName.length <= 0){
                 wellName = well.name;
             }else {
