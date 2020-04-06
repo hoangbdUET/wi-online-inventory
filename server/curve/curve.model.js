@@ -412,11 +412,12 @@ async function getCurveKey(curveRevision){
 
 async function getCurveData(curve){
     if(curve.curve_revisions) {
+        let dataPath = process.env.INVENTORY_DATAPATH || config.dataPath;
         let key = '';
         for (const revision of curve.curve_revisions) {
             if (revision.isCurrentRevision) {
                 key = await getCurveKey(revision);
-                curve.path = config.dataPath + '/' + await getCurveKey(revision);
+                curve.path = dataPath + '/' + await getCurveKey(revision);
                 break;
             }
         }
@@ -424,7 +425,7 @@ async function getCurveData(curve){
             return s3.getData(key);
         }
         else {
-            return fs.createReadStream(config.dataPath + '/' + key);
+            return fs.createReadStream(dataPath + '/' + key);
         }
     }
     else {
