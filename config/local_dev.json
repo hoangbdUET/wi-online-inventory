@@ -13,13 +13,13 @@
     "jwtSecretKey": "secretKey"
   },
 
-  "s3AccessKeyId": "",
-  "s3SecretAccessKey": "",
+  //"s3AccessKeyId": "",
+  //"s3SecretAccessKey": "",
   //if s3Path is defined, curves's data will be stored on aws s3, otherwise they will be stored on disk
-  "s3Bucket": "inventory-local",
-  "s3Path": "https://s3-ap-southeast-1.amazonaws.com/inventory-local",
+  //"s3Bucket": "inventory-local",
+  //"s3Path": "https://s3-ap-southeast-1.amazonaws.com/inventory-local",
 
-  "dataPath": "/Users/dodang/uet_work/backend/wi-online-inventory/tmp",
-  "exportPath": "/Users/dodang/uet_work/backend/wi-online-inventory/exports"
+  "dataPath": "/Users/dodang/revotech/backend/wi-online-inventory/tmp",
+  "exportPath": "/Users/dodang/revotech/backend/wi-online-inventory/exports"
 
 }

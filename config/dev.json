@@ -9,15 +9,15 @@
     "dbName": "inventory"
   },
   "Application": {
-    "port": 9000,
+    "port": 3003,
     "jwtSecretKey": "secretKey"
   },
   "s3AccessKeyId": "",
   "s3SecretAccessKey": "",
   //if s3Path is defined, curves's data will be stored on aws s3, otherwise they will be stored on disk
-  "s3Bucket": "",
-  "s3Path": "",
+  "s3Bucket": "wi-inventory-dev",
+  "s3Path": "https://s3-ap-southeast-1.amazonaws.com/wi-inventory-dev",
 
-  "dataPath": "/home/ubuntu/wi-inventory-data",
-  "exportPath": "server/export/exported-files"
+  "dataPath": "/Users/dodang/revotech/backend/wi-online-inventory/tmp",
+  "exportPath": "/Users/dodang/revotech/backend/wi-online-inventory/exports"
 }
