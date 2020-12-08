@@ -43,4 +43,5 @@ module.exports = {
     STATUS: new WellHeader('Status', ['STATUS'], 'Status'),
 	WTYPE: new WellHeader('Well Type', ['WTYPE'], 'Well Type'),
     FLUID: new WellHeader('Fluid', ['FLUID'], 'Fluid'),
+    BLOCK: new WellHeader('Block',['BLOCK'],'Block'),
 };
